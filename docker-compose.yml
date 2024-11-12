@@ -1,14 +1,11 @@
 services:
-  app:
-    container_name: nest-app
-    build:
-      context: .
-      dockerfile: Dockerfile
+  postgres:
+    image: postgres:latest
+    container_name: psql
     ports:
-      - "3000:3000"
-    volumes:
-      - .:/app
-      - /app/node_modules
+      - "5432:5432"
     environment:
-      - NODE_ENV=development
+      POSTGRES_USER: johndoe
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: db
     restart: unless-stopped
