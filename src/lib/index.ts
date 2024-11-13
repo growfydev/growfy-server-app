@@ -21,7 +21,6 @@ import { CanvasModule } from '../modules/api/socials/canvas/canvas.module';
 import { ShopifyModule } from '../modules/api/analytics/shopify/shopify.module';
 import { WoocomerceModule } from '../modules/api/analytics/woocomerce/woocomerce.module';
 import { StripeModule } from '../modules/api/payments/stripe/stripe.module';
-import { UsersModule } from 'src/modules/users/users.module';
 
 export const Modules = [
   SetupModule,
@@ -46,6 +45,5 @@ export const Modules = [
   CanvasModule,
   ShopifyModule,
   WoocomerceModule,
-  StripeModule,
-  UsersModule
+  StripeModule
 ];

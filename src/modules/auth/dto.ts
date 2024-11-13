@@ -1,8 +1,12 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, IsOptional } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString, MinLength, IsOptional, IsNumber } from "class-validator";
 
 export class RegisterDto {
     @IsEmail()
     email: string;
+
+    @IsString()
+    @IsNotEmpty()
+    name: string;
 
     @IsString()
     @MinLength(6)
@@ -24,7 +28,24 @@ export class AuthenticateDto {
 }
 
 export class TokensDto {
+    @IsString()
     accessToken: string;
+    @IsString()
     refreshToken: string;
 }
 
+export class Enable2FADto {
+    @IsNumber()
+    @IsNotEmpty()
+    userId: number;
+}
+
+export class Verify2FADto {
+    @IsNumber()
+    @IsNotEmpty()
+    userId: number;
+
+    @IsString()
+    @IsNotEmpty()
+    token: string;
+}

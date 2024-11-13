@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { User } from '@prisma/client';
-import { hashPassword, comparePasswords } from 'src/common/utils/crypt';
-import { generateAccessToken, generateRefreshToken } from 'src/common/utils/jwt';
+import { hashPassword, comparePasswords } from 'src/modules/auth/utils/crypt';
+import { generateAccessToken, generateRefreshToken } from 'src/modules/auth/utils/jwt';
 import { PrismaService } from 'src/core/prisma.service';
 import { AuthenticateDto, RegisterDto, TokensDto } from './dto';
 import { TwoFactorAuthService } from './two-factor-auth.service';
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 
 @Injectable()
 export class AuthService {
@@ -15,11 +14,11 @@ export class AuthService {
   ) {}
 
   async register(data: RegisterDto): Promise<User> {
-    const hashedPassword = await hashPassword(data.password);
     const newUser = await this.prisma.user.create({
       data: {
+        name: data.name,
         email: data.email,
-        password: hashedPassword,
+        password: await hashPassword(data.password),
       },
     });
     return newUser;
@@ -38,7 +37,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.isTwoFAEnabled) {
+    if (user.otp_enabled) {
+      if(!token2FA) {
+        throw new BadRequestException('The 2FA Token is Missing')
+      }
       const is2FATokenValid = await this.twoFactorAuthService.verify2FAToken(user.id, token2FA);
       if (!is2FATokenValid) {
         throw new BadRequestException('Invalid 2FA token');

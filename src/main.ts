@@ -8,6 +8,7 @@ async function main() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const port = Number(configService.get('PORT'))
+  app.setGlobalPrefix('api/v1')
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new AllExceptionsFilter())
   await app.listen(port);
