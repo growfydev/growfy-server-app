@@ -21,8 +21,8 @@ export class TwoFactorAuthService {
         await this.prisma.user.update({
             where: { id: userId },
             data: {
-                otp_base32: base32Secret,
-                otp_auth_url: otpauthUrl,
+                otpSecret: base32Secret,
+                otpAuthURI: otpauthUrl,
             },
         });
 
@@ -47,11 +47,11 @@ export class TwoFactorAuthService {
             throw new UnauthorizedException('User does not exist');
         }
 
-        if (!user.otp_base32) {
+        if (!user.otpSecret) {
             throw new UnauthorizedException('2FA is not enabled for this user');
         }
 
-        const totp = createTOTP(user.otp_base32, user.email, 'Growly');
+        const totp = createTOTP(user.otpSecret, user.email, 'Growly');
 
         const delta = totp.validate({ token });
 
@@ -62,8 +62,8 @@ export class TwoFactorAuthService {
         await this.prisma.user.update({
             where: { id: userId },
             data: {
-                otp_enabled: true,
-                otp_verified: true,
+                otpEnabled: true,
+                otpVerified: true,
             },
         });
 
@@ -79,7 +79,7 @@ export class TwoFactorAuthService {
     async enable2FA(userId: number): Promise<{ qrCodeUrl: string; base32: string }> {
         const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
-        if (user?.otp_enabled) {
+        if (user?.otpEnabled) {
             throw new BadRequestException('2FA is already enabled for this user');
         }
         return this.generateTwoFASecret(userId);

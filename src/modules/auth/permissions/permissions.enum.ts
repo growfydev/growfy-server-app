@@ -1,5 +1,5 @@
 export enum PermissionFlagsBits {
-  VIEW = 1,
+  VIEW,
   VIEW_ANALYTICS,
   VIEW_INBOX,
   VIEW_PLANNER,

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,30 +7,83 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum CoreRole {
+  ADMIN
+  USER
+}
+
+enum TeamRole {
+  TEAM_OWNER
+  TEAM_MEMBER
+  ANALYST
+  EDITOR
+  MANAGER
+  CONTENT_CREATOR
+  CLIENT
+  GUEST
+}
+
 model User {
-  id       Int    @id @default(autoincrement())
-  email    String @unique
-  name     String
-  password String
+  id          Int          @id @default(autoincrement())
+  email       String       @unique
+  name        String
+  password    String
+  role        CoreRole     @default(USER)
+  otpEnabled  Boolean      @default(false)
+  otpVerified Boolean      @default(false)
+  otpSecret   String?
+  otpAuthURI  String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime?    @updatedAt
+  TeamMember  TeamMember[]
+  profiles    Profile[]
+}
 
-  otp_enabled  Boolean @default(false)
-  otp_verified Boolean @default(false)
+model Team {
+  id        Int          @id @default(autoincrement())
+  name      String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime?    @updatedAt
+  members   TeamMember[]
+  profiles  Profile[]
+}
 
-  otp_ascii     String?
-  otp_hex       String?
-  otp_base32    String?
-  otp_auth_url  String?
-  SocialAccount SocialAccount[]
+model TeamMember {
+  id     Int      @id @default(autoincrement())
+  userId Int
+  teamId Int
+  role   TeamRole @default(TEAM_MEMBER)
+  user   User     @relation(fields: [userId], references: [id])
+  team   Team     @relation(fields: [teamId], references: [id])
 
-  @@map(name: "users")
+  @@unique([userId, teamId])
+}
+
+model Profile {
+  id             Int             @id @default(autoincrement())
+  name           String
+  userId         Int?
+  teamId         Int?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime?       @updatedAt
+  socialAccounts SocialAccount[]
+  user           User?           @relation(fields: [userId], references: [id])
+  team           Team?           @relation(fields: [teamId], references: [id])
+
+  @@unique([name, userId])
+  @@unique([name, teamId])
 }
 
 model SocialAccount {
-  id          Int    @id @default(autoincrement())
-  provider    String
-  accessToken String
-  userId      Int
-  user        User   @relation(fields: [userId], references: [id])
+  id                   Int       @id @default(autoincrement())
+  provider             String
+  encryptedAccessToken String
+  refreshToken         String?
+  expiresAt            DateTime?
+  profileId            Int
+  profile              Profile   @relation(fields: [profileId], references: [id])
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime? @updatedAt
 
-  @@unique([provider, userId])
+  @@unique([provider, profileId])
 }

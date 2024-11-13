@@ -2,16 +2,7 @@ import { TeamRole } from './role.enum';
 import { PermissionFlagsBits } from './permissions.enum';
 
 export const PermissionFlags: Record<TeamRole, PermissionFlagsBits[]> = {
-  [TeamRole.ANALYST]: [
-    PermissionFlagsBits.VIEW,
-    PermissionFlagsBits.VIEW_ANALYTICS,
-    PermissionFlagsBits.VIEW_INBOX,
-    PermissionFlagsBits.VIEW_PLANNER,
-    PermissionFlagsBits.VIEW_ADS,
-    PermissionFlagsBits.SMARTLINKS,
-    PermissionFlagsBits.REPORTS,
-  ],
-  [TeamRole.EDITOR]: [
+  [TeamRole.TEAM_OWNER]: [
     PermissionFlagsBits.VIEW,
     PermissionFlagsBits.VIEW_ANALYTICS,
     PermissionFlagsBits.VIEW_INBOX,
@@ -27,6 +18,8 @@ export const PermissionFlags: Record<TeamRole, PermissionFlagsBits[]> = {
     PermissionFlagsBits.PLAN_AND_PUBLISH,
     PermissionFlagsBits.PLAN_PENDING_REVIEW,
     PermissionFlagsBits.REVIEW_POSTS,
+    PermissionFlagsBits.MANAGEMENT,
+    PermissionFlagsBits.BRAND,
   ],
   [TeamRole.MANAGER]: [
     PermissionFlagsBits.VIEW,
@@ -47,6 +40,23 @@ export const PermissionFlags: Record<TeamRole, PermissionFlagsBits[]> = {
     PermissionFlagsBits.MANAGEMENT,
     PermissionFlagsBits.BRAND,
   ],
+  [TeamRole.EDITOR]: [
+    PermissionFlagsBits.VIEW,
+    PermissionFlagsBits.VIEW_ANALYTICS,
+    PermissionFlagsBits.VIEW_INBOX,
+    PermissionFlagsBits.VIEW_PLANNER,
+    PermissionFlagsBits.VIEW_ADS,
+    PermissionFlagsBits.SMARTLINKS,
+    PermissionFlagsBits.EDIT,
+    PermissionFlagsBits.REPORTS,
+    PermissionFlagsBits.INBOX,
+    PermissionFlagsBits.ADS,
+    PermissionFlagsBits.HASHTAG_TRACKER,
+    PermissionFlagsBits.PLANNER,
+    PermissionFlagsBits.PLAN_AND_PUBLISH,
+    PermissionFlagsBits.PLAN_PENDING_REVIEW,
+    PermissionFlagsBits.REVIEW_POSTS,
+  ],
   [TeamRole.CONTENT_CREATOR]: [
     PermissionFlagsBits.VIEW,
     PermissionFlagsBits.VIEW_ANALYTICS,
@@ -60,6 +70,15 @@ export const PermissionFlags: Record<TeamRole, PermissionFlagsBits[]> = {
     PermissionFlagsBits.HASHTAG_TRACKER,
     PermissionFlagsBits.PLAN_PENDING_REVIEW,
   ],
+  [TeamRole.ANALYST]: [
+    PermissionFlagsBits.VIEW,
+    PermissionFlagsBits.VIEW_ANALYTICS,
+    PermissionFlagsBits.VIEW_INBOX,
+    PermissionFlagsBits.VIEW_PLANNER,
+    PermissionFlagsBits.VIEW_ADS,
+    PermissionFlagsBits.SMARTLINKS,
+    PermissionFlagsBits.REPORTS,
+  ],
   [TeamRole.CLIENT]: [
     PermissionFlagsBits.VIEW,
     PermissionFlagsBits.VIEW_ANALYTICS,
@@ -70,4 +89,20 @@ export const PermissionFlags: Record<TeamRole, PermissionFlagsBits[]> = {
     PermissionFlagsBits.REPORTS,
     PermissionFlagsBits.REVIEW_POSTS,
   ],
+  [TeamRole.GUEST]: [
+    PermissionFlagsBits.VIEW,
+  ],
+  [TeamRole.TEAM_MEMBER]: [
+    PermissionFlagsBits.VIEW,
+    PermissionFlagsBits.VIEW_ANALYTICS,
+    PermissionFlagsBits.VIEW_INBOX,
+    PermissionFlagsBits.VIEW_PLANNER,
+    PermissionFlagsBits.VIEW_ADS,
+    PermissionFlagsBits.SMARTLINKS,
+    PermissionFlagsBits.INBOX,
+    PermissionFlagsBits.ADS,
+    PermissionFlagsBits.HASHTAG_TRACKER,
+    PermissionFlagsBits.PLANNER,
+  ],
 };
+

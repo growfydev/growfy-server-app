@@ -11,7 +11,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private readonly twoFactorAuthService: TwoFactorAuthService
-  ) {}
+  ) { }
 
   async register(data: RegisterDto): Promise<User> {
     const newUser = await this.prisma.user.create({
@@ -37,8 +37,8 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.otp_enabled) {
-      if(!token2FA) {
+    if (user.otpEnabled) {
+      if (!token2FA) {
         throw new BadRequestException('The 2FA Token is Missing')
       }
       const is2FATokenValid = await this.twoFactorAuthService.verify2FAToken(user.id, token2FA);
