@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { LinkedInService } from './linkedin.service';
-import { LinkedinController } from './linkedin.controller';
-import { HttpModule } from '@nestjs/axios';
 import { PrismaService } from 'src/core/prisma.service';
+import { LinkedInStrategy } from './auth/strategy';
+import { LinkedInController } from './linkedin.controller';
+import { LinkedInAuthGuard } from './linkedin.guard';
+import { LinkedInService } from './linkedin.service';
 
 @Module({
-  imports: [HttpModule],
-  providers: [LinkedInService, PrismaService],
-  controllers: [LinkedinController]
+  controllers: [LinkedInController],
+  providers: [LinkedInStrategy, LinkedInService, PrismaService, LinkedInAuthGuard],
 })
-export class LinkedinModule { }
+export class LinkedInModule { }

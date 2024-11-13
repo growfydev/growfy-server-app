@@ -3,7 +3,7 @@ import { SetupModule } from './setup.module';
 import { AuthModule } from '../modules/auth/auth.module';
 import { InstagramModule } from '../modules/api/socials/instagram/instagram.module';
 import { FacebookModule } from '../modules/api/socials/facebook/facebook.module';
-import { LinkedinModule } from '../modules/api/socials/linkedin/linkedin.module';
+import { LinkedInModule } from '../modules/api/socials/linkedin/linkedin.module';
 import { TiktokModule } from '../modules/api/socials/tiktok/tiktok.module';
 import { TiktokAdsModule } from '../modules/api/ads/tiktok/tiktok.module';
 import { XModule } from '../modules/api/socials/x/x.module';
@@ -31,7 +31,7 @@ export const Modules = [
   TiktokAdsModule,
   TiktokModule,
   XModule,
-  LinkedinModule,
+  LinkedInModule,
   PinterestModule,
   YoutubeModule,
   TwitchModule,

@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { Profile, User } from '@prisma/client';
 import { hashPassword, comparePasswords } from 'src/modules/auth/utils/crypt';
 import { generateAccessToken, generateRefreshToken } from 'src/modules/auth/utils/jwt';
 import { PrismaService } from 'src/core/prisma.service';
@@ -13,7 +13,7 @@ export class AuthService {
     private readonly twoFactorAuthService: TwoFactorAuthService
   ) { }
 
-  async register(data: RegisterDto): Promise<User> {
+  async register(data: RegisterDto): Promise<{ user: User; profile: Profile }> {
     const newUser = await this.prisma.user.create({
       data: {
         name: data.name,
@@ -21,7 +21,19 @@ export class AuthService {
         password: await hashPassword(data.password),
       },
     });
-    return newUser;
+
+    const profile = await this.createProfile(data.name, newUser.id);
+
+    return { user: newUser, profile };
+  }
+
+  async createProfile(name: string, userId: number) {
+    return this.prisma.profile.create({
+      data: {
+        name,
+        userId
+      }
+    })
   }
 
   async authenticate(authenticateDto: AuthenticateDto): Promise<TokensDto> {
