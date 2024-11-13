@@ -1,8 +1,8 @@
 import { ConfigService } from '@nestjs/config';
 import * as jwt from 'jsonwebtoken';
 
-const SECRET_KEY = process.env.JWT_SECRET_KEY || 'your_secret_key';
-const REFRESH_SECRET_KEY = process.env.JWT_REFRESH_SECRET_KEY || 'your_refresh_secret_key';
+const SECRET_KEY = process.env.JWT_SECRET_KEY;
+const REFRESH_SECRET_KEY = process.env.JWT_REFRESH_SECRET_KEY;
 
 export function generateAccessToken(userId: number): string {
   return jwt.sign({ userId }, SECRET_KEY, { expiresIn: '1h' });
@@ -13,5 +13,5 @@ export function generateRefreshToken(userId: number): string {
 }
 
 export const jwtConstants = (configService: ConfigService) => ({
-  secret: configService.get<string>('JWT_SECRET'),
+  secret: configService.get<string>('JWT_SECRET_KEY'),
 });
