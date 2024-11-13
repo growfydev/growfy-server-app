@@ -1,10 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
+import { ValidationPipe } from '@nestjs/common';
+import { AllExceptionsFilter } from './lib/AllExceptionsFilter';
 
 async function main() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
-  await app.listen(Number(configService.get('PORT')));
+  const port = Number(configService.get('PORT'))
+  app.setGlobalPrefix('api/v1')
+  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalFilters(new AllExceptionsFilter())
+  await app.listen(port);
 }
 void main();

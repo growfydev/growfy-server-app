@@ -14,6 +14,29 @@ datasource db {
 }
 
 model User {
-  id   Int    @id @default(autoincrement())
-  user String
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  name     String
+  password String
+
+  otp_enabled  Boolean @default(false)
+  otp_verified Boolean @default(false)
+
+  otp_ascii     String?
+  otp_hex       String?
+  otp_base32    String?
+  otp_auth_url  String?
+  SocialAccount SocialAccount[]
+
+  @@map(name: "users")
+}
+
+model SocialAccount {
+  id          Int    @id @default(autoincrement())
+  provider    String
+  accessToken String
+  userId      Int
+  user        User   @relation(fields: [userId], references: [id])
+
+  @@unique([provider, userId])
 }
