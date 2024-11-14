@@ -13,7 +13,7 @@ yarn-error.log*
 lerna-debug.log*
 yarn.lock
 package-lock.json
-
+scrapper/zinsta/Lib
 #Critical
 .env
 .env.development
