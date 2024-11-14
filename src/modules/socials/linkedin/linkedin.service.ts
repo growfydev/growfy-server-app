@@ -1,4 +1,3 @@
-// src/services/linkedin.service.ts
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/core/prisma.service';
 import { encryptToken } from './util/crypto';
