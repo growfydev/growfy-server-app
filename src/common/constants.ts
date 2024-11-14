@@ -1,4 +1,3 @@
-export const constants = {
-  services: {},
-  controllers: {},
-};
+export enum Services {
+  Stripe = 'STRIPE_CLIENT'
+}

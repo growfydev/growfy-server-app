@@ -23,6 +23,9 @@ export const configLoader: () => Config = (): Config => {
       client_id: process.env.TWITTER_CLIENT_ID,
       client_secret: process.env.TWITTER_CLIENT_SECRET,
       callback_uri: process.env.TWITTER_CALLBACK_URI
+    },
+    stripe: {
+      key: process.env.STRIPE_API_KEY
     }
   };
 };

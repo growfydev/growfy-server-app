@@ -23,7 +23,7 @@ export class LinkedInStrategy extends PassportStrategy(Strategy, 'linkedin') {
     async validate(
         req: Request,
         accessToken: string,
-        refreshToken: string,
+        refreshToken: string, 
         profile: LinkedInProfile
     ): Promise<LinkedInAuthenticatedUser> {
         const profileId = this.getProfileIdFromState(req.query.state);

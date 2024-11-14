@@ -1,4 +1,8 @@
 import { Module } from '@nestjs/common';
+import { StripeCoreModule } from './core.modue';
+import { configLoader } from 'src/lib/config.loader';
 
-@Module({})
-export class StripeModule {}
+@Module({
+    imports: [StripeCoreModule.forRoot(configLoader().stripe.key, { apiVersion: '2024-10-28.acacia' })]
+})
+export class StripeModule { }

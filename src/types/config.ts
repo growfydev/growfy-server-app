@@ -21,4 +21,7 @@ export type Config = {
         callback_uri: string;
         scopes: string;
     };
+    stripe: {
+        key: string;
+    }
 };
