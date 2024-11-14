@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { StripeCoreModule } from './core.modue';
+import { StripeCoreModule } from './core.module';
 import { configLoader } from 'src/lib/config.loader';
 
 @Module({
