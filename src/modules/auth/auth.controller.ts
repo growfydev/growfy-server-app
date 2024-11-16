@@ -1,6 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthenticateDto, RegisterDto, Enable2FADto, Verify2FADto, TokensDto } from './dto';
+import { AuthenticateDto, RegisterDto, Enable2FADto, Verify2FADto, TokensDto } from './types/dto';
 import { TwoFactorAuthService } from './two-factor-auth.service';
 
 @Controller('auth')

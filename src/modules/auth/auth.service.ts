@@ -3,7 +3,7 @@ import { Profile, User } from '@prisma/client';
 import { hashPassword, comparePasswords } from 'src/modules/auth/utils/crypt';
 import { generateAccessToken, generateRefreshToken } from 'src/modules/auth/utils/jwt';
 import { PrismaService } from 'src/core/prisma.service';
-import { AuthenticateDto, RegisterDto, TokensDto } from './dto';
+import { AuthenticateDto, RegisterDto, TokensDto } from './types/dto';
 import { TwoFactorAuthService } from './two-factor-auth.service';
 
 @Injectable()

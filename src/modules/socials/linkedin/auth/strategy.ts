@@ -4,7 +4,7 @@ import { Strategy, Profile as LinkedInProfile } from 'passport-linkedin-oauth2';
 import { Request } from 'express';
 import { LinkedInService } from '../linkedin.service';
 import { configLoader } from 'src/lib/config.loader';
-import { LinkedInAuthenticatedUser, LinkedInConfiguration } from 'src/types/socials/linkedin';
+import { LinkedInAuthenticatedUser, LinkedInConfiguration } from 'src/modules/socials/linkedin/types/linkedin';
 import { ParsedQs } from 'qs';
 
 @Injectable()
