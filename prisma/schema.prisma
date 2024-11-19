@@ -1,89 +1,95 @@
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
 
 enum CoreRole {
-  ADMIN
-  USER
+    ADMIN
+    USER
 }
 
 enum TeamRole {
-  TEAM_OWNER
-  TEAM_MEMBER
-  ANALYST
-  EDITOR
-  MANAGER
-  CONTENT_CREATOR
-  CLIENT
-  GUEST
+    TEAM_OWNER
+    TEAM_MEMBER
+    ANALYST
+    EDITOR
+    MANAGER
+    CONTENT_CREATOR
+    CLIENT
+    GUEST
 }
 
 model User {
-  id          Int          @id @default(autoincrement())
-  email       String       @unique
-  name        String
-  password    String
-  role        CoreRole     @default(USER)
-  otpEnabled  Boolean      @default(false)
-  otpVerified Boolean      @default(false)
-  otpSecret   String?
-  otpAuthURI  String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime?    @updatedAt
-  TeamMember  TeamMember[]
-  profiles    Profile[]
-}
-
-model Team {
-  id        Int          @id @default(autoincrement())
-  name      String
-  createdAt DateTime     @default(now())
-  updatedAt DateTime?    @updatedAt
-  members   TeamMember[]
-  profiles  Profile[]
-}
-
-model TeamMember {
-  id     Int      @id @default(autoincrement())
-  userId Int
-  teamId Int
-  role   TeamRole @default(TEAM_MEMBER)
-  user   User     @relation(fields: [userId], references: [id])
-  team   Team     @relation(fields: [teamId], references: [id])
-
-  @@unique([userId, teamId])
+    id             Int       @id @default(autoincrement())
+    name           String
+    email          String    @unique
+    password       String
+    phone          String?
+    role           CoreRole? @default(USER)
+    otpEnabled     Boolean   @default(false)
+    otpVerified    Boolean   @default(false)
+    otpSecret      String?
+    otpAuthURI     String?
+    createdAt      DateTime  @default(now())
+    updatedAt      DateTime? @updatedAt
+    profiles       Profile[]
+    members        Member[]  @relation("UserMembers")
+    relatedMembers Member[]  @relation("RelatedMembers")
 }
 
 model Profile {
-  id             Int             @id @default(autoincrement())
-  name           String
-  userId         Int?
-  teamId         Int?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime?       @updatedAt
-  socialAccounts SocialAccount[]
-  user           User?           @relation(fields: [userId], references: [id])
-  team           Team?           @relation(fields: [teamId], references: [id])
-
-  @@unique([name, userId])
-  @@unique([name, teamId])
+    id      Int      @id @default(autoincrement())
+    name    String
+    userId  Int?
+    user    User?    @relation(fields: [userId], references: [id])
+    socials Social[]
 }
 
-model SocialAccount {
-  id                   Int       @id @default(autoincrement())
-  provider             String
-  encryptedAccessToken String
-  refreshToken         String?
-  expiresAt            DateTime?
-  profileId            Int
-  profile              Profile   @relation(fields: [profileId], references: [id])
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime? @updatedAt
+model Social {
+    id         Int      @id @default(autoincrement())
+    token      String
+    providerId Int
+    profileId  Int
+    provider   Provider @relation(fields: [providerId], references: [id])
+    profile    Profile  @relation(fields: [profileId], references: [id])
+}
 
-  @@unique([provider, profileId])
+model Provider {
+    id      Int      @id @default(autoincrement())
+    name    String
+    socials Social[]
+}
+
+model Post {
+    id         Int       @id @default(autoincrement())
+    status     String?
+    body       String?
+    postTypeId Int?
+    taskId     Int?
+    postType   PostType? @relation(fields: [postTypeId], references: [id])
+    task       Task?     @relation(fields: [taskId], references: [id])
+}
+
+model Task {
+    id     Int    @id @default(autoincrement())
+    status String
+    posts  Post[]
+}
+
+model PostType {
+    id    Int    @id @default(autoincrement())
+    name  String
+    posts Post[]
+}
+
+model Member {
+    id            Int  @id @default(autoincrement())
+    userId        Int
+    relatedUserId Int
+    user          User @relation("UserMembers", fields: [userId], references: [id])
+    relatedUser   User @relation("RelatedMembers", fields: [relatedUserId], references: [id])
 }
