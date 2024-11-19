@@ -9,8 +9,16 @@ export class RegisterDto {
     name: string;
 
     @IsString()
+    @IsOptional()
+    phone?: string;
+
+    @IsString()
     @MinLength(6)
     password: string;
+
+    @IsString()
+    @IsNotEmpty()
+    nameProfile: string;
 }
 
 export class AuthenticateDto {
