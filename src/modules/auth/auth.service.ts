@@ -13,7 +13,7 @@ export class AuthService {
     private readonly twoFactorAuthService: TwoFactorAuthService
   ) { }
 
-  async register(data: RegisterDto): Promise<{ user: User; profile: Profile; member: Member }> {
+  async register(data: RegisterDto): Promise<{ user: User }> {
     const newUser = await this.prisma.user.create({
       data: {
         name: data.name,
@@ -24,13 +24,22 @@ export class AuthService {
     });
 
     const profile = await this.createProfile(data.nameProfile, newUser.id);
-    const member = await this.createMember(newUser.id, profile.id, TeamRole.MANAGER);
+    
+    await this.createMember(newUser.id, profile.id, TeamRole.MANAGER);
 
-    return {
-      user: newUser,
-      profile,
-      member
-    }
+    const users = await this.prisma.user.findUnique({
+      where: {
+        id: newUser.id
+      }, include: {
+        members: {
+          include: {
+            profile: true
+          }
+        }
+      }
+    })
+
+    return { user: users }
   }
 
   async createProfile(name: string, userId: number) {

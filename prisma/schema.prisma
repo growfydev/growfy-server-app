@@ -39,6 +39,17 @@ model User {
     members     Member[]
 }
 
+model Member {
+    id        Int      @id @default(autoincrement())
+    userId    Int
+    profileId Int
+    role      TeamRole
+    user      User     @relation(fields: [userId], references: [id])
+    profile   Profile  @relation(fields: [profileId], references: [id])
+
+    @@unique([userId, profileId])
+}
+
 model Profile {
     id      Int      @id @default(autoincrement())
     name    String
@@ -81,15 +92,4 @@ model PostType {
     id    Int    @id @default(autoincrement())
     name  String
     posts Post[]
-}
-
-model Member {
-    id        Int      @id @default(autoincrement())
-    userId    Int
-    profileId Int
-    role      TeamRole
-    user      User     @relation(fields: [userId], references: [id])
-    profile   Profile  @relation(fields: [profileId], references: [id])
-
-    @@unique([userId, profileId])
 }
