@@ -18,7 +18,12 @@ import { configLoader } from 'src/lib/config.loader';
       }),
     })
   ],
-  providers: [AuthService, PrismaService, TwoFactorAuthService],
-  controllers: [AuthController]
+  providers: [
+    AuthService,
+    PrismaService,
+    TwoFactorAuthService
+    ],
+  controllers: [AuthController],
+  exports: [AuthService]
 })
 export class AuthModule { }

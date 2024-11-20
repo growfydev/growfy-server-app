@@ -8,7 +8,8 @@ import { envSchema } from './validation.schema';
     ConfigModule.forRoot({
       load: [configLoader],
       validationSchema: envSchema,
+      isGlobal: true
     }),
   ],
 })
-export class SetupModule {}
+export class SetupModule { }

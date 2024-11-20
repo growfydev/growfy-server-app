@@ -23,6 +23,26 @@ enum TeamRole {
     GUEST
 }
 
+enum PermissionFlags {
+    VIEW
+    VIEW_ANALYTICS
+    VIEW_INBOX
+    VIEW_PLANNER
+    VIEW_ADS
+    SMARTLINKS
+    EDIT
+    REPORTS
+    INBOX
+    ADS
+    HASHTAG_TRACKER
+    PLANNER
+    PLAN_AND_PUBLISH
+    PLAN_PENDING_REVIEW
+    REVIEW_POSTS
+    MANAGEMENT
+    BRAND
+}
+
 model User {
     id          Int       @id @default(autoincrement())
     name        String
@@ -43,7 +63,7 @@ model Member {
     id        Int      @id @default(autoincrement())
     userId    Int
     profileId Int
-    role      TeamRole
+    role      TeamRole @default(TEAM_OWNER)
     user      User     @relation(fields: [userId], references: [id])
     profile   Profile  @relation(fields: [profileId], references: [id])
 
@@ -94,4 +114,29 @@ model PostType {
     id    Int    @id @default(autoincrement())
     name  String
     posts Post[]
+}
+
+model Permission {
+    id        Int                  @id @default(autoincrement())
+    name      PermissionFlags      @unique
+    roles     CoreRolePermission[]
+    teamRoles TeamRolePermission[]
+}
+
+model CoreRolePermission {
+    id           Int        @id @default(autoincrement())
+    coreRole     CoreRole
+    permission   Permission @relation(fields: [permissionId], references: [id])
+    permissionId Int
+
+    @@unique([coreRole, permissionId])
+}
+
+model TeamRolePermission {
+    id           Int        @id @default(autoincrement())
+    teamRole     TeamRole
+    permission   Permission @relation(fields: [permissionId], references: [id])
+    permissionId Int
+
+    @@unique([teamRole, permissionId])
 }
