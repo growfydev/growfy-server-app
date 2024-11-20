@@ -6,37 +6,37 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const context = host.switchToHttp();
     const response = context.getResponse();
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = 'Something went wrong.';
-    let errors = [];
+    let errors: string[] = [];
+    const standardMessage = 'Something went wrong.';
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const responseMessage = exception.getResponse();
+
       if (typeof responseMessage === 'object' && responseMessage['message']) {
         if (Array.isArray(responseMessage['message'])) {
           errors = responseMessage['message'];
         } else {
           errors = [responseMessage['message']];
         }
-
-        message = typeof responseMessage['message'] === 'string' ? responseMessage['message'] : 'Validation Errors';
-      } else {
-        message = responseMessage as string;
+      } else if (typeof responseMessage === 'string') {
+        errors = [responseMessage];
       }
+    } else if (exception instanceof Error) {
+      errors = [exception.message];
     } else {
-      message = (exception as any).message || message;
+      errors = ['An unexpected error occurred.'];
     }
 
     if (errors.length === 0) {
-      errors = [message];
+      errors = [standardMessage];
     }
 
     response.status(status).json({
       statusCode: status,
       timestamp: new Date().toISOString(),
       success: false,
-      data: null,
-      message,
+      message: standardMessage,
       errors,
     });
   }

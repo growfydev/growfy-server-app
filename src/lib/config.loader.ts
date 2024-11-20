@@ -26,6 +26,10 @@ export const configLoader: () => Config = (): Config => {
     },
     stripe: {
       key: process.env.STRIPE_API_KEY
+    },
+    redis: {
+      host: process.env.REDIS_HOST,
+      port: Number(process.env.REDIS_PORT) || 6379
     }
   };
 };

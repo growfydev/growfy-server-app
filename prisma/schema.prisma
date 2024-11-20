@@ -119,17 +119,7 @@ model PostType {
 model Permission {
     id        Int                  @id @default(autoincrement())
     name      PermissionFlags      @unique
-    roles     CoreRolePermission[]
     teamRoles TeamRolePermission[]
-}
-
-model CoreRolePermission {
-    id           Int        @id @default(autoincrement())
-    coreRole     CoreRole
-    permission   Permission @relation(fields: [permissionId], references: [id])
-    permissionId Int
-
-    @@unique([coreRole, permissionId])
 }
 
 model TeamRolePermission {

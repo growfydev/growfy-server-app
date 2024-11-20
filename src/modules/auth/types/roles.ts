@@ -4,6 +4,6 @@ export type UserRoles = {
         profileId: number;
         profileName: string;
         memberRole: string;
+        permissions: string[];
     }[];
-    permissions: string[];
 };

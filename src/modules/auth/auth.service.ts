@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { CoreRole, Member, Profile, TeamRole, User } from '@prisma/client';
+import { Member, Profile, TeamRole, User } from '@prisma/client';
 import { hashPassword, comparePasswords } from 'src/modules/auth/utils/crypt';
 import { generateAccessToken, generateRefreshToken } from 'src/modules/auth/utils/jwt';
 import { PrismaService } from 'src/core/prisma.service';
@@ -25,8 +25,6 @@ export class AuthService {
 
     const profile = await this.createProfile(data.nameProfile, newUser.id);
     await this.createMember(newUser.id, profile.id, TeamRole.MANAGER);
-    await this.assignCoreRolePermissions(newUser.role);
-    await this.assignTeamRolePermissions(TeamRole.MANAGER);
 
     const userWithDetails = await this.prisma.user.findUnique({
       where: { id: newUser.id },
@@ -39,7 +37,6 @@ export class AuthService {
 
     return { user: userWithDetails };
   }
-
 
   async createProfile(name: string, userId: number) {
     return this.prisma.profile.create({
@@ -59,56 +56,6 @@ export class AuthService {
     });
   }
 
-  async assignCoreRolePermissions(role: CoreRole) {
-    const existingPermissions = await this.prisma.coreRolePermission.findMany({
-      where: { coreRole: role },
-      select: { permissionId: true },
-    });
-
-    const existingPermissionIds = new Set(existingPermissions.map((p) => p.permissionId));
-
-    const corePermissions = await this.prisma.permission.findMany({
-      where: { roles: { some: { coreRole: role } } },
-    });
-
-    for (const permission of corePermissions) {
-      if (!existingPermissionIds.has(permission.id)) {
-        await this.prisma.coreRolePermission.create({
-          data: {
-            coreRole: role,
-            permissionId: permission.id,
-          },
-        });
-      }
-    }
-  }
-
-
-  async assignTeamRolePermissions(role: TeamRole) {
-    const existingPermissions = await this.prisma.teamRolePermission.findMany({
-      where: { teamRole: role },
-      select: { permissionId: true },
-    });
-
-    const existingPermissionIds = new Set(existingPermissions.map((p) => p.permissionId));
-
-    const teamPermissions = await this.prisma.permission.findMany({
-      where: { teamRoles: { some: { teamRole: role } } },
-    });
-
-    for (const permission of teamPermissions) {
-      if (!existingPermissionIds.has(permission.id)) {
-        await this.prisma.teamRolePermission.create({
-          data: {
-            teamRole: role,
-            permissionId: permission.id,
-          },
-        });
-      }
-    }
-  }
-
-
   async authenticate(authenticateDto: AuthenticateDto): Promise<TokensDto> {
     const { email, password, token2FA } = authenticateDto;
 
@@ -118,8 +65,8 @@ export class AuthService {
         id: true,
         email: true,
         password: true,
-        role: true,
         otpEnabled: true,
+        role: true,
         members: {
           select: {
             role: true,
@@ -153,31 +100,24 @@ export class AuthService {
       }
     }
 
-    const corePermissions = await this.prisma.coreRolePermission.findMany({
-      where: { coreRole: user.role },
-      select: { permission: true },
-    });
-
-    const teamPermissions = await this.prisma.teamRolePermission.findMany({
-      where: {
-        teamRole: { in: user.members.map((member) => member.role) },
-      },
-      select: { permission: true },
-    });
-
-    const permissions = [
-      ...corePermissions.map((p) => p.permission.name),
-      ...teamPermissions.map((p) => p.permission.name),
-    ];
+    const profilePermissions = await Promise.all(
+      user.members.map(async (member) => {
+        const permissions = await this.prisma.teamRolePermission.findMany({
+          where: { teamRole: member.role },
+          select: { permission: { select: { name: true } } },
+        });
+        return {
+          profileId: member.profile.id,
+          profileName: member.profile.name,
+          memberRole: member.role,
+          permissions: permissions.map((p) => p.permission.name),
+        };
+      })
+    );
 
     const userRoles = {
       userRole: user.role,
-      profiles: user.members.map((member) => ({
-        profileId: member.profile.id,
-        profileName: member.profile.name,
-        memberRole: member.role,
-      })),
-      permissions,
+      profiles: profilePermissions,
     };
 
     const accessToken = generateAccessToken(user.id, userRoles);
