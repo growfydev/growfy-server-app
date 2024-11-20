@@ -1,4 +1,4 @@
-import { PrismaClient, CoreRole, TeamRole, PermissionFlags } from '@prisma/client';
+import { PrismaClient, TeamRole, PermissionFlags } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -10,37 +10,6 @@ async function main() {
             update: {},
             create: { name: permission },
         });
-    }
-
-    const coreRolePermissions: Record<CoreRole, PermissionFlags[]> = {
-        ADMIN: Object.values(PermissionFlags),
-        USER: [
-            PermissionFlags.VIEW,
-            PermissionFlags.VIEW_INBOX,
-            PermissionFlags.VIEW_PLANNER,
-        ],
-    };
-
-    for (const [role, permissions] of Object.entries(coreRolePermissions)) {
-        const coreRole = role as CoreRole;
-        for (const permission of permissions) {
-            const perm = await prisma.permission.findUnique({ where: { name: permission } });
-            if (perm) {
-                await prisma.coreRolePermission.upsert({
-                    where: {
-                        coreRole_permissionId: {
-                            coreRole: coreRole,
-                            permissionId: perm.id,
-                        },
-                    },
-                    update: {},
-                    create: {
-                        coreRole,
-                        permissionId: perm.id,
-                    },
-                });
-            }
-        }
     }
 
     const teamRolePermissions: Record<TeamRole, PermissionFlags[]> = {

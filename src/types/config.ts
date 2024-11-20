@@ -23,5 +23,9 @@ export type Config = {
     };
     stripe: {
         key: string;
+    };
+    redis: {
+        host: string;
+        port: number;
     }
 };

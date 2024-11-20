@@ -1,9 +1,9 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { CoreRole } from '@prisma/client';
-import { UserRoles } from '../types/roles';
 import { ROLES_KEY } from '../keys/roles.keys';
 import { PERMISSIONS_KEY } from '../keys/permissions.keys';
+import { UserRoles } from '../types/roles';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -20,8 +20,8 @@ export class RolesGuard implements CanActivate {
             context.getClass(),
         ]);
 
-        const { user } = context.switchToHttp().getRequest();
-        const userRoles: UserRoles | undefined = user?.userRoles;
+        const { user, params } = context.switchToHttp().getRequest();
+        const userRoles: UserRoles = user?.userRoles;
 
         console.log('Required Roles:', requiredRoles);
         console.log('Required Permissions:', requiredPermissions);
@@ -37,20 +37,35 @@ export class RolesGuard implements CanActivate {
             return true;
         }
 
-        const userRoleMatches = requiredRoles
-            ? requiredRoles.includes(userRoles.userRole as CoreRole)
+        const profileId = params?.profileId; 
+        if (!profileId) {
+            console.log('No profile ID found in request. Access denied.');
+            return false;
+        }
+
+        const profile = userRoles.profiles.find((p) => p.profileId === Number(profileId));
+        if (!profile) {
+            console.log(`User does not have access to profile ID: ${profileId}. Access denied.`);
+            return false;
+        }
+
+        console.log('Profile Permissions:', profile.permissions);
+        console.log('Profile Member Role:', profile.memberRole);
+
+        const userRoleMatches = requiredRoles?.length
+            ? requiredRoles.includes(userRoles.userRole as CoreRole) ||
+            requiredRoles.includes(profile.memberRole as CoreRole)
             : true;
 
-        console.log('User Role Matches:', userRoleMatches);
-
-        const userPermissions = new Set(userRoles.permissions);
-        const hasRequiredPermissions = requiredPermissions
+        const userPermissions = new Set(profile.permissions);
+        const hasRequiredPermissions = requiredPermissions?.length
             ? requiredPermissions.every((perm) => userPermissions.has(perm))
             : true;
 
-        console.log('Has Required Permissions:', hasRequiredPermissions);
-
         const accessGranted = userRoleMatches && hasRequiredPermissions;
+
+        console.log('User Role Matches:', userRoleMatches);
+        console.log('Has Required Permissions:', hasRequiredPermissions);
         console.log('Access Granted:', accessGranted);
 
         return accessGranted;

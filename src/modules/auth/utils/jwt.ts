@@ -14,8 +14,7 @@ export function generateAccessToken(
   userId: number,
   userRoles: {
     userRole: string;
-    profiles: { profileId: number; profileName: string; memberRole: string }[];
-    permissions: string[];
+    profiles: { profileId: number; profileName: string; memberRole: string; permissions: string[] }[];
   }
 ): string {
   return jwt.sign(
@@ -24,7 +23,6 @@ export function generateAccessToken(
       userRoles: {
         userRole: userRoles.userRole,
         profiles: userRoles.profiles,
-        permissions: userRoles.permissions,
       },
     },
     SECRET_KEY,
@@ -38,7 +36,6 @@ export function generateAccessToken(
  * @param fingerprint - Optional fingerprint hash for additional security
  * @returns Signed JWT refresh token
  */
-
 export function generateRefreshToken(userId: number, fingerprint?: string): string {
   const payload: Record<string, any> = {
     userId,
