@@ -24,28 +24,25 @@ enum TeamRole {
 }
 
 model User {
-    id             Int       @id @default(autoincrement())
-    name           String
-    email          String    @unique
-    password       String
-    phone          String?
-    role           CoreRole? @default(USER)
-    otpEnabled     Boolean   @default(false)
-    otpVerified    Boolean   @default(false)
-    otpSecret      String?
-    otpAuthURI     String?
-    createdAt      DateTime  @default(now())
-    updatedAt      DateTime? @updatedAt
-    profiles       Profile[]
-    members        Member[]  @relation("UserMembers")
-    relatedMembers Member[]  @relation("RelatedMembers")
+    id          Int       @id @default(autoincrement())
+    name        String
+    email       String    @unique
+    password    String
+    phone       String?
+    role        CoreRole? @default(USER)
+    otpEnabled  Boolean   @default(false)
+    otpVerified Boolean   @default(false)
+    otpSecret   String?
+    otpAuthURI  String?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime? @updatedAt
+    members     Member[]
 }
 
 model Profile {
     id      Int      @id @default(autoincrement())
     name    String
-    userId  Int?
-    user    User?    @relation(fields: [userId], references: [id])
+    members Member[]
     socials Social[]
 }
 
@@ -87,9 +84,12 @@ model PostType {
 }
 
 model Member {
-    id            Int  @id @default(autoincrement())
-    userId        Int
-    relatedUserId Int
-    user          User @relation("UserMembers", fields: [userId], references: [id])
-    relatedUser   User @relation("RelatedMembers", fields: [relatedUserId], references: [id])
+    id        Int      @id @default(autoincrement())
+    userId    Int
+    profileId Int
+    role      TeamRole
+    user      User     @relation(fields: [userId], references: [id])
+    profile   Profile  @relation(fields: [profileId], references: [id])
+
+    @@unique([userId, profileId])
 }

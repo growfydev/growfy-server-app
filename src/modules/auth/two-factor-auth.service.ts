@@ -14,7 +14,7 @@ export class TwoFactorAuthService {
 
     async generateTwoFASecret(userId: number): Promise<{ qrCodeUrl: string; base32: string }> {
         const base32Secret = generateRandomBase32();
-        const totp = createTOTP(base32Secret, `user-${userId}`, 'YourAppName');
+        const totp = createTOTP(base32Secret, `user-${userId}`, 'Growfy');
         const otpauthUrl = totp.toString();
 
 

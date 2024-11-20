@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { Profile, User } from '@prisma/client';
+import { Member, Profile, TeamRole, User } from '@prisma/client';
 import { hashPassword, comparePasswords } from 'src/modules/auth/utils/crypt';
 import { generateAccessToken, generateRefreshToken } from 'src/modules/auth/utils/jwt';
 import { PrismaService } from 'src/core/prisma.service';
@@ -13,25 +13,40 @@ export class AuthService {
     private readonly twoFactorAuthService: TwoFactorAuthService
   ) { }
 
-  async register(data: RegisterDto): Promise<{ user: User; profile: Profile }> {
+  async register(data: RegisterDto): Promise<{ user: User; profile: Profile; member: Member }> {
     const newUser = await this.prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
+        phone: data.phone,
         password: await hashPassword(data.password),
       },
     });
 
-    const profile = await this.createProfile(data.name, newUser.id);
+    const profile = await this.createProfile(data.nameProfile, newUser.id);
+    const member = await this.createMember(newUser.id, profile.id, TeamRole.MANAGER);
 
-    return { user: newUser, profile };
+    return {
+      user: newUser,
+      profile,
+      member
+    }
   }
 
   async createProfile(name: string, userId: number) {
     return this.prisma.profile.create({
       data: {
-        name,
-        userId
+        name
+      }
+    })
+  }
+
+  async createMember(userId: number, profileId: number, Rol: TeamRole) {
+    return this.prisma.member.create({
+      data: {
+        userId,
+        profileId,
+        role: Rol
       }
     })
   }
