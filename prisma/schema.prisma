@@ -77,15 +77,17 @@ model Post {
     status     String?
     body       String?
     postTypeId Int?
-    taskId     Int?
+    taskId     Int       @unique
     postType   PostType? @relation(fields: [postTypeId], references: [id])
-    task       Task?     @relation(fields: [taskId], references: [id])
+    task       Task      @relation(fields: [taskId], references: [id])
 }
 
 model Task {
     id     Int    @id @default(autoincrement())
     status String
-    posts  Post[]
+    postId Int    @unique
+    unix   String
+    post   Post[]
 }
 
 model PostType {
