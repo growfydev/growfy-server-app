@@ -17,8 +17,23 @@ export class RegisterDto {
     password: string;
 
     @IsString()
+    @IsOptional()
+    nameProfile?: string;
+}
+
+export class CompleteRegistrationDto {
+    @IsString()
     @IsNotEmpty()
-    nameProfile: string;
+    name: string;
+
+    @IsString()
+    @MinLength(6)
+    password: string;
+
+    @IsString()
+    @IsOptional()
+    phone?: string;
+
 }
 
 export class AuthenticateDto {

@@ -6,6 +6,7 @@ export type Profile = {
 };
 
 export type UserRoles = {
+    userId: number;
     userRole: string;
     profiles: Profile[];
 };

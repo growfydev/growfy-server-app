@@ -23,6 +23,7 @@ import { WoocomerceModule } from '../modules/analytics/woocomerce/woocomerce.mod
 import { StripeModule } from '../modules/payments/stripe/stripe.module';
 
 import { MembersModule } from 'src/modules/members/members.module';
+import { ProfilesModule } from 'src/modules/profiles/profiles.module';
 
 export const Modules = [
   SetupModule,
@@ -50,4 +51,5 @@ export const Modules = [
   StripeModule,
 
   MembersModule,
+  ProfilesModule,
 ];
