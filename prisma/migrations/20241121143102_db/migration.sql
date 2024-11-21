@@ -7,6 +7,9 @@ CREATE TYPE "TeamRole" AS ENUM ('TEAM_OWNER', 'TEAM_MEMBER', 'ANALYST', 'EDITOR'
 -- CreateEnum
 CREATE TYPE "PermissionFlags" AS ENUM ('VIEW', 'VIEW_ANALYTICS', 'VIEW_INBOX', 'VIEW_PLANNER', 'VIEW_ADS', 'SMARTLINKS', 'EDIT', 'REPORTS', 'INBOX', 'ADS', 'HASHTAG_TRACKER', 'PLANNER', 'PLAN_AND_PUBLISH', 'PLAN_PENDING_REVIEW', 'REVIEW_POSTS', 'MANAGEMENT', 'BRAND');
 
+-- CreateEnum
+CREATE TYPE "GlobalStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'DELETED');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
@@ -19,6 +22,7 @@ CREATE TABLE "User" (
     "otpVerified" BOOLEAN NOT NULL DEFAULT false,
     "otpSecret" TEXT,
     "otpAuthURI" TEXT,
+    "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
 
@@ -31,6 +35,9 @@ CREATE TABLE "Member" (
     "userId" INTEGER NOT NULL,
     "profileId" INTEGER NOT NULL,
     "role" "TeamRole" NOT NULL DEFAULT 'TEAM_OWNER',
+    "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
 
     CONSTRAINT "Member_pkey" PRIMARY KEY ("id")
 );
@@ -39,6 +46,9 @@ CREATE TABLE "Member" (
 CREATE TABLE "Profile" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
 
     CONSTRAINT "Profile_pkey" PRIMARY KEY ("id")
 );
@@ -49,6 +59,9 @@ CREATE TABLE "Social" (
     "token" TEXT NOT NULL,
     "providerId" INTEGER NOT NULL,
     "profileId" INTEGER NOT NULL,
+    "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
 
     CONSTRAINT "Social_pkey" PRIMARY KEY ("id")
 );
@@ -57,6 +70,9 @@ CREATE TABLE "Social" (
 CREATE TABLE "Provider" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
 
     CONSTRAINT "Provider_pkey" PRIMARY KEY ("id")
 );
@@ -68,6 +84,9 @@ CREATE TABLE "Post" (
     "body" TEXT,
     "postTypeId" INTEGER,
     "taskId" INTEGER NOT NULL,
+    "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
 
     CONSTRAINT "Post_pkey" PRIMARY KEY ("id")
 );
@@ -76,8 +95,11 @@ CREATE TABLE "Post" (
 CREATE TABLE "Task" (
     "id" SERIAL NOT NULL,
     "status" TEXT NOT NULL,
-    "postId" INTEGER NOT NULL,
     "unix" TEXT NOT NULL,
+    "postId" INTEGER NOT NULL,
+    "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
 
     CONSTRAINT "Task_pkey" PRIMARY KEY ("id")
 );
@@ -86,6 +108,9 @@ CREATE TABLE "Task" (
 CREATE TABLE "PostType" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
 
     CONSTRAINT "PostType_pkey" PRIMARY KEY ("id")
 );
@@ -94,17 +119,11 @@ CREATE TABLE "PostType" (
 CREATE TABLE "Permission" (
     "id" SERIAL NOT NULL,
     "name" "PermissionFlags" NOT NULL,
+    "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
 
     CONSTRAINT "Permission_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "CoreRolePermission" (
-    "id" SERIAL NOT NULL,
-    "coreRole" "CoreRole" NOT NULL,
-    "permissionId" INTEGER NOT NULL,
-
-    CONSTRAINT "CoreRolePermission_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -112,6 +131,9 @@ CREATE TABLE "TeamRolePermission" (
     "id" SERIAL NOT NULL,
     "teamRole" "TeamRole" NOT NULL,
     "permissionId" INTEGER NOT NULL,
+    "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
 
     CONSTRAINT "TeamRolePermission_pkey" PRIMARY KEY ("id")
 );
@@ -130,9 +152,6 @@ CREATE UNIQUE INDEX "Task_postId_key" ON "Task"("postId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Permission_name_key" ON "Permission"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "CoreRolePermission_coreRole_permissionId_key" ON "CoreRolePermission"("coreRole", "permissionId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "TeamRolePermission_teamRole_permissionId_key" ON "TeamRolePermission"("teamRole", "permissionId");
@@ -154,9 +173,6 @@ ALTER TABLE "Post" ADD CONSTRAINT "Post_postTypeId_fkey" FOREIGN KEY ("postTypeI
 
 -- AddForeignKey
 ALTER TABLE "Post" ADD CONSTRAINT "Post_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "Task"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "CoreRolePermission" ADD CONSTRAINT "CoreRolePermission_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "Permission"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TeamRolePermission" ADD CONSTRAINT "TeamRolePermission_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "Permission"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
