@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { Member, Profile, TeamRole, User } from '@prisma/client';
+import { TeamRole, User } from '@prisma/client';
 import { hashPassword, comparePasswords } from 'src/modules/auth/utils/crypt';
 import { generateAccessToken, generateRefreshToken } from 'src/modules/auth/utils/jwt';
 import { PrismaService } from 'src/core/prisma.service';
@@ -23,22 +23,32 @@ export class AuthService {
       },
     });
 
-    const profile = await this.createProfile(data.nameProfile, newUser.id);
-    await this.createMember(newUser.id, profile.id, TeamRole.MANAGER);
 
-    const userWithDetails = await this.prisma.user.findUnique({
-      where: { id: newUser.id },
-      include: {
-        members: {
-          include: { profile: true },
+    let userWithDetails: User;
+
+    if (data.nameProfile) {
+      const profile = await this.createProfile(data.nameProfile);
+      await this.createMember(newUser.id, profile.id, TeamRole.MANAGER);
+
+      userWithDetails = await this.prisma.user.findUnique({
+        where: { id: newUser.id },
+        include: {
+          members: {
+            include: { profile: true },
+          },
         },
-      },
-    });
+      });
+    } else {
+      userWithDetails = await this.prisma.user.findUnique({
+        where: { id: newUser.id },
+      });
+    }
 
     return { user: userWithDetails };
   }
 
-  async createProfile(name: string, userId: number) {
+
+  async createProfile(name: string) {
     return this.prisma.profile.create({
       data: {
         name,
