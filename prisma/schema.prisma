@@ -43,90 +43,124 @@ enum PermissionFlags {
     BRAND
 }
 
+enum GlobalStatus {
+    ACTIVE
+    INACTIVE
+    DELETED
+}
+
 model User {
-    id          Int       @id @default(autoincrement())
-    name        String
-    email       String    @unique
-    password    String
-    phone       String?
-    role        CoreRole  @default(USER)
-    otpEnabled  Boolean   @default(false)
-    otpVerified Boolean   @default(false)
-    otpSecret   String?
-    otpAuthURI  String?
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime? @updatedAt
-    members     Member[]
+    id           Int          @id @default(autoincrement())
+    name         String
+    email        String       @unique
+    password     String
+    phone        String?
+    role         CoreRole     @default(USER)
+    otpEnabled   Boolean      @default(false)
+    otpVerified  Boolean      @default(false)
+    otpSecret    String?
+    otpAuthURI   String?
+    globalStatus GlobalStatus @default(ACTIVE)
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime?    @updatedAt
+    members      Member[]
 }
 
 model Member {
-    id        Int      @id @default(autoincrement())
-    userId    Int
-    profileId Int
-    role      TeamRole @default(TEAM_OWNER)
-    user      User     @relation(fields: [userId], references: [id])
-    profile   Profile  @relation(fields: [profileId], references: [id])
+    id           Int          @id @default(autoincrement())
+    userId       Int
+    profileId    Int
+    role         TeamRole     @default(TEAM_OWNER)
+    user         User         @relation(fields: [userId], references: [id])
+    profile      Profile      @relation(fields: [profileId], references: [id])
+    globalStatus GlobalStatus @default(ACTIVE)
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime?    @updatedAt
 
     @@unique([userId, profileId])
 }
 
 model Profile {
-    id      Int      @id @default(autoincrement())
-    name    String
-    members Member[]
-    socials Social[]
+    id           Int          @id @default(autoincrement())
+    name         String
+    members      Member[]
+    socials      Social[]
+    globalStatus GlobalStatus @default(ACTIVE)
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime?    @updatedAt
 }
 
 model Social {
-    id         Int      @id @default(autoincrement())
-    token      String
-    providerId Int
-    profileId  Int
-    provider   Provider @relation(fields: [providerId], references: [id])
-    profile    Profile  @relation(fields: [profileId], references: [id])
+    id           Int          @id @default(autoincrement())
+    token        String
+    providerId   Int
+    profileId    Int
+    provider     Provider     @relation(fields: [providerId], references: [id])
+    profile      Profile      @relation(fields: [profileId], references: [id])
+    globalStatus GlobalStatus @default(ACTIVE)
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime?    @updatedAt
 }
 
 model Provider {
-    id      Int      @id @default(autoincrement())
-    name    String
-    socials Social[]
+    id           Int          @id @default(autoincrement())
+    name         String
+    socials      Social[]
+    globalStatus GlobalStatus @default(ACTIVE)
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime?    @updatedAt
 }
 
 model Post {
-    id         Int       @id @default(autoincrement())
-    status     String?
-    body       String?
-    postTypeId Int?
-    taskId     Int       @unique
-    postType   PostType? @relation(fields: [postTypeId], references: [id])
-    task       Task      @relation(fields: [taskId], references: [id])
+    id           Int          @id @default(autoincrement())
+    status       String?
+    body         String?
+    postTypeId   Int?
+    taskId       Int          @unique
+    postType     PostType?    @relation(fields: [postTypeId], references: [id])
+    task         Task         @relation(fields: [taskId], references: [id])
+    globalStatus GlobalStatus @default(ACTIVE)
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime?    @updatedAt
 }
 
 model Task {
-    id     Int    @id @default(autoincrement())
-    status String
-    postId Int    @unique
-    unix   String
-    post   Post[]
+    id           Int          @id @default(autoincrement())
+    status       String
+    unix         String
+    postId       Int          @unique
+    posts        Post[]
+    globalStatus GlobalStatus @default(ACTIVE)
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime?    @updatedAt
 }
 
 model PostType {
-    id    Int    @id @default(autoincrement())
-    name  String
-    posts Post[]
+    id           Int          @id @default(autoincrement())
+    name         String
+    posts        Post[]
+    globalStatus GlobalStatus @default(ACTIVE)
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime?    @updatedAt
 }
 
 model Permission {
-    id        Int                  @id @default(autoincrement())
-    name      PermissionFlags      @unique
-    teamRoles TeamRolePermission[]
+    id           Int                  @id @default(autoincrement())
+    name         PermissionFlags      @unique
+    teamRoles    TeamRolePermission[]
+    globalStatus GlobalStatus         @default(ACTIVE)
+    createdAt    DateTime             @default(now())
+    updatedAt    DateTime?            @updatedAt
 }
 
 model TeamRolePermission {
-    id           Int        @id @default(autoincrement())
+    id           Int          @id @default(autoincrement())
     teamRole     TeamRole
-    permission   Permission @relation(fields: [permissionId], references: [id])
+    permission   Permission   @relation(fields: [permissionId], references: [id])
     permissionId Int
+    globalStatus GlobalStatus @default(ACTIVE)
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime?    @updatedAt
 
     @@unique([teamRole, permissionId])
 }
