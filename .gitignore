@@ -22,6 +22,7 @@ scrapper/zinsta/Lib
 
 # OS
 .DS_Store
+docker-compose.yml
 
 # Tests
 /coverage

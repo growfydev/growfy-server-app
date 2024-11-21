@@ -3,7 +3,7 @@ services:
     image: postgres:latest
     container_name: psql
     ports:
-      - "5431:5432"
+      - "5432:5432"
     environment:
       POSTGRES_USER: johndoe
       POSTGRES_PASSWORD: 12345
