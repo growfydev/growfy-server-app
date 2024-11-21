@@ -3,6 +3,10 @@ import { StripeCoreModule } from './core.module';
 import { configLoader } from 'src/lib/config.loader';
 
 @Module({
-    imports: [StripeCoreModule.forRoot(configLoader().stripe.key, { apiVersion: '2024-10-28.acacia' })]
+  imports: [
+    StripeCoreModule.forRoot(configLoader().stripe.key, {
+      apiVersion: '2024-11-20.acacia',
+    }),
+  ],
 })
-export class StripeModule { }
+export class StripeModule {}

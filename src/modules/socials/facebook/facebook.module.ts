@@ -1,9 +1,10 @@
-import { Module } from '@nestjs/common';
-import { FacebookController } from './facebook.controller';
+import { forwardRef, Module } from '@nestjs/common';
 import { FacebookService } from './facebook.service';
+import { SocialsModule } from '../socials.module';
 
 @Module({
-  controllers: [FacebookController],
-  providers: [FacebookService]
+  imports: [forwardRef(() => SocialsModule)],
+  providers: [FacebookService],
+  exports: [FacebookService],
 })
 export class FacebookModule {}
