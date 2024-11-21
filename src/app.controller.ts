@@ -1,6 +1,8 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { Auth } from 'src/modules/auth/decorators/auth.decorator';
 import { CoreRole, PermissionFlags } from '@prisma/client';
+import { UserRoles } from './modules/auth/types/roles';
+import { ActiveUser } from './modules/auth/decorators/session.decorator';
 
 @Controller()
 export class AppController {
@@ -9,8 +11,11 @@ export class AppController {
      */
     @Get('view/:profileId')
     @Auth([CoreRole.USER], [PermissionFlags.VIEW]) // Requires `USER` role and `VIEW` permission for the profile
-    async viewResource(@Param('profileId') profileId: number) {
-        return { message: `You have access to view resources for profile ${profileId}.` };
+    async viewResource(@ActiveUser() user: UserRoles, @Param('profileId') profileId: number) {
+        return {
+            message: `You have access to view resources for profile ${profileId}.`,
+            user,
+        };
     }
 
     /**

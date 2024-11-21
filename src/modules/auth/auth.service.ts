@@ -1,9 +1,9 @@
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { Member, Profile, TeamRole, User } from '@prisma/client';
+import { GlobalStatus, TeamRole, User } from '@prisma/client';
 import { hashPassword, comparePasswords } from 'src/modules/auth/utils/crypt';
 import { generateAccessToken, generateRefreshToken } from 'src/modules/auth/utils/jwt';
 import { PrismaService } from 'src/core/prisma.service';
-import { AuthenticateDto, RegisterDto, TokensDto } from './types/dto';
+import { AuthenticateDto, CompleteRegistrationDto, RegisterDto, TokensDto } from './types/dto';
 import { TwoFactorAuthService } from './two-factor-auth.service';
 
 @Injectable()
@@ -23,22 +23,54 @@ export class AuthService {
       },
     });
 
-    const profile = await this.createProfile(data.nameProfile, newUser.id);
-    await this.createMember(newUser.id, profile.id, TeamRole.MANAGER);
 
-    const userWithDetails = await this.prisma.user.findUnique({
-      where: { id: newUser.id },
-      include: {
-        members: {
-          include: { profile: true },
+    let userWithDetails: User;
+
+    if (data.nameProfile) {
+      const profile = await this.createProfile(data.nameProfile);
+      await this.createMember(newUser.id, profile.id, TeamRole.MANAGER);
+
+      userWithDetails = await this.prisma.user.findUnique({
+        where: { id: newUser.id },
+        include: {
+          members: {
+            include: { profile: true },
+          },
         },
-      },
-    });
+      });
+    } else {
+      userWithDetails = await this.prisma.user.findUnique({
+        where: { id: newUser.id },
+      });
+    }
 
     return { user: userWithDetails };
   }
 
-  async createProfile(name: string, userId: number) {
+  async completeRegistration(email: string, dto: CompleteRegistrationDto): Promise<{ user: User }> {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user || user.globalStatus !== GlobalStatus.INACTIVE) {
+      throw new BadRequestException('No se encontró un usuario pendiente de activación.');
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { email },
+      data: {
+        name: dto.name,
+        phone: dto.phone,
+        password: await hashPassword(dto.password),
+        globalStatus: GlobalStatus.ACTIVE,
+      },
+    });
+
+    return { user: updatedUser };
+  }
+
+
+  async createProfile(name: string) {
     return this.prisma.profile.create({
       data: {
         name,

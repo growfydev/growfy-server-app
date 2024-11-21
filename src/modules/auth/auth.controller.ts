@@ -1,6 +1,6 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Param, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthenticateDto, RegisterDto, Enable2FADto, Verify2FADto, TokensDto } from './types/dto';
+import { AuthenticateDto, RegisterDto, Enable2FADto, Verify2FADto, TokensDto, CompleteRegistrationDto } from './types/dto';
 import { TwoFactorAuthService } from './two-factor-auth.service';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
 
@@ -15,6 +15,15 @@ export class AuthController {
     @ResponseMessage('User registered successfully')
     register(@Body() registerDto: RegisterDto) {
         return this.authService.register(registerDto);
+    }
+
+    @Post('complete-registration/:email')
+    @ResponseMessage('User registration completed successfully')
+    async completeRegistration(
+        @Param('email') email: string,
+        @Body() dto: CompleteRegistrationDto,
+    ) {
+        return this.authService.completeRegistration(email, dto);
     }
 
     @Post('login')
