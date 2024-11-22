@@ -10,7 +10,7 @@ import { UserRoles } from '../auth/types/roles';
 export class ProfilesService {
   constructor(private readonly prisma: PrismaService) { }
 
-  async create(createProfileDto: CreateProfileDto): Promise<{ profile: Profile }> {
+  async create(userId: number, createProfileDto: CreateProfileDto): Promise<{ profile: Profile }> {
     const { name } = createProfileDto;
 
     if (!name) {
@@ -18,8 +18,16 @@ export class ProfilesService {
     }
 
     const profile = await this.prisma.profile.create({
-      data: { name },
+      data: { name, userId },
     });
+
+    await this.prisma.member.create({
+      data: {
+        userId,
+        profileId: profile.id,
+        role: TeamRole.MANAGER,
+      },
+    })
 
     return { profile };
   }
