@@ -136,7 +136,7 @@ export class ProfilesService {
 
       // Opcional: Enviar correo de invitación
       console.log(`Invitation email sent to ${email}`);
-      console.log(`Invitation link: ${configLoader().client_url}/auth/complete-registration/?email=${email}`);
+      console.log(`Invitation link: ${configLoader().client_url}/complete-registration/?email=${email}`);
     }
 
     const isAlreadyMember = await this.prisma.member.findFirst({
