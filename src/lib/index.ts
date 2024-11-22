@@ -1,5 +1,5 @@
 import { ThreadsModule } from '../modules/socials/threads/threads.module';
-import { SetupModule } from './setup.module';
+import { SetupModule } from '../modules/config/setup.module';
 import { AuthModule } from '../modules/auth/auth.module';
 import { InstagramModule } from '../modules/socials/instagram/instagram.module';
 import { FacebookModule } from '../modules/socials/facebook/facebook.module';
@@ -21,7 +21,7 @@ import { CanvasModule } from '../modules/socials/canvas/canvas.module';
 import { ShopifyModule } from '../modules/analytics/shopify/shopify.module';
 import { WoocomerceModule } from '../modules/analytics/woocomerce/woocomerce.module';
 import { StripeModule } from '../modules/payments/stripe/stripe.module';
-
+import { TaskModule } from 'src/modules/tasks/tasks.module';
 import { MembersModule } from 'src/modules/members/members.module';
 import { ProfilesModule } from 'src/modules/profiles/profiles.module';
 
@@ -49,7 +49,7 @@ export const Modules = [
   ShopifyModule,
   WoocomerceModule,
   StripeModule,
-
+  TaskModule,
   MembersModule,
   ProfilesModule,
 ];
