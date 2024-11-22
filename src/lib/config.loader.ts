@@ -4,6 +4,7 @@ export const configLoader: () => Config = (): Config => {
   return {
     port: process.env.PORT,
     database: process.env.DATABASE_URL,
+    client_url: process.env.CLIENT_URL,
     jwt: {
       secret_key: process.env.JWT_SECRET,
       refresh_key: process.env.REFRESH_SECRET_KEY

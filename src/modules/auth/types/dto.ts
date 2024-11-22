@@ -64,10 +64,6 @@ export class Enable2FADto {
 }
 
 export class Verify2FADto {
-    @IsNumber()
-    @IsNotEmpty()
-    userId: number;
-
     @IsString()
     @IsNotEmpty()
     token: string;

@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Header, Headers, Param, Post } from '@nestjs/common';
+import { AuthService } from './auth.service';
 import { AuthenticateDto, RegisterDto, Enable2FADto, Verify2FADto, TokensDto, CompleteRegistrationDto } from './types/dto';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
 import { ActiveUser } from './decorators/session.decorator';
@@ -44,9 +45,10 @@ export class AuthController {
     }
 
     @Post('otp/enable')
+    @Auth([CoreRole.USER, CoreRole.ADMIN])
     @ResponseMessage('2FA enabled successfully')
-    async enable2FA(@Body() dto: Enable2FADto) {
-        const { qrCodeUrl, base32 } = await this.twoFactorAuthService.enable2FA(dto.userId);
+    async enable2FA(@ActiveUser() user: UserRoles) {
+        const { qrCodeUrl, base32 } = await this.twoFactorAuthService.enable2FA(user.userId);
 
         return {
             qrCodeUrl,
@@ -55,9 +57,10 @@ export class AuthController {
     }
 
     @Post('otp/verify')
+    @Auth([CoreRole.USER, CoreRole.ADMIN])
     @ResponseMessage('OTP verification process completed')
-    async verify2FA(@Body() dto: Verify2FADto) {
-        const isVerified = await this.twoFactorAuthService.verify2FAToken(dto.userId, dto.token);
+    async verify2FA(@ActiveUser() user: UserRoles, @Body() dto: Verify2FADto) {
+        const isVerified = await this.twoFactorAuthService.verify2FAToken(user.userId, dto.token);
 
         return { isVerified };
     }

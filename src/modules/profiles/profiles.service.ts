@@ -4,7 +4,7 @@ import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { Profile, GlobalStatus, CoreRole, TeamRole, Member, User } from '@prisma/client';
 import { InviteUserDto } from './dto/invite-user.dto';
-import { UserRoles } from '../auth/types/roles';
+import { configLoader } from 'src/lib/config.loader';
 
 @Injectable()
 export class ProfilesService {
@@ -135,7 +135,8 @@ export class ProfilesService {
       });
 
       // Opcional: Enviar correo de invitación
-      // this.emailService.sendInvitationEmail(invitedUser.email, profileId);
+      console.log(`Invitation email sent to ${email}`);
+      console.log(`Invitation link: ${configLoader().client_url}/complete-registration/?email=${email}`);
     }
 
     const isAlreadyMember = await this.prisma.member.findFirst({
