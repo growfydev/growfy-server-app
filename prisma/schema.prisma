@@ -120,11 +120,10 @@ model Post {
     id           Int          @id @default(autoincrement())
     status       String?
     postTypeId   Int?
-    taskId       Int?
     profileId    Int
     postType     PostType?    @relation(fields: [postTypeId], references: [id])
-    task         Task?        @relation(fields: [taskId], references: [id])
     profile      Profile      @relation(fields: [profileId], references: [id])
+    task         Task?
     globalStatus GlobalStatus @default(ACTIVE)
     createdAt    DateTime     @default(now())
     updatedAt    DateTime?    @updatedAt
@@ -135,7 +134,7 @@ model Task {
     status       String
     unix         Int
     postId       Int          @unique
-    posts        Post[]
+    post         Post         @relation(fields: [postId], references: [id])
     globalStatus GlobalStatus @default(ACTIVE)
     createdAt    DateTime     @default(now())
     updatedAt    DateTime?    @updatedAt
