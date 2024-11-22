@@ -1,8 +1,12 @@
-import { Body, Controller, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthenticateDto, RegisterDto, Enable2FADto, Verify2FADto, TokensDto, CompleteRegistrationDto } from './types/dto';
 import { TwoFactorAuthService } from './two-factor-auth.service';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
+import { ActiveUser } from './decorators/session.decorator';
+import { UserRoles } from './types/roles';
+import { Auth } from './decorators/auth.decorator';
+import { CoreRole } from '@prisma/client';
 
 @Controller('auth')
 export class AuthController {
@@ -30,6 +34,13 @@ export class AuthController {
     @ResponseMessage('User logged in successfully')
     async login(@Body() authenticateDto: AuthenticateDto): Promise<TokensDto> {
         return this.authService.authenticate(authenticateDto);
+    }
+
+    @Get('me')
+    @Auth([CoreRole.USER, CoreRole.ADMIN])
+    @ResponseMessage('User details retrieved successfully')
+    async me(@ActiveUser() user: UserRoles) {
+        return this.authService.getProfile(user.userId);
     }
 
     @Post('otp/enable')

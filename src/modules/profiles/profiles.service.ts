@@ -10,7 +10,7 @@ import { UserRoles } from '../auth/types/roles';
 export class ProfilesService {
   constructor(private readonly prisma: PrismaService) { }
 
-  async create(createProfileDto: CreateProfileDto): Promise<{ profile: Profile }> {
+  async create(userId: number, createProfileDto: CreateProfileDto): Promise<{ profile: Profile }> {
     const { name } = createProfileDto;
 
     if (!name) {
@@ -18,8 +18,16 @@ export class ProfilesService {
     }
 
     const profile = await this.prisma.profile.create({
-      data: { name },
+      data: { name, userId },
     });
+
+    await this.prisma.member.create({
+      data: {
+        userId,
+        profileId: profile.id,
+        role: TeamRole.MANAGER,
+      },
+    })
 
     return { profile };
   }
@@ -105,7 +113,11 @@ export class ProfilesService {
   }
 
   async inviteUser(inviteUserDto: InviteUserDto): Promise<{ member: Member }> {
-    const { email, profileId } = inviteUserDto;
+    const { email, profileId, role } = inviteUserDto;
+
+    if (!Object.values(TeamRole).includes(role)) {
+      throw new BadRequestException('Invalid role');
+    }
 
     let invitedUser = await this.prisma.user.findUnique({
       where: { email },
@@ -141,7 +153,7 @@ export class ProfilesService {
       data: {
         userId: invitedUser.id,
         profileId,
-        role: TeamRole.TEAM_MEMBER,
+        role: role,
         globalStatus: GlobalStatus.ACTIVE,
       },
     })

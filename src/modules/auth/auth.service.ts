@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { GlobalStatus, TeamRole, User } from '@prisma/client';
 import { hashPassword, comparePasswords } from 'src/modules/auth/utils/crypt';
 import { generateAccessToken, generateRefreshToken } from 'src/modules/auth/utils/jwt';
@@ -27,7 +27,7 @@ export class AuthService {
     let userWithDetails: User;
 
     if (data.nameProfile) {
-      const profile = await this.createProfile(data.nameProfile);
+      const profile = await this.createProfile(data.nameProfile, newUser.id);
       await this.createMember(newUser.id, profile.id, TeamRole.MANAGER);
 
       userWithDetails = await this.prisma.user.findUnique({
@@ -70,10 +70,11 @@ export class AuthService {
   }
 
 
-  async createProfile(name: string) {
+  async createProfile(name: string, userId: number) {
     return this.prisma.profile.create({
       data: {
         name,
+        userId,
       },
     });
   }
@@ -156,5 +157,22 @@ export class AuthService {
     const refreshToken = generateRefreshToken(user.id);
 
     return { accessToken, refreshToken };
+  }
+
+  async getProfile(userId: number): Promise<{ user: User }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        members: {
+          include: { profile: true },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return { user: user };
   }
 }

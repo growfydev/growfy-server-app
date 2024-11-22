@@ -64,6 +64,7 @@ model User {
     createdAt    DateTime     @default(now())
     updatedAt    DateTime?    @updatedAt
     members      Member[]
+    profiles     Profile[]
 }
 
 model Member {
@@ -83,11 +84,13 @@ model Member {
 model Profile {
     id           Int          @id @default(autoincrement())
     name         String
+    userId       Int
     members      Member[]
     socials      Social[]
     globalStatus GlobalStatus @default(ACTIVE)
     createdAt    DateTime     @default(now())
     updatedAt    DateTime?    @updatedAt
+    User         User         @relation(fields: [userId], references: [id])
 }
 
 model Social {

@@ -1,20 +1,23 @@
 import { Auth } from '../auth/decorators/auth.decorator';
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, ParseIntPipe } from '@nestjs/common';
 import { CoreRole, PermissionFlags } from '@prisma/client';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { ProfilesService } from './profiles.service';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ActiveUser } from '../auth/decorators/session.decorator';
+import { UserRoles } from '../auth/types/roles';
 
 @Controller('profiles')
 export class ProfilesController {
   constructor(private readonly profilesService: ProfilesService) { }
 
   @Post()
+  @Auth([CoreRole.USER])
   @ResponseMessage('Profile created successfully')
-  create(@Body() createProfileDto: CreateProfileDto) {
-    return this.profilesService.create(createProfileDto);
+  create(@ActiveUser() user: UserRoles, @Body() createProfileDto: CreateProfileDto) {
+    return this.profilesService.create(user.userId, createProfileDto);
   }
 
   @Get()
@@ -54,10 +57,14 @@ export class ProfilesController {
   }
 
 
-  @Post('invite')
+  @Post(':profileId/invite')
   @Auth([CoreRole.USER], [PermissionFlags.MANAGEMENT])
   @ResponseMessage('User invited successfully')
-  async inviteUser(@Body() inviteUserDto: InviteUserDto) {
-    return this.profilesService.inviteUser(inviteUserDto);
+  async inviteUser(
+    @Param('profileId', ParseIntPipe) profileId: number,
+    @Body() inviteUserDto: InviteUserDto,
+  ) {
+    return this.profilesService.inviteUser({ ...inviteUserDto, profileId });
   }
+
 }
