@@ -31,7 +31,7 @@ export type UserType = {
     profiles: Profile[];
 }
 
-export type UserActiveInterfaceType = UserActiveInterface;
+export type UserActiveType = UserActiveInterface;
 export type JwtPayloadType = JwtPayload;
 export type ProfileType = Profile;
 export type RequestDataType = RequestData;
