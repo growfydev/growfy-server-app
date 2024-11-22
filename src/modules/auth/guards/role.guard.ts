@@ -39,6 +39,12 @@ export class RolesGuard implements CanActivate {
             return true;
         }
 
+        if (!requiredPermissions?.length) {
+            const userRoleMatches = this.hasMatchingRoles(requiredRoles, userRoles, null);
+            this.logger.debug('Access Granted (no profile check):', userRoleMatches);
+            return userRoleMatches;
+        }
+
         const profileId = Number(params?.profileId);
         if (isNaN(profileId)) {
             this.logger.warn('Invalid or missing profile ID. Access denied.');
@@ -75,9 +81,12 @@ export class RolesGuard implements CanActivate {
  * @param {Profile} profile - The profile being checked for role access.
  * @returns {boolean} - Returns `true` if any of the required roles match the user's roles or the profile's member role, otherwise `false`.
  */
-    private hasMatchingRoles(requiredRoles: CoreRole[], userRoles: UserRoles, profile: Profile): boolean {
+    private hasMatchingRoles(requiredRoles: CoreRole[], userRoles: UserRoles, profile: Profile | null): boolean {
         if (!requiredRoles?.length) return true;
-        return requiredRoles.includes(userRoles.userRole as CoreRole) || requiredRoles.includes(profile.memberRole as CoreRole);
+        return (
+            requiredRoles.includes(userRoles.userRole as CoreRole) ||
+            (profile?.memberRole && requiredRoles.includes(profile.memberRole as CoreRole))
+        );
     }
 
     /**
