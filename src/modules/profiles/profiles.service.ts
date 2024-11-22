@@ -105,7 +105,11 @@ export class ProfilesService {
   }
 
   async inviteUser(inviteUserDto: InviteUserDto): Promise<{ member: Member }> {
-    const { email, profileId } = inviteUserDto;
+    const { email, profileId, role } = inviteUserDto;
+
+    if (!Object.values(TeamRole).includes(role)) {
+      throw new BadRequestException('Invalid role');
+    }
 
     let invitedUser = await this.prisma.user.findUnique({
       where: { email },
@@ -141,7 +145,7 @@ export class ProfilesService {
       data: {
         userId: invitedUser.id,
         profileId,
-        role: TeamRole.TEAM_MEMBER,
+        role: role,
         globalStatus: GlobalStatus.ACTIVE,
       },
     })
