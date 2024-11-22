@@ -3,9 +3,15 @@ import { Job } from 'bull';
 
 @Processor('taskQueue')
 export class TaskConsumer {
-    @Process('executeOnce')
-    async handleExecuteOnce(job: Job) {
-        const { message } = job.data;
-        console.log(`Executed succesfully: ${message}`);
+    @Process('*') // Generic handler for any task
+    async handleTask(job: Job) {
+        const { taskName, ...taskData } = job.data;
+
+        console.log(`Executing task "${job.name}" with data:`, taskData);
+
+        // Add specific task handlers if needed
+        if (job.name === 'executeOnce') {
+            console.log(`Task-specific logic: ${taskData.message}`);
+        }
     }
 }
