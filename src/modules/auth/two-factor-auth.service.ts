@@ -12,9 +12,9 @@ export class TwoFactorAuthService {
      * @returns URL del código QR y el secreto base32.
      */
 
-    async generateTwoFASecret(userId: number): Promise<{ qrCodeUrl: string; base32: string }> {
+    async generateTwoFASecret(userId: number, userName: string): Promise<{ qrCodeUrl: string; base32: string }> {
         const base32Secret = generateRandomBase32();
-        const totp = createTOTP(base32Secret, `user-${userId}`, 'Growfy');
+        const totp = createTOTP(base32Secret, `user-${userId}-${userName}`, 'Growfy');
         const otpauthUrl = totp.toString();
 
 
@@ -82,7 +82,7 @@ export class TwoFactorAuthService {
         if (user?.otpEnabled) {
             throw new BadRequestException('2FA is already enabled for this user');
         }
-        return this.generateTwoFASecret(userId);
+        return this.generateTwoFASecret(userId, user.name);
     }
 }
 
