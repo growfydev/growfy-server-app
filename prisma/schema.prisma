@@ -133,7 +133,7 @@ model Post {
 model Task {
     id           Int          @id @default(autoincrement())
     status       String
-    unix         String
+    unix         Int
     postId       Int          @unique
     posts        Post[]
     globalStatus GlobalStatus @default(ACTIVE)
