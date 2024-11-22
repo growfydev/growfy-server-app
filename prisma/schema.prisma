@@ -119,7 +119,6 @@ model Provider {
 model Post {
     id           Int          @id @default(autoincrement())
     status       String?
-    body         String?
     postTypeId   Int?
     taskId       Int?
     profileId    Int
