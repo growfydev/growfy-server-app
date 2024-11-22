@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { GlobalStatus, TeamRole, User } from '@prisma/client';
 import { hashPassword, comparePasswords } from 'src/modules/auth/utils/crypt';
 import { generateAccessToken, generateRefreshToken } from 'src/modules/auth/utils/jwt';
@@ -168,6 +168,10 @@ export class AuthService {
         },
       },
     });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
 
     return { user: user };
   }
