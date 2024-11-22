@@ -32,7 +32,7 @@ export class TaskProducer {
         const task = await this.prisma.task.create({
             data: {
                 status: 'SCHEDULED',
-                unix: unixTimestamp.toString(),
+                unix: unixTimestamp,
                 postId: postId,
             },
         });
