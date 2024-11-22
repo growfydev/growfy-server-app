@@ -87,6 +87,7 @@ model Profile {
     userId       Int
     members      Member[]
     socials      Social[]
+    posts        Post[]
     globalStatus GlobalStatus @default(ACTIVE)
     createdAt    DateTime     @default(now())
     updatedAt    DateTime?    @updatedAt
@@ -106,22 +107,24 @@ model Social {
 }
 
 model Provider {
-    id           Int          @id @default(autoincrement())
-    name         String
-    socials      Social[]
-    globalStatus GlobalStatus @default(ACTIVE)
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime?    @updatedAt
+    id               Int                @id @default(autoincrement())
+    name             String
+    socials          Social[]
+    globalStatus     GlobalStatus       @default(ACTIVE)
+    createdAt        DateTime           @default(now())
+    updatedAt        DateTime?          @updatedAt
+    ProviderPostType ProviderPostType[]
 }
 
 model Post {
     id           Int          @id @default(autoincrement())
     status       String?
-    body         String?
     postTypeId   Int?
-    taskId       Int          @unique
+    taskId       Int?
+    profileId    Int
     postType     PostType?    @relation(fields: [postTypeId], references: [id])
-    task         Task         @relation(fields: [taskId], references: [id])
+    task         Task?        @relation(fields: [taskId], references: [id])
+    profile      Profile      @relation(fields: [profileId], references: [id])
     globalStatus GlobalStatus @default(ACTIVE)
     createdAt    DateTime     @default(now())
     updatedAt    DateTime?    @updatedAt
@@ -141,10 +144,21 @@ model Task {
 model PostType {
     id           Int          @id @default(autoincrement())
     name         String
+    fields       Json
     posts        Post[]
     globalStatus GlobalStatus @default(ACTIVE)
     createdAt    DateTime     @default(now())
     updatedAt    DateTime?    @updatedAt
+
+    ProviderPostType ProviderPostType[]
+}
+
+model ProviderPostType {
+    id         Int      @id @default(autoincrement())
+    providerId Int      @unique
+    posttypeId Int      @unique
+    provider   Provider @relation(fields: [providerId], references: [id])
+    posttype   PostType @relation(fields: [posttypeId], references: [id])
 }
 
 model Permission {

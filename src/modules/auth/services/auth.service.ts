@@ -3,7 +3,7 @@ import { GlobalStatus, TeamRole, User } from '@prisma/client';
 import { hashPassword, comparePasswords } from 'src/modules/auth/utils/crypt';
 import { generateAccessToken, generateRefreshToken } from 'src/modules/auth/utils/jwt';
 import { PrismaService } from 'src/core/prisma.service';
-import { AuthenticateDto, CompleteRegistrationDto, RegisterDto, TokensDto } from './types/dto';
+import { RegisterDto, CompleteRegistrationDto, AuthenticateDto, TokensDto } from '../types/dto';
 import { TwoFactorAuthService } from './two-factor-auth.service';
 
 @Injectable()

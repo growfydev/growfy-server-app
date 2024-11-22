@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/core/prisma.service';
-import { generateRandomBase32 } from './utils/crypt';
-import { createTOTP, generateQRCodeUrl } from './utils/2fa';
+import { createTOTP, generateQRCodeUrl } from '../utils/2fa';
+import { generateRandomBase32 } from '../utils/crypt';
 
 @Injectable()
 export class TwoFactorAuthService {
