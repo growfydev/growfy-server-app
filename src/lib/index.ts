@@ -22,7 +22,6 @@ import { ShopifyModule } from '../modules/analytics/shopify/shopify.module';
 import { WoocomerceModule } from '../modules/analytics/woocomerce/woocomerce.module';
 import { StripeModule } from '../modules/payments/stripe/stripe.module';
 import { TaskModule } from 'src/modules/tasks/tasks.module';
-import { MembersModule } from 'src/modules/members/members.module';
 import { ProfilesModule } from 'src/modules/profiles/profiles.module';
 
 export const Modules = [
@@ -50,6 +49,5 @@ export const Modules = [
   WoocomerceModule,
   StripeModule,
   TaskModule,
-  MembersModule,
   ProfilesModule,
 ];
