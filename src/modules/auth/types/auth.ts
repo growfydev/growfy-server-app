@@ -11,7 +11,6 @@ interface JwtPayload {
 interface UserActiveInterface {
     id: number;
     role: string;
-    email?: string;
 }
 
 interface Profile {
@@ -26,9 +25,9 @@ interface RequestData {
     body: Record<string, any>;
 }
 
-export type UserRolesType = {
-    userId: number;
-    userRole: string;
+export type UserType = {
+    id: number;
+    role: string;
     profiles: Profile[];
 }
 

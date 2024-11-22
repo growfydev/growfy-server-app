@@ -6,7 +6,7 @@ import { Auth } from './decorators/auth.decorator';
 import { CoreRole } from '@prisma/client';
 import { TwoFactorAuthService } from './services/two-factor-auth.service';
 import { AuthService } from './services/auth.service';
-import { UserRolesType } from './types/auth';
+import { UserType } from './types/auth';
 
 @Controller('auth')
 export class AuthController {
@@ -39,15 +39,15 @@ export class AuthController {
     @Get('me')
     @Auth([CoreRole.USER, CoreRole.ADMIN])
     @ResponseMessage('User details retrieved successfully')
-    async me(@ActiveUser() user: UserRolesType) {
-        return this.authService.getProfile(user.userId);
+    async me(@ActiveUser() user: UserType) {
+        return this.authService.getProfile(user.id);
     }
 
     @Post('otp/enable')
     @Auth([CoreRole.USER, CoreRole.ADMIN])
     @ResponseMessage('2FA enabled successfully')
-    async enable2FA(@ActiveUser() user: UserRolesType) {
-        const { qrCodeUrl, base32 } = await this.twoFactorAuthService.enable2FA(user.userId);
+    async enable2FA(@ActiveUser() user: UserType) {
+        const { qrCodeUrl, base32 } = await this.twoFactorAuthService.enable2FA(user.id);
 
         return {
             qrCodeUrl,
@@ -58,8 +58,8 @@ export class AuthController {
     @Post('otp/verify')
     @Auth([CoreRole.USER, CoreRole.ADMIN])
     @ResponseMessage('OTP verification process completed')
-    async verify2FA(@ActiveUser() user: UserRolesType, @Body() dto: Verify2FADto) {
-        const isVerified = await this.twoFactorAuthService.verify2FAToken(user.userId, dto.token);
+    async verify2FA(@ActiveUser() user: UserType, @Body() dto: Verify2FADto) {
+        const isVerified = await this.twoFactorAuthService.verify2FAToken(user.id, dto.token);
 
         return { isVerified };
     }

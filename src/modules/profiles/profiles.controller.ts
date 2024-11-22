@@ -7,7 +7,7 @@ import { ProfilesService } from './profiles.service';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ActiveUser } from '../auth/decorators/session.decorator';
-import { UserRolesType } from '../auth/types/auth';
+import { UserType } from '../auth/types/auth';
 
 @Controller('profiles')
 export class ProfilesController {
@@ -16,8 +16,8 @@ export class ProfilesController {
   @Post()
   @Auth([CoreRole.USER])
   @ResponseMessage('Profile created successfully')
-  create(@ActiveUser() user: UserRolesType, @Body() createProfileDto: CreateProfileDto) {
-    return this.profilesService.create(user.userId, createProfileDto);
+  create(@ActiveUser() user: UserType, @Body() createProfileDto: CreateProfileDto) {
+    return this.profilesService.create(user.id, createProfileDto);
   }
 
   @Get()
