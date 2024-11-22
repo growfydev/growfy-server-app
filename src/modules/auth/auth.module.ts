@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/core/prisma.service';
-import { TwoFactorAuthService } from './two-factor-auth.service';
 import { configLoader } from 'src/lib/config.loader';
+import { AuthService } from './services/auth.service';
+import { TwoFactorAuthService } from './services/two-factor-auth.service';
+import { RolesGuardService } from './services/roles-guard.service';
 
 @Module({
   imports: [
@@ -21,9 +22,10 @@ import { configLoader } from 'src/lib/config.loader';
   providers: [
     AuthService,
     PrismaService,
-    TwoFactorAuthService
-    ],
+    TwoFactorAuthService,
+    RolesGuardService,
+  ],
   controllers: [AuthController],
-  exports: [AuthService]
+  exports: [AuthService, RolesGuardService]
 })
 export class AuthModule { }

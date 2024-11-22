@@ -1,12 +1,12 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { AuthService } from './auth.service';
 import { AuthenticateDto, RegisterDto, Enable2FADto, Verify2FADto, TokensDto, CompleteRegistrationDto } from './types/dto';
-import { TwoFactorAuthService } from './two-factor-auth.service';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
 import { ActiveUser } from './decorators/session.decorator';
 import { UserRoles } from './types/roles';
 import { Auth } from './decorators/auth.decorator';
 import { CoreRole } from '@prisma/client';
+import { AuthService } from './services/auth.service';
+import { TwoFactorAuthService } from './services/two-factor-auth.service';
 
 @Controller('auth')
 export class AuthController {

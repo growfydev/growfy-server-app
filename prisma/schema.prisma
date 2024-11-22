@@ -87,6 +87,7 @@ model Profile {
     userId       Int
     members      Member[]
     socials      Social[]
+    posts        Post[]
     globalStatus GlobalStatus @default(ACTIVE)
     createdAt    DateTime     @default(now())
     updatedAt    DateTime?    @updatedAt
@@ -119,9 +120,11 @@ model Post {
     status       String?
     body         String?
     postTypeId   Int?
-    taskId       Int          @unique
+    taskId       Int?
+    profileId    Int
     postType     PostType?    @relation(fields: [postTypeId], references: [id])
-    task         Task         @relation(fields: [taskId], references: [id])
+    task         Task?        @relation(fields: [taskId], references: [id])
+    profile      Profile      @relation(fields: [profileId], references: [id])
     globalStatus GlobalStatus @default(ACTIVE)
     createdAt    DateTime     @default(now())
     updatedAt    DateTime?    @updatedAt
