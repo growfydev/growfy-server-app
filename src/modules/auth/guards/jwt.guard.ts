@@ -9,7 +9,7 @@ import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { configLoader } from 'src/lib/config.loader';
-import { JwtPayload } from '../types/jwt';
+import { JwtPayloadType } from '../types/auth'; // Updated to use the new type
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -36,9 +36,9 @@ export class AuthGuard implements CanActivate {
 
     try {
       const secret = configLoader().jwt.secret_key;
-      const payload: JwtPayload = await this.jwtService.verifyAsync(token, { secret });
-      request.user = payload;
-    } catch {
+      const payload: JwtPayloadType = await this.jwtService.verifyAsync<JwtPayloadType>(token, { secret });
+      request.user = payload.user;
+    } catch (error) {
       throw new UnauthorizedException('Invalid token');
     }
 

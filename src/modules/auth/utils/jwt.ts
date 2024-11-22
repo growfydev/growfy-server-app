@@ -11,19 +11,15 @@ const REFRESH_SECRET_KEY = configLoader().jwt.refresh_key;
  * @returns Signed JWT access token
  */
 export function generateAccessToken(
-  userId: number,
-  userRoles: {
-    userRole: string;
-    profiles: { profileId: number; profileName: string; memberRole: string; permissions: string[] }[];
+  user: {
+    id: number;
+    role: string;
+    profiles: { id: number; roles: string; permissions: string[] }[];
   }
 ): string {
   return jwt.sign(
     {
-      userId,
-      userRoles: {
-        userRole: userRoles.userRole,
-        profiles: userRoles.profiles,
-      },
+      user,
     },
     SECRET_KEY,
     { expiresIn: '1h' }

@@ -148,16 +148,22 @@ export class AuthService {
       })
     );
 
-    const userRoles = {
-      userRole: user.role,
-      profiles: profilePermissions,
+    const JwtPayload = {
+      id: user.id,
+      role: user.role as string,
+      profiles: profilePermissions.map((profile) => ({
+        id: profile.profileId,
+        roles: profile.memberRole as string,
+        permissions: profile.permissions.map(String),
+      })),
     };
 
-    const accessToken = generateAccessToken(user.id, userRoles);
+    const accessToken = generateAccessToken(JwtPayload);
     const refreshToken = generateRefreshToken(user.id);
 
     return { accessToken, refreshToken };
   }
+
 
   async getProfile(userId: number): Promise<{ user: User }> {
     const user = await this.prisma.user.findUnique({

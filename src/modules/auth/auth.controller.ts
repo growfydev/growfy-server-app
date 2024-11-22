@@ -2,11 +2,11 @@ import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { AuthenticateDto, RegisterDto, Verify2FADto, TokensDto, CompleteRegistrationDto } from './types/dto';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
 import { ActiveUser } from './decorators/session.decorator';
-import { UserRoles } from './types/roles';
 import { Auth } from './decorators/auth.decorator';
 import { CoreRole } from '@prisma/client';
 import { TwoFactorAuthService } from './services/two-factor-auth.service';
 import { AuthService } from './services/auth.service';
+import { UserRolesType } from './types/auth';
 
 @Controller('auth')
 export class AuthController {
@@ -39,14 +39,14 @@ export class AuthController {
     @Get('me')
     @Auth([CoreRole.USER, CoreRole.ADMIN])
     @ResponseMessage('User details retrieved successfully')
-    async me(@ActiveUser() user: UserRoles) {
+    async me(@ActiveUser() user: UserRolesType) {
         return this.authService.getProfile(user.userId);
     }
 
     @Post('otp/enable')
     @Auth([CoreRole.USER, CoreRole.ADMIN])
     @ResponseMessage('2FA enabled successfully')
-    async enable2FA(@ActiveUser() user: UserRoles) {
+    async enable2FA(@ActiveUser() user: UserRolesType) {
         const { qrCodeUrl, base32 } = await this.twoFactorAuthService.enable2FA(user.userId);
 
         return {
@@ -58,7 +58,7 @@ export class AuthController {
     @Post('otp/verify')
     @Auth([CoreRole.USER, CoreRole.ADMIN])
     @ResponseMessage('OTP verification process completed')
-    async verify2FA(@ActiveUser() user: UserRoles, @Body() dto: Verify2FADto) {
+    async verify2FA(@ActiveUser() user: UserRolesType, @Body() dto: Verify2FADto) {
         const isVerified = await this.twoFactorAuthService.verify2FAToken(user.userId, dto.token);
 
         return { isVerified };
