@@ -82,9 +82,9 @@ CREATE TABLE "Provider" (
 CREATE TABLE "Post" (
     "id" SERIAL NOT NULL,
     "status" TEXT,
-    "body" TEXT,
     "postTypeId" INTEGER,
-    "taskId" INTEGER NOT NULL,
+    "taskId" INTEGER,
+    "profileId" INTEGER NOT NULL,
     "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
@@ -109,11 +109,21 @@ CREATE TABLE "Task" (
 CREATE TABLE "PostType" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "fields" JSONB NOT NULL,
     "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
 
     CONSTRAINT "PostType_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ProviderPostType" (
+    "id" SERIAL NOT NULL,
+    "providerId" INTEGER NOT NULL,
+    "posttypeId" INTEGER NOT NULL,
+
+    CONSTRAINT "ProviderPostType_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -146,10 +156,13 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "Member_userId_profileId_key" ON "Member"("userId", "profileId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Post_taskId_key" ON "Post"("taskId");
+CREATE UNIQUE INDEX "Task_postId_key" ON "Task"("postId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Task_postId_key" ON "Task"("postId");
+CREATE UNIQUE INDEX "ProviderPostType_providerId_key" ON "ProviderPostType"("providerId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ProviderPostType_posttypeId_key" ON "ProviderPostType"("posttypeId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Permission_name_key" ON "Permission"("name");
@@ -176,7 +189,16 @@ ALTER TABLE "Social" ADD CONSTRAINT "Social_profileId_fkey" FOREIGN KEY ("profil
 ALTER TABLE "Post" ADD CONSTRAINT "Post_postTypeId_fkey" FOREIGN KEY ("postTypeId") REFERENCES "PostType"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Post" ADD CONSTRAINT "Post_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "Task"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Post" ADD CONSTRAINT "Post_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "Task"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Post" ADD CONSTRAINT "Post_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProviderPostType" ADD CONSTRAINT "ProviderPostType_providerId_fkey" FOREIGN KEY ("providerId") REFERENCES "Provider"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProviderPostType" ADD CONSTRAINT "ProviderPostType_posttypeId_fkey" FOREIGN KEY ("posttypeId") REFERENCES "PostType"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TeamRolePermission" ADD CONSTRAINT "TeamRolePermission_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "Permission"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
