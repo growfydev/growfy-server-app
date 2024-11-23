@@ -7,6 +7,10 @@ import { configLoader } from 'src/lib/config.loader';
 import { AuthService } from './services/auth.service';
 import { TwoFactorAuthService } from './services/two-factor-auth.service';
 import { RolesGuardService } from './services/roles-guard.service';
+import { AuthenticationService } from './services/authentication.service';
+import { MemberService } from './services/member.service';
+import { ProfileService } from './services/profile.service';
+import { UserService } from './services/users.service';
 
 @Module({
   imports: [
@@ -24,8 +28,15 @@ import { RolesGuardService } from './services/roles-guard.service';
     PrismaService,
     TwoFactorAuthService,
     RolesGuardService,
+    AuthenticationService,
+    MemberService,
+    ProfileService,
+    UserService
   ],
   controllers: [AuthController],
-  exports: [AuthService, RolesGuardService]
+  exports: [
+    AuthService,
+    RolesGuardService
+  ]
 })
 export class AuthModule { }

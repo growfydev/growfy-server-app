@@ -1,5 +1,4 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { CoreRole } from '@prisma/client'; // Adjust if using a different source for roles
 import { RolesGuardService } from '../services/roles-guard.service';
 
 @Injectable()
