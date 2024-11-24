@@ -1,7 +1,6 @@
 import { ExecutionContext, Injectable, Logger } from '@nestjs/common';
-import { CoreRole, TeamRole } from '@prisma/client';
-import { TEAM_ROLES_KEYS } from '../keys/teamroles.keys';
-import { ROLES_KEY } from '../keys/roles.keys';
+import { Role, ProfileMemberRoles } from '@prisma/client';
+import { PROFILE_ROLES_KEY, ROLES_KEY } from '../keys/roles.keys';
 import { JwtPayloadType, ProfileType } from '../types/auth';
 import { Reflector } from '@nestjs/core';
 import { RequestDataType } from '../types/auth';
@@ -12,15 +11,15 @@ export class RolesGuardService {
 
     constructor(private readonly reflector: Reflector) { }
 
-    getRequiredRoles(context: ExecutionContext): CoreRole[] {
-        return this.reflector.getAllAndOverride<CoreRole[]>(ROLES_KEY, [
+    getRequiredRoles(context: ExecutionContext): Role[] {
+        return this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
             context.getHandler(),
             context.getClass(),
         ]);
     }
 
-    getRequiredProfileRoles(context: ExecutionContext): TeamRole[] {
-        return this.reflector.getAllAndOverride<TeamRole[]>(TEAM_ROLES_KEYS, [
+    getRequiredProfileRoles(context: ExecutionContext): ProfileMemberRoles[] {
+        return this.reflector.getAllAndOverride<ProfileMemberRoles[]>(PROFILE_ROLES_KEY, [
             context.getHandler(),
             context.getClass(),
         ]);
@@ -35,16 +34,16 @@ export class RolesGuardService {
         };
     }
 
-    isAdminAccess(requiredRoles: CoreRole[], user: JwtPayloadType['user']): boolean {
-        if (requiredRoles?.includes(CoreRole.ADMIN) && user.role === CoreRole.ADMIN) {
+    isAdminAccess(requiredRoles: Role[], user: JwtPayloadType['user']): boolean {
+        if (requiredRoles?.includes(Role.ADMIN) && user.role === Role.ADMIN) {
             this.logger.debug('User is ADMIN. Access granted.');
             return true;
         }
         return false;
     }
 
-    checkRolesWithoutPermissions(requiredRoles: CoreRole[], user: JwtPayloadType['user']): boolean {
-        const hasRoles = this.hasMatchingRoles(requiredRoles, user, null);
+    checkRolesWithoutPermissions(requiredRoles: Role[], user: JwtPayloadType['user']): boolean {
+        const hasRoles = this.hasMatchingRoles(requiredRoles, user);
         this.logger.debug(`Access granted without profile check: ${hasRoles}`);
         return hasRoles;
     }
@@ -71,12 +70,12 @@ export class RolesGuardService {
 
 
     validateAccess(
-        requiredRoles: CoreRole[],
-        requiredProfileRoles: TeamRole[],
+        requiredRoles: Role[],
+        requiredProfileRoles: ProfileMemberRoles[],
         user: JwtPayloadType['user'],
         profile: ProfileType
     ): boolean {
-        const roleMatches = this.hasMatchingRoles(requiredRoles, user, profile);
+        const roleMatches = this.hasMatchingRoles(requiredRoles, user);
         const profileRolesMatch = this.hasMatchingProfileRoles(requiredProfileRoles, profile);
 
         const accessGranted = roleMatches && profileRolesMatch;
@@ -94,15 +93,14 @@ export class RolesGuardService {
         return false;
     }
 
-    hasMatchingRoles(requiredRoles: CoreRole[], user: JwtPayloadType['user'], profile: ProfileType | null): boolean {
+    hasMatchingRoles(requiredRoles: Role[], user: JwtPayloadType['user']): boolean {
         if (!requiredRoles?.length) return true;
         return (
-            requiredRoles.includes(user.role as CoreRole) ||
-            (profile?.roles && requiredRoles.includes(profile.roles as CoreRole))
+            requiredRoles.includes(user.role as Role)
         );
     }
 
-    hasMatchingProfileRoles(requiredProfileRoles: TeamRole[], profile: ProfileType): boolean {
+    hasMatchingProfileRoles(requiredProfileRoles: ProfileMemberRoles[], profile: ProfileType): boolean {
         if (!requiredProfileRoles?.length) return true;
         const userProfileRoles = Array.isArray(profile.roles)
             ? new Set(profile.roles)

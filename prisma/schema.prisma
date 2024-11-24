@@ -7,17 +7,17 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-enum CoreRole {
+enum Role {
     ADMIN
     USER
 }
 
-enum TeamRole {
-    TEAM_OWNER
-    TEAM_MEMBER
+enum ProfileMemberRoles {
+    MEMBER
+    OWNER
+    MANAGER
     ANALYST
     EDITOR
-    MANAGER
     CONTENT_CREATOR
     CLIENT
     GUEST
@@ -57,14 +57,13 @@ enum TaskStatus {
     CANCELED
 }
 
-
 model User {
     id           Int          @id @default(autoincrement())
     name         String
     email        String       @unique
     password     String
     phone        String?
-    role         CoreRole     @default(USER)
+    role         Role         @default(USER)
     otpEnabled   Boolean      @default(false)
     otpVerified  Boolean      @default(false)
     otpSecret    String?
@@ -77,15 +76,15 @@ model User {
 }
 
 model Member {
-    id           Int          @id @default(autoincrement())
+    id           Int                @id @default(autoincrement())
     userId       Int
     profileId    Int
-    role         TeamRole     @default(TEAM_OWNER)
-    user         User         @relation(fields: [userId], references: [id])
-    profile      Profile      @relation(fields: [profileId], references: [id])
-    globalStatus GlobalStatus @default(ACTIVE)
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime?    @updatedAt
+    role         ProfileMemberRoles @default(OWNER)
+    user         User               @relation(fields: [userId], references: [id])
+    profile      Profile            @relation(fields: [profileId], references: [id])
+    globalStatus GlobalStatus       @default(ACTIVE)
+    createdAt    DateTime           @default(now())
+    updatedAt    DateTime?          @updatedAt
 
     @@unique([userId, profileId])
 }
@@ -147,7 +146,6 @@ model Task {
     globalStatus GlobalStatus @default(ACTIVE)
     createdAt    DateTime     @default(now())
     updatedAt    DateTime?    @updatedAt
-
 }
 
 model PostType {
@@ -171,22 +169,22 @@ model ProviderPostType {
 }
 
 model Permission {
-    id           Int                  @id @default(autoincrement())
-    name         PermissionFlags      @unique
-    teamRoles    TeamRolePermission[]
-    globalStatus GlobalStatus         @default(ACTIVE)
-    createdAt    DateTime             @default(now())
-    updatedAt    DateTime?            @updatedAt
+    id           Int                     @id @default(autoincrement())
+    name         PermissionFlags         @unique
+    profileRoles ProfileRolePermission[]
+    globalStatus GlobalStatus            @default(ACTIVE)
+    createdAt    DateTime                @default(now())
+    updatedAt    DateTime?               @updatedAt
 }
 
-model TeamRolePermission {
-    id           Int          @id @default(autoincrement())
-    teamRole     TeamRole
-    permission   Permission   @relation(fields: [permissionId], references: [id])
+model ProfileRolePermission {
+    id           Int                @id @default(autoincrement())
+    profileRoles ProfileMemberRoles
+    permission   Permission         @relation(fields: [permissionId], references: [id])
     permissionId Int
-    globalStatus GlobalStatus @default(ACTIVE)
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime?    @updatedAt
+    globalStatus GlobalStatus       @default(ACTIVE)
+    createdAt    DateTime           @default(now())
+    updatedAt    DateTime?          @updatedAt
 
-    @@unique([teamRole, permissionId])
+    @@unique([profileRoles, permissionId])
 }

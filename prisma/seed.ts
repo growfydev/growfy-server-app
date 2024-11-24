@@ -1,4 +1,4 @@
-import { PrismaClient, TeamRole, PermissionFlags } from '@prisma/client';
+import { PrismaClient, ProfileMemberRoles, PermissionFlags } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -12,13 +12,13 @@ async function main() {
         });
     }
 
-    const teamRolePermissions: Record<TeamRole, PermissionFlags[]> = {
-        TEAM_OWNER: [
+    const profileRolePermissions: Record<ProfileMemberRoles, PermissionFlags[]> = {
+        OWNER: [
             PermissionFlags.VIEW,
             PermissionFlags.MANAGEMENT,
             PermissionFlags.EDIT,
         ],
-        TEAM_MEMBER: [PermissionFlags.VIEW],
+        MEMBER: [PermissionFlags.VIEW],
         ANALYST: [PermissionFlags.VIEW_ANALYTICS],
         EDITOR: [PermissionFlags.EDIT],
         MANAGER: [
@@ -31,24 +31,25 @@ async function main() {
         GUEST: [],
     };
 
-    for (const [role, permissions] of Object.entries(teamRolePermissions)) {
-        const teamRole = role as TeamRole;
+    for (const [role, permissions] of Object.entries(profileRolePermissions)) {
+        const profileRole = role as ProfileMemberRoles;
         for (const permission of permissions) {
             const perm = await prisma.permission.findUnique({ where: { name: permission } });
             if (perm) {
-                await prisma.teamRolePermission.upsert({
+                await prisma.profileRolePermission.upsert({
                     where: {
-                        teamRole_permissionId: {
-                            teamRole: teamRole,
+                        profileRoles_permissionId: {
+                            profileRoles: profileRole,
                             permissionId: perm.id,
                         },
                     },
                     update: {},
                     create: {
-                        teamRole,
+                        profileRoles: profileRole,
                         permissionId: perm.id,
                     },
                 });
+
             }
         }
     }
