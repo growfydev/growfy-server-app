@@ -1,6 +1,6 @@
 import { Auth } from '../auth/decorators/auth.decorator';
 import { Controller, Get, Post, Body, Param, Delete, Put, ParseIntPipe } from '@nestjs/common';
-import { CoreRole, PermissionFlags } from '@prisma/client';
+import { CoreRole, PermissionFlags, TeamRole } from '@prisma/client';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { ProfilesService } from './profiles.service';
@@ -58,7 +58,7 @@ export class ProfilesController {
 
 
   @Post(':profileId/invite')
-  @Auth([CoreRole.USER], [PermissionFlags.MANAGEMENT])
+  @Auth([CoreRole.USER], [TeamRole.ANALYST])
   @ResponseMessage('User invited successfully')
   async inviteUser(
     @Param('profileId', ParseIntPipe) profileId: number,

@@ -1,6 +1,6 @@
 import { ExecutionContext, Injectable, Logger } from '@nestjs/common';
-import { CoreRole } from '@prisma/client'; // Adjust as needed
-import { PERMISSIONS_KEY } from '../keys/permissions.keys';
+import { CoreRole, TeamRole } from '@prisma/client';
+import { TEAM_ROLES_KEYS } from '../keys/teamroles.keys';
 import { ROLES_KEY } from '../keys/roles.keys';
 import { JwtPayloadType, ProfileType } from '../types/auth';
 import { Reflector } from '@nestjs/core';
@@ -19,8 +19,8 @@ export class RolesGuardService {
         ]);
     }
 
-    getRequiredPermissions(context: ExecutionContext): string[] {
-        return this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
+    getRequiredProfileRoles(context: ExecutionContext): TeamRole[] {
+        return this.reflector.getAllAndOverride<TeamRole[]>(TEAM_ROLES_KEYS, [
             context.getHandler(),
             context.getClass(),
         ]);
@@ -35,16 +35,16 @@ export class RolesGuardService {
         };
     }
 
-    isAdminAccess(requiredRoles: CoreRole[], userRoles: JwtPayloadType['user']): boolean {
-        if (requiredRoles?.includes(CoreRole.ADMIN) && userRoles.role === CoreRole.ADMIN) {
+    isAdminAccess(requiredRoles: CoreRole[], user: JwtPayloadType['user']): boolean {
+        if (requiredRoles?.includes(CoreRole.ADMIN) && user.role === CoreRole.ADMIN) {
             this.logger.debug('User is ADMIN. Access granted.');
             return true;
         }
         return false;
     }
 
-    checkRolesWithoutPermissions(requiredRoles: CoreRole[], userRoles: JwtPayloadType['user']): boolean {
-        const hasRoles = this.hasMatchingRoles(requiredRoles, userRoles, null);
+    checkRolesWithoutPermissions(requiredRoles: CoreRole[], user: JwtPayloadType['user']): boolean {
+        const hasRoles = this.hasMatchingRoles(requiredRoles, user, null);
         this.logger.debug(`Access granted without profile check: ${hasRoles}`);
         return hasRoles;
     }
@@ -54,44 +54,70 @@ export class RolesGuardService {
         return isNaN(profileId) ? null : profileId;
     }
 
-    getProfile(userRoles: JwtPayloadType['user'], profileId: number): ProfileType | undefined {
-        return userRoles.profiles.find((p) => p.id === profileId);
+    getProfile(user: JwtPayloadType['user'], profileId: number): ProfileType | undefined {
+        if (!user.profiles || !user.profiles.length) {
+            this.logger.warn(`User has no profiles.`);
+            return undefined;
+        }
+
+        const profile = user.profiles.find((p) => p.id === profileId);
+
+        if (!profile) {
+            this.logger.warn(`No matching profile found for ID: ${profileId}`);
+        }
+
+        return profile;
     }
+
 
     validateAccess(
         requiredRoles: CoreRole[],
-        requiredPermissions: string[],
-        userRoles: JwtPayloadType['user'],
+        requiredProfileRoles: TeamRole[],
+        user: JwtPayloadType['user'],
         profile: ProfileType
     ): boolean {
-        const roleMatches = this.hasMatchingRoles(requiredRoles, userRoles, profile);
-        const permissionMatches = this.hasPermissions(requiredPermissions, profile);
+        const roleMatches = this.hasMatchingRoles(requiredRoles, user, profile);
+        const profileRolesMatch = this.hasMatchingProfileRoles(requiredProfileRoles, profile);
 
-        const accessGranted = roleMatches && permissionMatches;
+        const accessGranted = roleMatches && profileRolesMatch;
 
-        this.logger.debug(`Role Matches: ${roleMatches}`);
-        this.logger.debug(`Permission Matches: ${permissionMatches}`);
+        this.logger.debug(`Core Role Matches: ${roleMatches}`);
+        this.logger.debug(`Profile Roles Match: ${profileRolesMatch}`);
         this.logger.debug(`Access Granted: ${accessGranted}`);
 
         return accessGranted;
     }
+
 
     denyAccess(reason: string): boolean {
         this.logger.warn(reason);
         return false;
     }
 
-    hasMatchingRoles(requiredRoles: CoreRole[], userRoles: JwtPayloadType['user'], profile: ProfileType | null): boolean {
+    hasMatchingRoles(requiredRoles: CoreRole[], user: JwtPayloadType['user'], profile: ProfileType | null): boolean {
         if (!requiredRoles?.length) return true;
         return (
-            requiredRoles.includes(userRoles.role as CoreRole) ||
+            requiredRoles.includes(user.role as CoreRole) ||
             (profile?.roles && requiredRoles.includes(profile.roles as CoreRole))
         );
     }
 
-    hasPermissions(requiredPermissions: string[], profile: ProfileType): boolean {
-        if (!requiredPermissions?.length) return true;
-        const userPermissions = new Set(profile.permissions);
-        return requiredPermissions.every((perm) => userPermissions.has(perm));
+    hasMatchingProfileRoles(requiredProfileRoles: TeamRole[], profile: ProfileType): boolean {
+        if (!requiredProfileRoles?.length) return true;
+        const userProfileRoles = Array.isArray(profile.roles)
+            ? new Set(profile.roles)
+            : new Set(profile.roles.split(','));
+
+        const isMatch = requiredProfileRoles.every((role) => userProfileRoles.has(role));
+
+        if (!isMatch) {
+            this.logger.warn(
+                `Profile roles do not match. Required: ${requiredProfileRoles.join(', ')}, UserProfileRoles: ${Array.from(userProfileRoles).join(', ')}`
+            );
+        }
+
+        return isMatch;
     }
+
+
 }
