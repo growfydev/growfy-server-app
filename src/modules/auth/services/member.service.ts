@@ -11,8 +11,8 @@ export class MemberService {
     }
 
     async getRolePermissions(role: ProfileMemberRoles): Promise<string[]> {
-        const permissions = await this.prisma.ProfileMemberRolesPermission.findMany({
-            where: { ProfileMemberRoles: role },
+        const permissions = await this.prisma.profileRolePermission.findMany({
+            where: { profileRoles: role },
             select: { permission: { select: { name: true } } },
         });
         return permissions.map((p) => p.permission.name);
