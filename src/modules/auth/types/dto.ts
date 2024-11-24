@@ -20,6 +20,7 @@ export class RegisterDto {
     @IsNotEmpty()
     name: string;
 
+
     @ApiProperty()
     @IsString()
     @IsOptional()
