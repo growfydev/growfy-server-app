@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, NotFoundException } from "@nestjs/common";
-import { User, TeamRole, GlobalStatus } from "@prisma/client";
+import { User, ProfileMemberRoles, GlobalStatus } from "@prisma/client";
 import { RegisterDto, CompleteRegistrationDto, AuthenticateDto, TokensDto } from "../types/dto";
 import { hashPassword } from "../utils/crypt";
 import { AuthenticationService } from "./authentication.service";
@@ -21,7 +21,7 @@ export class AuthService {
 
     if (data.nameProfile) {
       const profile = await this.profileService.createProfile(data.nameProfile, newUser.id);
-      await this.memberService.createMember(newUser.id, profile.id, TeamRole.MANAGER);
+      await this.memberService.createMember(newUser.id, profile.id, ProfileMemberRoles.MANAGER);
     }
 
     return { user: newUser };

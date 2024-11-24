@@ -1,8 +1,8 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { Auth } from 'src/modules/auth/decorators/auth.decorator';
-import { CoreRole, TeamRole } from '@prisma/client';
 import { ActiveUser } from './modules/auth/decorators/session.decorator';
 import { UserType } from './modules/auth/types/auth';
+import { ProfileMemberRoles, Role } from '@prisma/client';
 
 @Controller()
 export class AppController {
@@ -16,7 +16,7 @@ export class AppController {
      */
 
     @Get('view/:profileId')
-    @Auth([CoreRole.USER], [TeamRole.MANAGER, TeamRole.ANALYST, TeamRole.EDITOR])
+    @Auth([Role.USER], [ProfileMemberRoles.MANAGER, ProfileMemberRoles.ANALYST, ProfileMemberRoles.EDITOR])
     async viewResource(@ActiveUser() user: UserType, @Param('profileId') profileId: number) {
         return {
             message: `You have access to view resources for profile ${profileId}.`,
@@ -26,7 +26,7 @@ export class AppController {
 
 
     @Get('manage/:profileId')
-    @Auth([CoreRole.ADMIN]) // Requires `ADMIN` role
+    @Auth([Role.ADMIN]) // Requires `ADMIN` role
     async manageResource(@Param('profileId') profileId: number) {
         return { message: `You have access to manage resources for profile ${profileId}.` };
     }

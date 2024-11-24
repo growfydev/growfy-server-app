@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from 'src/core/prisma.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { Profile, GlobalStatus, CoreRole, TeamRole, Member, User } from '@prisma/client';
+import { Profile, GlobalStatus, Role, ProfileMemberRoles, Member, User } from '@prisma/client';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { configLoader } from 'src/lib/config.loader';
 
@@ -25,7 +25,7 @@ export class ProfilesService {
       data: {
         userId,
         profileId: profile.id,
-        role: TeamRole.MANAGER,
+        role: ProfileMemberRoles.MANAGER,
       },
     })
 
@@ -115,7 +115,7 @@ export class ProfilesService {
   async inviteUser(inviteUserDto: InviteUserDto): Promise<{ member: Member }> {
     const { email, profileId, role } = inviteUserDto;
 
-    if (!Object.values(TeamRole).includes(role)) {
+    if (!Object.values(ProfileMemberRoles).includes(role)) {
       throw new BadRequestException('Invalid role');
     }
 
@@ -129,7 +129,7 @@ export class ProfilesService {
           name: 'Pending User',
           email,
           password: '',
-          role: CoreRole.USER,
+          role: Role.USER,
           globalStatus: GlobalStatus.INACTIVE,
         },
       });
