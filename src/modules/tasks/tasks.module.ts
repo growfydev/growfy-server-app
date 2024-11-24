@@ -8,14 +8,14 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-    imports: [
-        BullModule.registerQueue({
-            name: 'taskQueue',
-        }),
-        AuthModule
-    ],
-    controllers: [TaskController],
-    providers: [TaskProducer, TaskConsumer, PrismaService, JwtService],
-    exports: [TaskProducer],
+  imports: [
+    BullModule.registerQueue({
+      name: 'taskQueue',
+    }),
+    AuthModule,
+  ],
+  controllers: [TaskController],
+  providers: [TaskProducer, TaskConsumer, PrismaService, JwtService],
+  exports: [TaskProducer],
 })
-export class TaskModule { }
+export class TaskModule {}

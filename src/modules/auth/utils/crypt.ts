@@ -7,7 +7,7 @@ import * as crypto from 'crypto';
  * @returns Clave secreta base32.
  */
 export function generateRandomBase32(length: number = 32): string {
-  const buffer = crypto.randomBytes(Math.ceil(length * 5 / 8));
+  const buffer = crypto.randomBytes(Math.ceil((length * 5) / 8));
   const base32Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
   let base32 = '';
 
@@ -35,6 +35,9 @@ export async function hashPassword(password: string): Promise<string> {
  * @param hashedPassword Contraseña hasheada.
  * @returns Verdadero si coinciden.
  */
-export async function comparePasswords(password: string, hashedPassword: string): Promise<boolean> {
+export async function comparePasswords(
+  password: string,
+  hashedPassword: string,
+): Promise<boolean> {
   return await bcrypt.compare(password, hashedPassword);
 }

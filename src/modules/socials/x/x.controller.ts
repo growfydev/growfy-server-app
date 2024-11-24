@@ -1,4 +1,13 @@
-import { Controller, Get, Query, Redirect, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Redirect,
+  Post,
+  Body,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { XService } from './x.service';
 import { OAuthCodeDto, PostTweetDto, GetUserDetailsDto } from './tweet.dto';
 
@@ -26,7 +35,10 @@ export class XController {
   }
 
   @Post('tweet')
-  async tweet(@Body() postTweetDto: PostTweetDto, @Query('accessToken') accessToken: string) {
+  async tweet(
+    @Body() postTweetDto: PostTweetDto,
+    @Query('accessToken') accessToken: string,
+  ) {
     const { text } = postTweetDto;
 
     try {

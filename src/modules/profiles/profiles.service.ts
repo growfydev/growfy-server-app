@@ -1,16 +1,30 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/core/prisma.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { Profile, GlobalStatus, Role, ProfileMemberRoles, Member, User } from '@prisma/client';
+import {
+  Profile,
+  GlobalStatus,
+  Role,
+  ProfileMemberRoles,
+  Member,
+  User,
+} from '@prisma/client';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { configLoader } from 'src/lib/config.loader';
 
 @Injectable()
 export class ProfilesService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
-  async create(userId: number, createProfileDto: CreateProfileDto): Promise<{ profile: Profile }> {
+  async create(
+    userId: number,
+    createProfileDto: CreateProfileDto,
+  ): Promise<{ profile: Profile }> {
     const { name } = createProfileDto;
 
     if (!name) {
@@ -27,7 +41,7 @@ export class ProfilesService {
         profileId: profile.id,
         role: ProfileMemberRoles.MANAGER,
       },
-    })
+    });
 
     return { profile };
   }
@@ -52,7 +66,10 @@ export class ProfilesService {
     return { profile };
   }
 
-  async update(id: number, updateProfileDto: UpdateProfileDto): Promise<{ profile: Profile }> {
+  async update(
+    id: number,
+    updateProfileDto: UpdateProfileDto,
+  ): Promise<{ profile: Profile }> {
     const profile = await this.prisma.profile.findUnique({ where: { id } });
 
     if (!profile) {
@@ -136,7 +153,9 @@ export class ProfilesService {
 
       // Opcional: Enviar correo de invitación
       console.log(`Invitation email sent to ${email}`);
-      console.log(`Invitation link: ${configLoader().client_url}/complete-registration/?email=${email}`);
+      console.log(
+        `Invitation link: ${configLoader().client_url}/complete-registration/?email=${email}`,
+      );
     }
 
     const isAlreadyMember = await this.prisma.member.findFirst({
@@ -147,7 +166,9 @@ export class ProfilesService {
     });
 
     if (isAlreadyMember) {
-      throw new BadRequestException('The user is already a member of this profile.');
+      throw new BadRequestException(
+        'The user is already a member of this profile.',
+      );
     }
 
     const newMember = await this.prisma.member.create({
@@ -157,7 +178,7 @@ export class ProfilesService {
         role: role,
         globalStatus: GlobalStatus.ACTIVE,
       },
-    })
+    });
 
     return { member: newMember };
   }

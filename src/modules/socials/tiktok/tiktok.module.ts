@@ -4,6 +4,6 @@ import { TiktokController } from './tiktok.controller';
 
 @Module({
   providers: [TiktokService],
-  controllers: [TiktokController]
+  controllers: [TiktokController],
 })
 export class TiktokModule {}

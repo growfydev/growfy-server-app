@@ -8,14 +8,18 @@ import * as qrcode from 'qrcode';
  * @param issuer Nombre de la aplicación.
  * @returns Instancia TOTP.
  */
-export function createTOTP(secret: string, label: string, issuer: string): OTPAuth.TOTP {
-    return new OTPAuth.TOTP({
-        issuer,
-        label,
-        algorithm: 'SHA1',
-        digits: 6,
-        secret,
-    });
+export function createTOTP(
+  secret: string,
+  label: string,
+  issuer: string,
+): OTPAuth.TOTP {
+  return new OTPAuth.TOTP({
+    issuer,
+    label,
+    algorithm: 'SHA1',
+    digits: 6,
+    secret,
+  });
 }
 
 /**
@@ -24,5 +28,5 @@ export function createTOTP(secret: string, label: string, issuer: string): OTPAu
  * @returns URL del código QR.
  */
 export async function generateQRCodeUrl(otpauthUrl: string): Promise<string> {
-    return await qrcode.toDataURL(otpauthUrl);
+  return await qrcode.toDataURL(otpauthUrl);
 }

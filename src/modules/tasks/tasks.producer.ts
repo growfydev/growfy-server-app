@@ -4,19 +4,15 @@ import { Queue } from 'bull';
 
 @Injectable()
 export class TaskProducer {
-    constructor(@InjectQueue('taskQueue') private taskQueue: Queue) { }
+  constructor(@InjectQueue('taskQueue') private taskQueue: Queue) {}
 
-    async scheduleTask(unixTimestamp: number, message: string) {
-        const delay = unixTimestamp * 1000 - Date.now();
+  async scheduleTask(unixTimestamp: number, message: string) {
+    const delay = unixTimestamp * 1000 - Date.now();
 
-        if (delay < 0) {
-            throw new Error('Timestamp must be a future date.');
-        }
-
-        await this.taskQueue.add(
-            'executeOnce',
-            { message },
-            { delay }
-        );
+    if (delay < 0) {
+      throw new Error('Timestamp must be a future date.');
     }
+
+    await this.taskQueue.add('executeOnce', { message }, { delay });
+  }
 }

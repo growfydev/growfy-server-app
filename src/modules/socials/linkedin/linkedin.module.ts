@@ -5,4 +5,4 @@ import { PrismaService } from 'src/core/prisma.service';
   controllers: [],
   providers: [PrismaService],
 })
-export class LinkedInModule { }
+export class LinkedInModule {}

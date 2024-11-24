@@ -10,10 +10,13 @@ import { ProfileMemberRoles, Role } from '@prisma/client';
  * @param roles - List of required core roles for the route
  * @param ProfileMemberRoless - List of required team roles to have access to an specific feature.
  */
-export function Auth(roles: Role[] = [], ProfileMemberRoless: ProfileMemberRoles[] = []) {
-    return applyDecorators(
-        SetMetadata(ROLES_KEY, roles),
-        SetMetadata(PROFILE_ROLES_KEY, ProfileMemberRoless),
-        UseGuards(AuthGuard, RolesGuard),
-    );
+export function Auth(
+  roles: Role[] = [],
+  ProfileMemberRoless: ProfileMemberRoles[] = [],
+) {
+  return applyDecorators(
+    SetMetadata(ROLES_KEY, roles),
+    SetMetadata(PROFILE_ROLES_KEY, ProfileMemberRoless),
+    UseGuards(AuthGuard, RolesGuard),
+  );
 }

@@ -4,11 +4,11 @@ import { IsOptional, IsString, IsEnum } from 'class-validator';
 import { GlobalStatus } from '@prisma/client';
 
 export class UpdateProfileDto extends PartialType(CreateProfileDto) {
-    @IsOptional()
-    @IsString()
-    name?: string;
+  @IsOptional()
+  @IsString()
+  name?: string;
 
-    @IsOptional()
-    @IsEnum(GlobalStatus)
-    globalStatus?: GlobalStatus;
+  @IsOptional()
+  @IsEnum(GlobalStatus)
+  globalStatus?: GlobalStatus;
 }

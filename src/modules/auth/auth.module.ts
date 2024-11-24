@@ -21,7 +21,7 @@ import { UserService } from './services/users.service';
         secret: configLoader().jwt.secret_key,
         signOptions: { expiresIn: '7d' },
       }),
-    })
+    }),
   ],
   providers: [
     AuthService,
@@ -31,12 +31,9 @@ import { UserService } from './services/users.service';
     AuthenticationService,
     MemberService,
     ProfileService,
-    UserService
+    UserService,
   ],
   controllers: [AuthController],
-  exports: [
-    AuthService,
-    RolesGuardService
-  ]
+  exports: [AuthService, RolesGuardService],
 })
-export class AuthModule { }
+export class AuthModule {}
