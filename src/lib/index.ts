@@ -24,13 +24,19 @@ import { StripeModule } from '../modules/payments/stripe/stripe.module';
 import { TaskModule } from 'src/modules/tasks/tasks.module';
 import { ProfilesModule } from 'src/modules/profiles/profiles.module';
 
-export const Modules = [
+const CoreModules = [
   SetupModule,
-  AuthModule,
+  TaskModule
+];
+
+const AuthModules = [
+  AuthModule
+];
+
+const SocialModules = [
   InstagramModule,
   FacebookModule,
   ThreadsModule,
-  TiktokAdsModule,
   TiktokModule,
   XModule,
   LinkedInModule,
@@ -39,15 +45,43 @@ export const Modules = [
   TwitchModule,
   WhatsappModule,
   WebModule,
+  CanvasModule,
+];
+
+const AdsModules = [
+  TiktokAdsModule,
   MetaModule,
-  GoogleModule,
+  GoogleModule
+];
+
+const ThirdPartyModules = [
   TwilioModule,
   DriveModule,
-  EmailModule,
-  CanvasModule,
-  ShopifyModule,
-  WoocomerceModule,
-  StripeModule,
-  TaskModule,
-  ProfilesModule,
+  EmailModule
 ];
+
+const AnalyticsModules = [
+  ShopifyModule,
+  WoocomerceModule
+];
+
+const PaymentModules = [
+  StripeModule
+];
+
+const TaskManagementModules = [
+  ProfilesModule
+];
+
+const Modules = [
+  ...CoreModules,
+  ...AuthModules,
+  ...SocialModules,
+  ...AdsModules,
+  ...ThirdPartyModules,
+  ...AnalyticsModules,
+  ...PaymentModules,
+  ...TaskManagementModules,
+];
+
+export default Modules;
