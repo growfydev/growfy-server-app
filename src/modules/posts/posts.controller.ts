@@ -8,8 +8,6 @@ import {
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dtos/create-post.dto';
-import { ActiveUser } from '../auth/decorators/session.decorator';
-import { UserType } from '../auth/types/auth';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { ProfileMemberRoles, Role } from '@prisma/client';
 

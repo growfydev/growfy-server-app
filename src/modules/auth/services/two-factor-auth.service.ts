@@ -61,7 +61,7 @@ export class TwoFactorAuthService {
       throw new UnauthorizedException('2FA is not enabled for this user');
     }
 
-    const totp = createTOTP(user.otpSecret, user.email, 'Growly');
+    const totp = createTOTP(user.otpSecret, user.email, 'Growfy');
 
     const delta = totp.validate({ token });
 

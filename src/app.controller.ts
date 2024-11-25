@@ -1,8 +1,7 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { Auth } from 'src/modules/auth/decorators/auth.decorator';
 import { ActiveUser } from './modules/auth/decorators/session.decorator';
-import { UserType } from './modules/auth/types/auth';
-import { ProfileMemberRoles, Role } from '@prisma/client';
+import { ProfileMemberRoles, Role, User } from '@prisma/client';
 
 @Controller()
 export class AppController {
@@ -24,7 +23,7 @@ export class AppController {
     ],
   )
   async viewResource(
-    @ActiveUser() user: UserType,
+    @ActiveUser() user: User,
     @Param('profileId') profileId: number,
   ) {
     return {

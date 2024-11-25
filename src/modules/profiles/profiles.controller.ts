@@ -9,24 +9,24 @@ import {
   Put,
   ParseIntPipe,
 } from '@nestjs/common';
-import { Role, PermissionFlags, ProfileMemberRoles } from '@prisma/client';
+import { Role, ProfileMemberRoles, User } from '@prisma/client';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { ProfilesService } from './profiles.service';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ActiveUser } from '../auth/decorators/session.decorator';
-import { UserType } from '../auth/types/auth';
+
 
 @Controller('profiles')
 export class ProfilesController {
-  constructor(private readonly profilesService: ProfilesService) {}
+  constructor(private readonly profilesService: ProfilesService) { }
 
   @Post()
   @Auth([Role.USER])
   @ResponseMessage('Profile created successfully')
   create(
-    @ActiveUser() user: UserType,
+    @ActiveUser() user: User,
     @Body() createProfileDto: CreateProfileDto,
   ) {
     return this.profilesService.create(user.id, createProfileDto);

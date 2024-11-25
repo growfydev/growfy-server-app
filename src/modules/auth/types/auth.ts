@@ -8,10 +8,10 @@ interface JwtPayload {
   exp: number;
 }
 
-interface UserActiveInterface {
-  id: number;
-  role: string;
-}
+// interface UserActiveInterface {
+//   id: number;
+//   role: string;
+// }
 
 interface Profile {
   id: number;
@@ -25,13 +25,13 @@ interface RequestData {
   body: Record<string, any>;
 }
 
-export type UserType = {
-  id: number;
-  role: string;
-  profiles: Profile[];
-};
+// export type UserType = {
+//   id: number;
+//   role: string;
+//   profiles: Profile[];
+// };
 
-export type UserActiveType = UserActiveInterface;
+// export type UserActiveType = UserActiveInterface;
 export type JwtPayloadType = JwtPayload;
 export type ProfileType = Profile;
 export type RequestDataType = RequestData;

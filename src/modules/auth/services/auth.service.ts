@@ -50,7 +50,7 @@ export class AuthService {
     const user = await this.userService.findUserByEmail(email);
     if (!user || user.globalStatus !== GlobalStatus.INACTIVE) {
       throw new BadRequestException(
-        'No se encontró un usuario pendiente de activación.',
+        'No user found with pending activation.',
       );
     }
 

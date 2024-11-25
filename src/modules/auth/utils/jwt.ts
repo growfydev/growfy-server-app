@@ -1,3 +1,4 @@
+import { ProfileMemberRoles, Role } from '@prisma/client';
 import * as jwt from 'jsonwebtoken';
 import { configLoader } from 'src/lib/config.loader';
 
@@ -12,8 +13,8 @@ const REFRESH_SECRET_KEY = configLoader().jwt.refresh_key;
  */
 export function generateAccessToken(user: {
   id: number;
-  role: string;
-  profiles: { id: number; roles: string; permissions: string[] }[];
+  role: Role;
+  profiles: { id: number; roles: ProfileMemberRoles[]; permissions: string[] }[];
 }): string {
   return jwt.sign(
     {

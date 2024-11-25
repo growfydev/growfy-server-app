@@ -9,7 +9,7 @@ import { RequestDataType } from '../types/auth';
 export class RolesGuardService {
   private readonly logger = new Logger(RolesGuardService.name);
 
-  constructor(private readonly reflector: Reflector) {}
+  constructor(private readonly reflector: Reflector) { }
 
   getRequiredRoles(context: ExecutionContext): Role[] {
     return this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
@@ -107,8 +107,19 @@ export class RolesGuardService {
     requiredRoles: Role[],
     user: JwtPayloadType['user'],
   ): boolean {
-    if (!requiredRoles?.length) return true;
-    return requiredRoles.includes(user.role as Role);
+    if (!requiredRoles?.length) return true; // No specific roles required
+    const userRoles = Array.isArray(user.role) ? user.role : [user.role];
+    const hasAllRoles = requiredRoles.every((role) => userRoles.includes(role));
+
+    if (!hasAllRoles) {
+      this.logger.warn(
+        `User does not have all required roles. Required: ${requiredRoles.join(
+          ', ',
+        )}, User Roles: ${userRoles.join(', ')}`,
+      );
+    }
+
+    return hasAllRoles;
   }
 
   hasMatchingProfileRoles(
@@ -120,16 +131,18 @@ export class RolesGuardService {
       ? new Set(profile.roles)
       : new Set(profile.roles.split(','));
 
-    const isMatch = requiredProfileRoles.every((role) =>
+    const hasAllProfileRoles = requiredProfileRoles.every((role) =>
       userProfileRoles.has(role),
     );
 
-    if (!isMatch) {
+    if (!hasAllProfileRoles) {
       this.logger.warn(
-        `Profile roles do not match. Required: ${requiredProfileRoles.join(', ')}, UserProfileRoles: ${Array.from(userProfileRoles).join(', ')}`,
+        `Profile does not have all required profile roles. Required: ${requiredProfileRoles.join(
+          ', ',
+        )}, UserProfileRoles: ${Array.from(userProfileRoles).join(', ')}`,
       );
     }
 
-    return isMatch;
+    return hasAllProfileRoles;
   }
 }
