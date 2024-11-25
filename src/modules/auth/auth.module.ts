@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/core/prisma.service';
 import { configLoader } from 'src/lib/config.loader';
@@ -21,7 +21,7 @@ import { UserService } from './services/users.service';
         secret: configLoader().jwt.secret_key,
         signOptions: { expiresIn: '7d' },
       }),
-    })
+    }),
   ],
   providers: [
     AuthService,
@@ -31,12 +31,10 @@ import { UserService } from './services/users.service';
     AuthenticationService,
     MemberService,
     ProfileService,
-    UserService
+    UserService,
+    JwtService,
   ],
   controllers: [AuthController],
-  exports: [
-    AuthService,
-    RolesGuardService
-  ]
+  exports: [AuthService, RolesGuardService, JwtService],
 })
-export class AuthModule { }
+export class AuthModule {}
