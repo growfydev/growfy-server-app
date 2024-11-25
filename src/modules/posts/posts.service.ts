@@ -126,6 +126,16 @@ export class PostsService extends Service {
       data: { globalStatus: GlobalStatus.ACTIVE, status: PostStatus.PUBLISHED },
     });
 
+    if (post.task) {
+      await this.prisma.task.update({
+        where: {
+          id: post.task.id
+        }, data: {
+          status: TaskStatus.COMPLETED
+        }
+      })
+    }
+
     this.logger.log(`Post ${postId} has been published.`);
   }
 }
