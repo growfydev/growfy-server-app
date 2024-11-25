@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   NotFoundException,
   Param,
   Post,
@@ -23,5 +24,19 @@ export class PostsController {
     @Param('profileId') profileId: number,
   ) {
     return this.postsService.createPost(createPostDto, +profileId);
+
+  }
+
+  @Get(':profileId/posts')
+  @Auth([Role.USER], [ProfileMemberRoles.MANAGER])
+  async getPostsByProfile(@Param('profileId') profileId: number) {
+    const posts = await this.postsService.getPostsByProfile(+profileId);
+    if (!posts) {
+      throw new NotFoundException(
+        `No se encontraron posts para el perfil con ID ${profileId}.`,
+      );
+    }
+    return posts;
+
   }
 }

@@ -6,7 +6,7 @@ export class CreatePostDto {
   readonly content: Record<string, any>; // Representa los campos dinámicos (fields).
 
   @IsString()
-  readonly provider: ProviderNames; // Identifica el proveedor.
+  readonly provider; // Identifica el proveedor.
 
   @IsString()
   readonly typePost: string; // El nombre del tipo de post para las validaciones.
