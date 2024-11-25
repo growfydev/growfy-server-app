@@ -1,15 +1,19 @@
 import { ExecutionContext, Injectable, Logger } from '@nestjs/common';
-import { Role, ProfileMemberRoles } from '@prisma/client';
+import { Role, ProfileMemberRoles, Profile } from '@prisma/client';
 import { PROFILE_ROLES_KEY, ROLES_KEY } from '../keys/roles.keys';
-import { JwtPayloadType, ProfileType } from '../types/auth';
+import { JwtPayloadType } from '../types/auth';
 import { Reflector } from '@nestjs/core';
 import { RequestDataType } from '../types/auth';
+import { PrismaService } from 'src/core/prisma.service';
 
 @Injectable()
 export class RolesGuardService {
   private readonly logger = new Logger(RolesGuardService.name);
 
-  constructor(private readonly reflector: Reflector) { }
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly prisma: PrismaService,
+  ) { }
 
   getRequiredRoles(context: ExecutionContext): Role[] {
     return this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
@@ -59,34 +63,17 @@ export class RolesGuardService {
     return isNaN(profileId) ? null : profileId;
   }
 
-  getProfile(
-    user: JwtPayloadType['user'],
-    profileId: number,
-  ): ProfileType | undefined {
-    if (!user.profiles || !user.profiles.length) {
-      this.logger.warn(`User has no profiles.`);
-      return undefined;
-    }
-
-    const profile = user.profiles.find((p) => p.id === profileId);
-
-    if (!profile) {
-      this.logger.warn(`No matching profile found for ID: ${profileId}`);
-    }
-
-    return profile;
-  }
-
-  validateAccess(
+  async validateAccess(
     requiredRoles: Role[],
     requiredProfileRoles: ProfileMemberRoles[],
     user: JwtPayloadType['user'],
-    profile: ProfileType,
-  ): boolean {
+    profileId: number,
+  ): Promise<boolean> {
     const roleMatches = this.hasMatchingRoles(requiredRoles, user);
-    const profileRolesMatch = this.hasMatchingProfileRoles(
+    const profileRolesMatch = await this.hasMatchingProfileRoles(
       requiredProfileRoles,
-      profile,
+      profileId,
+      user.id,
     );
 
     const accessGranted = roleMatches && profileRolesMatch;
@@ -122,14 +109,24 @@ export class RolesGuardService {
     return hasAllRoles;
   }
 
-  hasMatchingProfileRoles(
+  async hasMatchingProfileRoles(
     requiredProfileRoles: ProfileMemberRoles[],
-    profile: ProfileType,
-  ): boolean {
-    if (!requiredProfileRoles?.length) return true;
-    const userProfileRoles = Array.isArray(profile.roles)
-      ? new Set(profile.roles)
-      : new Set(profile.roles.split(','));
+    profileId: number,
+    userId: number,
+  ): Promise<boolean> {
+    if (!requiredProfileRoles?.length) return true; 
+
+    const members = await this.prisma.member.findMany({
+      where: {
+        profileId,
+        userId,
+      },
+      select: {
+        role: true,
+      },
+    });
+
+    const userProfileRoles = new Set(members.map((member) => member.role));
 
     const hasAllProfileRoles = requiredProfileRoles.every((role) =>
       userProfileRoles.has(role),

@@ -32,7 +32,7 @@ export class MemberService {
       permissions: string[];
     }[]
   > {
-    // Fetch all memberships for the user, including the profiles
+
     const members = await this.prisma.member.findMany({
       where: { userId, globalStatus: 'ACTIVE' },
       include: {
@@ -42,16 +42,13 @@ export class MemberService {
 
     if (members.length === 0) return [];
 
-    // Fetch all unique roles from the memberships
     const roles = members.map((member) => member.role);
 
-    // Fetch all permissions for these roles in one query
     const permissionsByRole = await this.prisma.profileRolePermission.findMany({
       where: { profileRoles: { in: roles } },
       select: { profileRoles: true, permission: { select: { name: true } } },
     });
 
-    // Map role to its permissions
     const rolePermissionsMap = permissionsByRole.reduce((map, item) => {
       const role = item.profileRoles;
       if (!map[role]) {
@@ -61,11 +58,10 @@ export class MemberService {
       return map;
     }, {} as Record<ProfileMemberRoles, string[]>);
 
-    // Build the profiles and roles result
     return members.map((member) => ({
       id: member.profile.id,
       name: member.profile.name,
-      roles: [member.role], // Adjust if multiple roles per member
+      roles: [member.role],
       permissions: rolePermissionsMap[member.role] || [],
     }));
   }

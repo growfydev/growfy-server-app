@@ -33,5 +33,5 @@ interface RequestData {
 
 // export type UserActiveType = UserActiveInterface;
 export type JwtPayloadType = JwtPayload;
-export type ProfileType = Profile;
+// export type ProfileType = Profile;
 export type RequestDataType = RequestData;
