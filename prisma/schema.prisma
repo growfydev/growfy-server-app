@@ -142,7 +142,7 @@ model Provider {
 
 model Post {
     id           Int          @id @default(autoincrement())
-    status       PostStatus?
+    status       PostStatus
     postTypeId   Int?
     profileId    Int
     postType     PostType?    @relation(fields: [postTypeId], references: [id])

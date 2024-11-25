@@ -1,4 +1,5 @@
-import { PermissionFlags, PostStatus, PrismaClient, ProfileMemberRoles, ProviderNames } from '@prisma/client';
+import { PermissionFlags, PrismaClient, ProfileMemberRoles, ProviderNames } from '@prisma/client';
+import { hashPassword } from '../src/modules/auth/utils/crypt';
 
 const prisma = new PrismaClient();
 
@@ -52,7 +53,8 @@ async function main() {
             }
         }
     }
-
+    const exampleUser = await createExampleUser();
+    console.log('Example user created:', exampleUser);
     await fillProvidersAndSocials();
     await seedPostTypesAndRelations();
 }
@@ -73,7 +75,7 @@ async function fillProvidersAndSocials() {
 }
 
 async function seedPostTypesAndRelations() {
-    // Add PostTypes
+
     const postTypes = [
         {
             name: 'text',
@@ -136,28 +138,44 @@ async function seedPostTypesAndRelations() {
             skipDuplicates: true,
         });
 
-        const post = await prisma.post.create({
-            data: {
-                status: PostStatus.QUEUED,
-                profileId: profile.id,
-                fields: { message: "Sample message", imgUrl: "http://example.com/image.jpg" },
-                createdAt: new Date(),
-            },
-        });
-
-        await prisma.task.create({
-            data: {
-                status: 'PENDING',
-                unix: Math.floor(Date.now() / 1000),
-                postId: post.id,
-                createdAt: new Date(),
-            },
-        });
-
-        console.log('Sample Social, Post, and Task seeded successfully.');
     } else {
         console.warn('No provider or profile found to link Social, Post, and Task.');
     }
+}
+
+async function createExampleUser() {
+
+    const user = await prisma.user.create({
+        data: {
+            name: 'John Doe',
+            email: 'johndoe@example.com',
+            phone: '123-456-7890',
+            password: await hashPassword('123456'),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        },
+    });
+
+    const profile = await prisma.profile.create({
+        data: {
+            name: 'John Doe Profile',
+            userId: user.id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        },
+    });
+
+    const member = await prisma.member.create({
+        data: {
+            userId: user.id,
+            profileId: profile.id,
+            role: ProfileMemberRoles.MANAGER,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        },
+    });
+
+    return { user, profile, member };
 }
 
 main()

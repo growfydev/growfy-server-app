@@ -23,7 +23,7 @@ export class AuthService {
     private profileService: ProfileService,
     private memberService: MemberService,
     private authenticationService: AuthenticationService,
-  ) {}
+  ) { }
 
   async register(data: RegisterDto): Promise<{ user: User }> {
     const newUser = await this.userService.createUser(data);
