@@ -114,9 +114,16 @@ model Social {
     updatedAt    DateTime?    @updatedAt
 }
 
+enum ProviderNames {
+    FACEBOOK
+    INSTAGRAM
+    TWITTER
+    PINTEREST
+}
+
 model Provider {
     id               Int                @id @default(autoincrement())
-    name             String
+    name             ProviderNames      @unique
     socials          Social[]
     globalStatus     GlobalStatus       @default(ACTIVE)
     createdAt        DateTime           @default(now())
@@ -163,8 +170,8 @@ model PostType {
 
 model ProviderPostType {
     id         Int      @id @default(autoincrement())
-    providerId Int      @unique
-    posttypeId Int      @unique
+    providerId Int
+    posttypeId Int
     provider   Provider @relation(fields: [providerId], references: [id])
     posttype   PostType @relation(fields: [posttypeId], references: [id])
 }
