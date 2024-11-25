@@ -1,10 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma.service';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { TaskQueueService } from '../tasks/tasks-queue.service';
+import { GlobalStatus, PostStatus, TaskStatus } from '@prisma/client';
 
 @Injectable()
 export class PostsService {
+
+  private readonly logger = new Logger();
   constructor(private readonly prisma: PrismaService, private readonly taskQueueService: TaskQueueService) { }
 
   async createPost(postData: CreatePostDto, profileId: number) {
@@ -60,14 +63,14 @@ export class PostsService {
 
     const newPost = await this.prisma.post.create({
       data: {
-        status: status || 'DRAFT',
+        status: status,
         postTypeId: postType.id,
         profileId: profileId,
         fields: content,
-        globalStatus: 'ACTIVE',
+        globalStatus: GlobalStatus.ACTIVE,
         task: unix
           ? {
-            create: { status: 'PENDING', unix },
+            create: { status: TaskStatus.PENDING, unix },
           }
           : undefined,
       },
@@ -110,6 +113,7 @@ export class PostsService {
   async publishPost(profileId: number, postId: number): Promise<void> {
     const post = await this.prisma.post.findFirst({
       where: { id: postId, profileId },
+      include: { task: true },
     });
 
     if (!post) {
@@ -118,10 +122,9 @@ export class PostsService {
 
     await this.prisma.post.update({
       where: { id: postId },
-      data: { globalStatus: 'ACTIVE', status: 'PUBLISHED' },
+      data: { globalStatus: GlobalStatus.ACTIVE, status: PostStatus.PUBLISHED },
     });
 
-    console.log(`Post ${postId} has been published.`);
-
+    this.logger.log(`Post ${postId} has been published.`);
   }
 }

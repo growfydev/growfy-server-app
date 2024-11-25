@@ -11,7 +11,13 @@ CREATE TYPE "PermissionFlags" AS ENUM ('VIEW', 'VIEW_ANALYTICS', 'VIEW_INBOX', '
 CREATE TYPE "GlobalStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'DELETED');
 
 -- CreateEnum
-CREATE TYPE "TaskStatus" AS ENUM ('SCHEDULED', 'PEDNING', 'PROCESSING', 'COMPLETED', 'CANCELED');
+CREATE TYPE "TaskStatus" AS ENUM ('SCHEDULED', 'PEDNING', 'PROCESSING', 'COMPLETED', 'CANCELED', 'FAILED');
+
+-- CreateEnum
+CREATE TYPE "PostStatus" AS ENUM ('QUEUED', 'COMPLETED', 'CANCELED', 'FAILED');
+
+-- CreateEnum
+CREATE TYPE "ProviderNames" AS ENUM ('FACEBOOK', 'INSTAGRAM', 'TWITTER', 'PINTEREST');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -73,7 +79,7 @@ CREATE TABLE "Social" (
 -- CreateTable
 CREATE TABLE "Provider" (
     "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
+    "name" "ProviderNames" NOT NULL,
     "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
@@ -84,7 +90,7 @@ CREATE TABLE "Provider" (
 -- CreateTable
 CREATE TABLE "Post" (
     "id" SERIAL NOT NULL,
-    "status" TEXT,
+    "status" "PostStatus",
     "postTypeId" INTEGER,
     "profileId" INTEGER NOT NULL,
     "fields" JSONB NOT NULL,
@@ -98,7 +104,7 @@ CREATE TABLE "Post" (
 -- CreateTable
 CREATE TABLE "Task" (
     "id" SERIAL NOT NULL,
-    "status" TEXT NOT NULL,
+    "status" "TaskStatus" NOT NULL,
     "unix" INTEGER NOT NULL,
     "postId" INTEGER NOT NULL,
     "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
@@ -159,13 +165,10 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "Member_userId_profileId_key" ON "Member"("userId", "profileId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Provider_name_key" ON "Provider"("name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Task_postId_key" ON "Task"("postId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "ProviderPostType_providerId_key" ON "ProviderPostType"("providerId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "ProviderPostType_posttypeId_key" ON "ProviderPostType"("posttypeId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Permission_name_key" ON "Permission"("name");
