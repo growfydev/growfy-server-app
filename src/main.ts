@@ -16,7 +16,7 @@ async function main() {
     .setDescription('Documentación de mi API')
     .setVersion('1.0')
     .addTag('endpoints')
-    .addBearerAuth() // Si usas autenticación JWT
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
