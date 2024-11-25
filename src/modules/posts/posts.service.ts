@@ -80,6 +80,32 @@ export class PostsService {
     return newPost;
   }
 
+  async getPostsByProfile(profileId: number) {
+    return this.prisma.profile.findUnique({
+      where: {
+        id: profileId,
+      },
+      include: {
+        posts: {
+          include: {
+            task: true,
+            postType: true,
+            profile: {
+              include: {
+                socials: {
+                  include: {
+                    provider: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+  }
+
 
   async publishPost(profileId: number, postId: number): Promise<void> {
     const post = await this.prisma.post.findFirst({
@@ -96,30 +122,6 @@ export class PostsService {
     });
 
     console.log(`Post ${postId} has been published.`);
-
-  async getPostsByProfile(profileId: number) {
-    return this.prisma.profile.findUnique({
-      where: {
-        id: profileId, // Reemplaza con el ID del perfil que deseas consultar
-      },
-      include: {
-        posts: {
-          include: {
-            task: true, // Incluye la información de la tarea asociada al post
-            postType: true, // Incluye el tipo de post
-            profile: {
-              include: {
-                socials: {
-                  include: {
-                    provider: true, // Incluye el proveedor asociado
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
 
   }
 }
