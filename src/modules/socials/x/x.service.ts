@@ -39,7 +39,10 @@ export class XService {
     } catch (error) {
       const status = error.response?.status || 500;
       const errorData = error.response?.data || error.message;
-      throw new HttpException(`Error al obtener el Access Token: ${JSON.stringify(errorData)}`, status);
+      throw new HttpException(
+        `Error al obtener el Access Token: ${JSON.stringify(errorData)}`,
+        status,
+      );
     }
   }
 
@@ -60,7 +63,10 @@ export class XService {
     } catch (error) {
       const status = error.response?.status || 500;
       const errorData = error.response?.data || error.message;
-      throw new HttpException(`Error al publicar el tweet: ${JSON.stringify(errorData)}`, status);
+      throw new HttpException(
+        `Error al publicar el tweet: ${JSON.stringify(errorData)}`,
+        status,
+      );
     }
   }
 }

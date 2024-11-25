@@ -24,7 +24,10 @@ export class TiktokService {
       if (data?.data?.access_token) {
         return data.data.access_token;
       } else {
-        throw new HttpException('Error al obtener el token de acceso', HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          'Error al obtener el token de acceso',
+          HttpStatus.BAD_REQUEST,
+        );
       }
     } catch (error) {
       throw new HttpException(
@@ -33,5 +36,4 @@ export class TiktokService {
       );
     }
   }
-
 }

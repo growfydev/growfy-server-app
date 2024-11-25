@@ -1,3 +1,3 @@
 export enum Services {
-  Stripe = 'STRIPE_CLIENT'
+  Stripe = 'STRIPE_CLIENT',
 }

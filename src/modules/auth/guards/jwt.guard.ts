@@ -15,8 +15,8 @@ import { JwtPayloadType } from '../types/auth'; // Updated to use the new type
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
-    private reflector: Reflector
-  ) { }
+    private reflector: Reflector,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -36,7 +36,8 @@ export class AuthGuard implements CanActivate {
 
     try {
       const secret = configLoader().jwt.secret_key;
-      const payload: JwtPayloadType = await this.jwtService.verifyAsync<JwtPayloadType>(token, { secret });
+      const payload: JwtPayloadType =
+        await this.jwtService.verifyAsync<JwtPayloadType>(token, { secret });
       request.user = payload.user;
     } catch (error) {
       throw new UnauthorizedException('Invalid token');

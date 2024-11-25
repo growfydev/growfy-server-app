@@ -10,19 +10,17 @@ const REFRESH_SECRET_KEY = configLoader().jwt.refresh_key;
  * @param userRoles - User's roles and associated profile information
  * @returns Signed JWT access token
  */
-export function generateAccessToken(
-  user: {
-    id: number;
-    role: string;
-    profiles: { id: number; roles: string; permissions: string[] }[];
-  }
-): string {
+export function generateAccessToken(user: {
+  id: number;
+  role: string;
+  profiles: { id: number; roles: string; permissions: string[] }[];
+}): string {
   return jwt.sign(
     {
       user,
     },
     SECRET_KEY,
-    { expiresIn: '1h' }
+    { expiresIn: '1h' },
   );
 }
 
@@ -32,7 +30,10 @@ export function generateAccessToken(
  * @param fingerprint - Optional fingerprint hash for additional security
  * @returns Signed JWT refresh token
  */
-export function generateRefreshToken(userId: number, fingerprint?: string): string {
+export function generateRefreshToken(
+  userId: number,
+  fingerprint?: string,
+): string {
   const payload: Record<string, any> = {
     userId,
     iat: Math.floor(Date.now() / 1000),

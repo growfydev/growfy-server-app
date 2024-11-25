@@ -1,4 +1,11 @@
-import { Controller, Post, Body, Query, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Query,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { TiktokService } from './tiktok.service';
 
 @Controller('tiktok')
@@ -14,6 +21,4 @@ export class TiktokController {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-
-
 }

@@ -4,6 +4,6 @@ import { XController } from './x.controller';
 
 @Module({
   providers: [XService],
-  controllers: [XController]
+  controllers: [XController],
 })
 export class XModule {}

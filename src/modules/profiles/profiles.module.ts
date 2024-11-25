@@ -10,4 +10,4 @@ import { AuthModule } from '../auth/auth.module';
   controllers: [ProfilesController],
   providers: [ProfilesService, PrismaService, JwtService],
 })
-export class ProfilesModule { }
+export class ProfilesModule {}
