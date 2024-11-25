@@ -1,14 +1,15 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma.service';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { TaskQueueService } from '../tasks/tasks-queue.service';
 import { GlobalStatus, PostStatus, TaskStatus } from '@prisma/client';
+import { Service } from 'src/service';
 
 @Injectable()
-export class PostsService {
-
-  private readonly logger = new Logger();
-  constructor(private readonly prisma: PrismaService, private readonly taskQueueService: TaskQueueService) { }
+export class PostsService extends Service {
+  constructor(private readonly prisma: PrismaService, private readonly taskQueueService: TaskQueueService) {
+    super();
+  }
 
   async createPost(postData: CreatePostDto, profileId: number) {
     const { typePost, provider, content, status, unix } = postData;

@@ -16,10 +16,13 @@ import {
 } from '@prisma/client';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { configLoader } from 'src/lib/config.loader';
+import { Service } from 'src/service';
 
 @Injectable()
-export class ProfilesService {
-  constructor(private readonly prisma: PrismaService) {}
+export class ProfilesService extends Service {
+  constructor(private readonly prisma: PrismaService) {
+    super();
+  }
 
   async create(
     userId: number,
@@ -152,8 +155,8 @@ export class ProfilesService {
       });
 
       // Opcional: Enviar correo de invitación
-      console.log(`Invitation email sent to ${email}`);
-      console.log(
+      this.logger.log(`Invitation email sent to ${email}`);
+      this.logger.log(
         `Invitation link: ${configLoader().client_url}/complete-registration/?email=${email}`,
       );
     }

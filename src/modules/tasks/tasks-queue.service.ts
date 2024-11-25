@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import { Service } from 'src/service';
 
 @Injectable()
-export class TaskQueueService {
-    constructor(@InjectQueue('taskQueue') private readonly taskQueue: Queue) { }
+export class TaskQueueService extends Service {
+    constructor(@InjectQueue('taskQueue') private readonly taskQueue: Queue) {
+        super();
+    }
 
     async scheduleTask(
         profileId: number,
@@ -18,5 +21,7 @@ export class TaskQueueService {
             { profileId, postId },
             { delay },
         );
+
+        this.logger.debug(`New task added to the queue for profile id: ${profileId}, and post id ${postId}`)
     }
 }
