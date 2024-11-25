@@ -22,6 +22,6 @@ export class PostsController {
     @Body() createPostDto: CreatePostDto,
     @Param('profileId') profileId: number,
   ) {
-    return this.postsService.createPost(createPostDto, profileId);
+    return this.postsService.createPost(createPostDto, +profileId);
   }
 }

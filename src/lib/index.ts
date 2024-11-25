@@ -23,7 +23,7 @@ import { TaskModule } from 'src/modules/tasks/tasks.module';
 import { ProfilesModule } from 'src/modules/profiles/profiles.module';
 import { PostsModule } from '../modules/posts/posts.module';
 
-const CoreModules = [SetupModule, TaskModule, PostsModule];
+const CoreModules = [SetupModule, PostsModule];
 
 const AuthModules = [AuthModule];
 
@@ -48,7 +48,7 @@ const AnalyticsModules = [ShopifyModule, WoocomerceModule];
 
 const PaymentModules = [StripeModule];
 
-const TaskManagementModules = [ProfilesModule];
+const TaskManagementModules = [ProfilesModule, TaskModule];
 
 const Modules = [
   ...CoreModules,

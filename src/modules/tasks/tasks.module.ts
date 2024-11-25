@@ -1,22 +1,26 @@
-import { Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bull';
-import { PrismaService } from 'src/core/prisma.service';
-import { AuthModule } from '../auth/auth.module';
-import { TaskQueueService } from './tasks-queue.service';
-import { TaskQueueProcessor } from './task.processor';
-import { PostsService } from '../posts/posts.service';
-import { PostsModule } from '../posts/posts.module';
+import { BullModule } from "@nestjs/bull";
+import { PrismaService } from "src/core/prisma.service";
+import { configLoader } from "src/lib/config.loader";
+import { PostsModule } from "../posts/posts.module";
+import { TaskQueueProcessor } from "./task.processor";
+import { TaskQueueService } from "./tasks-queue.service";
+import { Module } from "@nestjs/common";
 
 @Module({
     imports: [
+        BullModule.forRoot({
+            redis: {
+                host: configLoader().redis.host,
+                port: configLoader().redis.port,
+            },
+        }),
         BullModule.registerQueue({
             name: 'taskQueue',
         }),
-        AuthModule,
-        PostsModule
+        PostsModule,
     ],
     controllers: [],
-    providers: [TaskQueueService, TaskQueueProcessor],
-    exports: [TaskQueueService, TaskQueueProcessor],
+    providers: [PrismaService, TaskQueueService, TaskQueueProcessor],
+    exports: [TaskQueueService, TaskQueueProcessor, BullModule],
 })
 export class TaskModule { }
