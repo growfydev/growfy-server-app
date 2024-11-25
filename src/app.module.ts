@@ -10,4 +10,4 @@ import { JwtService } from '@nestjs/jwt';
   controllers: [AppController],
   providers: [PrismaService, ResponseInterceptor, JwtService],
 })
-export class AppModule { }
+export class AppModule {}

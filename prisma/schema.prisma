@@ -132,6 +132,7 @@ model Post {
     postType     PostType?    @relation(fields: [postTypeId], references: [id])
     profile      Profile      @relation(fields: [profileId], references: [id])
     task         Task?
+    fields       Json
     globalStatus GlobalStatus @default(ACTIVE)
     createdAt    DateTime     @default(now())
     updatedAt    DateTime?    @updatedAt
