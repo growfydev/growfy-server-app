@@ -57,33 +57,42 @@ export class CompleteRegistrationDto {
 }
 
 export class AuthenticateDto {
+    @ApiProperty()
     @IsEmail()
     @IsNotEmpty()
     email: string;
 
+    @ApiProperty()
     @IsString()
     @IsNotEmpty()
     password: string;
 
+    @ApiProperty()
     @IsString()
     @IsOptional()
     token2FA?: string;
 }
 
 export class TokensDto {
+    @ApiProperty()
     @IsString()
     accessToken: string;
+
+    @ApiProperty()
     @IsString()
     refreshToken: string;
 }
 
 export class Enable2FADto {
+
+    @ApiProperty()
     @IsNumber()
     @IsNotEmpty()
     userId: number;
 }
 
 export class Verify2FADto {
+    @ApiProperty()
     @IsString()
     @IsNotEmpty()
     token: string;
