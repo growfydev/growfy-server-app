@@ -24,6 +24,7 @@ export class PostsController {
     @Param('profileId') profileId: number,
   ) {
     return this.postsService.createPost(createPostDto, +profileId);
+
   }
 
   @Get(':profileId/posts')
@@ -36,5 +37,6 @@ export class PostsController {
       );
     }
     return posts;
+
   }
 }

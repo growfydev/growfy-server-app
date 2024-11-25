@@ -1,14 +1,18 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma.service';
 import { PostsService } from './posts.service';
 import { PostsController } from './posts.controller';
-import { JwtService } from '@nestjs/jwt';
 import { AuthModule } from '../auth/auth.module';
+import { TaskQueueService } from '../tasks/tasks-queue.service';
+import { TaskModule } from '../tasks/tasks.module';
 
 @Module({
-  imports: [AuthModule],
+  imports: [
+    forwardRef(() => TaskModule),
+    forwardRef(() => AuthModule),
+  ],
   controllers: [PostsController],
-  providers: [PostsService, PrismaService],
+  providers: [TaskQueueService, PostsService, PrismaService],
   exports: [PostsService],
 })
-export class PostsModule {}
+export class PostsModule { }

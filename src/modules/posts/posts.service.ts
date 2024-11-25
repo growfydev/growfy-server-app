@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma.service';
 import { CreatePostDto } from './dtos/create-post.dto';
+import { TaskQueueService } from '../tasks/tasks-queue.service';
 
 @Injectable()
 export class PostsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly taskQueueService: TaskQueueService) { }
 
   async createPost(postData: CreatePostDto, profileId: number) {
     const { typePost, provider, content, status, unix } = postData;
@@ -57,16 +58,6 @@ export class PostsService {
       );
     }
 
-    let taskData = null;
-    if (unix) {
-      taskData = {
-        create: {
-          status: 'PENDING',
-          unix,
-        },
-      };
-    }
-
     const newPost = await this.prisma.post.create({
       data: {
         status: status || 'DRAFT',
@@ -74,12 +65,37 @@ export class PostsService {
         profileId: profileId,
         fields: content,
         globalStatus: 'ACTIVE',
-        task: taskData,
+        task: unix
+          ? {
+            create: { status: 'PENDING', unix },
+          }
+          : undefined,
       },
     });
 
+    if (unix) {
+      await this.taskQueueService.scheduleTask(profileId, newPost.id, unix);
+    }
+
     return newPost;
   }
+
+
+  async publishPost(profileId: number, postId: number): Promise<void> {
+    const post = await this.prisma.post.findFirst({
+      where: { id: postId, profileId },
+    });
+
+    if (!post) {
+      throw new Error(`Post with ID ${postId} not found for profile ${profileId}.`);
+    }
+
+    await this.prisma.post.update({
+      where: { id: postId },
+      data: { globalStatus: 'ACTIVE', status: 'PUBLISHED' },
+    });
+
+    console.log(`Post ${postId} has been published.`);
 
   async getPostsByProfile(profileId: number) {
     return this.prisma.profile.findUnique({
@@ -104,5 +120,6 @@ export class PostsService {
         },
       },
     });
+
   }
 }
