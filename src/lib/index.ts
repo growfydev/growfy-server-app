@@ -1,8 +1,6 @@
 import { ThreadsModule } from '../modules/socials/threads/threads.module';
 import { SetupModule } from '../modules/config/setup.module';
 import { AuthModule } from '../modules/auth/auth.module';
-import { InstagramModule } from '../modules/socials/instagram/instagram.module';
-import { FacebookModule } from '../modules/socials/facebook/facebook.module';
 import { LinkedInModule } from '../modules/socials/linkedin/linkedin.module';
 import { TiktokModule } from '../modules/socials/tiktok/tiktok.module';
 import { TiktokAdsModule } from '../modules/ads/tiktok/tiktok.module';
@@ -23,14 +21,13 @@ import { WoocomerceModule } from '../modules/analytics/woocomerce/woocomerce.mod
 import { StripeModule } from '../modules/payments/stripe/stripe.module';
 import { TaskModule } from 'src/modules/tasks/tasks.module';
 import { ProfilesModule } from 'src/modules/profiles/profiles.module';
+import { PostsModule } from '../modules/posts/posts.module';
 
-const CoreModules = [SetupModule, TaskModule];
+const CoreModules = [SetupModule, TaskModule, PostsModule];
 
 const AuthModules = [AuthModule];
 
 const SocialModules = [
-  InstagramModule,
-  FacebookModule,
   ThreadsModule,
   TiktokModule,
   XModule,
