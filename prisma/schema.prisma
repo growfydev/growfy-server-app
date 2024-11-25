@@ -51,10 +51,19 @@ enum GlobalStatus {
 
 enum TaskStatus {
     SCHEDULED
-    PEDNING
+    PENDING
     PROCESSING
     COMPLETED
     CANCELED
+    FAILED
+}
+
+enum PostStatus {
+    QUEUED
+    COMPLETED
+    CANCELED
+    FAILED
+    PUBLISHED
 }
 
 model User {
@@ -133,7 +142,7 @@ model Provider {
 
 model Post {
     id           Int          @id @default(autoincrement())
-    status       String?
+    status       PostStatus?
     postTypeId   Int?
     profileId    Int
     postType     PostType?    @relation(fields: [postTypeId], references: [id])
@@ -147,7 +156,7 @@ model Post {
 
 model Task {
     id           Int          @id @default(autoincrement())
-    status       String
+    status       TaskStatus
     unix         Int
     postId       Int          @unique
     post         Post         @relation(fields: [postId], references: [id])

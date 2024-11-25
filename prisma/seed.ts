@@ -1,4 +1,4 @@
-import { PermissionFlags, PrismaClient, ProfileMemberRoles, ProviderNames } from '@prisma/client';
+import { PermissionFlags, PostStatus, PrismaClient, ProfileMemberRoles, ProviderNames } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -138,7 +138,7 @@ async function seedPostTypesAndRelations() {
 
         const post = await prisma.post.create({
             data: {
-                status: 'DRAFT',
+                status: PostStatus.QUEUED,
                 profileId: profile.id,
                 fields: { message: "Sample message", imgUrl: "http://example.com/image.jpg" },
                 createdAt: new Date(),
