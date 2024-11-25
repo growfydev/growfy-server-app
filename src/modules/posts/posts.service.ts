@@ -6,7 +6,7 @@ import { CreatePostDto } from './dtos/create-post.dto';
 export class PostsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createPost(postData: CreatePostDto) {
+  async createPost(postData: CreatePostDto, profileId: number) {
     const { typePost, provider, content, status, unix } = postData;
 
     const postType = await this.prisma.postType.findFirst({
@@ -51,16 +51,8 @@ export class PostsService {
       }
     }
 
-    const profile = await this.prisma.profile.findFirst({
-      where: {
-        socials: {
-          some: {
-            providerId: providerData.id,
-          },
-        },
-      },
-    });
-    if (!profile) {
+    
+    if (!profileId) {
       throw new Error(
         `No se encontró un perfil asociado al proveedor "${provider}".`,
       );
@@ -80,7 +72,7 @@ export class PostsService {
       data: {
         status: status || 'DRAFT',
         postTypeId: postType.id,
-        profileId: profile.id,
+        profileId: profileId,
         fields: content,
         globalStatus: 'ACTIVE',
         task: taskData,

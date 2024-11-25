@@ -10,6 +10,7 @@ import { ProfileMemberRoles, Role } from '@prisma/client';
  * @param roles - List of required core roles for the route (defaults to [Role.USER])
  * @param profileMemberRoles - List of required team roles to have access to a specific feature.
  */
+
 export function Auth(roles?: Role[], profileMemberRoles: ProfileMemberRoles[] = []) {
     const effectiveRoles = roles?.length ? roles : [Role.USER];
     return applyDecorators(
