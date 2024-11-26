@@ -7,12 +7,15 @@ import { Service } from 'src/service';
 
 @Injectable()
 export class PostsService extends Service {
-  constructor(private readonly prisma: PrismaService, private readonly taskQueueService: TaskQueueService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly taskQueueService: TaskQueueService,
+  ) {
     super();
   }
 
   async createPost(postData: CreatePostDto, profileId: number) {
-    const { typePost, provider, content, status, unix } = postData;
+    const { typePost, provider, content, unix } = postData;
 
     const postType = await this.prisma.postType.findFirst({
       where: { name: typePost },
@@ -62,18 +65,19 @@ export class PostsService extends Service {
       );
     }
 
+    const postStatus = unix ? PostStatus.QUEUED : PostStatus.PUBLISHED;
+    const taskStatus = unix ? TaskStatus.PENDING : TaskStatus.COMPLETED;
+    const unixCurrentTimestamp = new Date().getTime() / 1000;
     const newPost = await this.prisma.post.create({
       data: {
-        status: status,
+        status: postStatus,
         postTypeId: postType.id,
         profileId: profileId,
         fields: content,
         globalStatus: GlobalStatus.ACTIVE,
         task: unix
-          ? {
-            create: { status: TaskStatus.PENDING, unix },
-          }
-          : undefined,
+          ? { create: { status: taskStatus, unix } }
+          : { create: { status: taskStatus, unix: unixCurrentTimestamp } },
       },
     });
 
@@ -107,9 +111,7 @@ export class PostsService extends Service {
         },
       },
     });
-
   }
-
 
   async publishPost(profileId: number, postId: number): Promise<void> {
     const post = await this.prisma.post.findFirst({
@@ -118,7 +120,9 @@ export class PostsService extends Service {
     });
 
     if (!post) {
-      throw new Error(`Post with ID ${postId} not found for profile ${profileId}.`);
+      throw new Error(
+        `Post with ID ${postId} not found for profile ${profileId}.`,
+      );
     }
 
     await this.prisma.post.update({
@@ -129,11 +133,12 @@ export class PostsService extends Service {
     if (post.task) {
       await this.prisma.task.update({
         where: {
-          id: post.task.id
-        }, data: {
-          status: TaskStatus.COMPLETED
-        }
-      })
+          id: post.task.id,
+        },
+        data: {
+          status: TaskStatus.COMPLETED,
+        },
+      });
     }
 
     this.logger.log(`Post ${postId} has been published.`);
