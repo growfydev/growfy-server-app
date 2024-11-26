@@ -5,6 +5,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { AllExceptionsFilter } from './lib/AllExceptionsFilter';
 import { ResponseInterceptor } from './lib/ResponseInterceptor';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { Logger } from 'nestjs-pino';
 
 async function main() {
   const app = await NestFactory.create(AppModule);
@@ -27,6 +28,7 @@ async function main() {
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(app.get(ResponseInterceptor));
+  app.useLogger(app.get(Logger));
   await app.listen(port);
 }
 void main();

@@ -6,7 +6,7 @@ import { hashPassword } from '../utils/crypt';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async createUser(data: RegisterDto): Promise<User> {
     return this.prisma.user.create({
@@ -24,7 +24,15 @@ export class UserService {
   }
 
   async findUserById(id: number): Promise<User | null> {
-    return this.prisma.user.findUnique({ where: { id } });
+    return this.prisma.user.findUnique({
+      where: { id }, include: {
+        members: {
+          include: {
+            profile: true,
+          },
+        },
+      }
+    });
   }
 
   async updateUser(email: string, data: Partial<User>): Promise<User> {

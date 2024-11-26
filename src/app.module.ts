@@ -4,10 +4,11 @@ import Modules from './lib';
 import { ResponseInterceptor } from './lib/ResponseInterceptor';
 import { AppController } from './app.controller';
 import { JwtService } from '@nestjs/jwt';
+import { LoggerConfiguredModule } from './lib/logger.config';
 
 @Module({
-  imports: Modules,
+  imports: [...Modules, LoggerConfiguredModule],
   controllers: [AppController],
   providers: [PrismaService, ResponseInterceptor, JwtService],
 })
-export class AppModule {}
+export class AppModule { }

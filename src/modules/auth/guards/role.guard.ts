@@ -23,6 +23,8 @@ export class RolesGuard implements CanActivate {
 
     if (this.rolesGuard.isAdminAccess(requiredRoles, user)) return true;
 
+    if (!requiredProfileRoles.length) return true;
+
     const profileId = this.rolesGuard.getProfileId(params, body);
     if (!profileId) {
       return this.rolesGuard.denyAccess('Invalid or missing profile ID.');

@@ -46,7 +46,7 @@ export class AuthController {
   @Auth([Role.USER, Role.ADMIN])
   @ResponseMessage('User details retrieved successfully')
   async me(@ActiveUser() user: User) {
-    return this.authService.getProfile(user.id);
+    return this.authService.getUser(user.id);
   }
 
   @Post('otp/enable')
