@@ -41,7 +41,7 @@ export class PostsService extends Service {
         });
       if (!isValidProviderPostType) {
         throw new Error(
-          `The type of post "${typePost}" not supported by the supplier"${provider}".`,
+          `The type of post "${typePost}" is not supported by the supplier "${provider}".`,
         );
       }
 
@@ -49,20 +49,20 @@ export class PostsService extends Service {
       for (const [field, fieldType] of Object.entries(requiredFields)) {
         if (!(field in content)) {
           throw new Error(
-            `The field "${field}" It is required for the type of post "${typePost}".`,
+            `The field "${field}" is required for the type of post "${typePost}".`,
           );
         }
 
         if (typeof content[field] !== fieldType) {
           throw new Error(
-            `The field "${field}" must be type "${fieldType}", but it was received"${typeof content[field]}".`,
+            `The field "${field}" must be of type "${fieldType}", but received "${typeof content[field]}".`,
           );
         }
       }
 
       if (!profileId) {
         throw new Error(
-          `No profile associated with the provider was found"${provider}".`,
+          `No profile associated with the provider "${provider}".`,
         );
       }
 
@@ -74,7 +74,7 @@ export class PostsService extends Service {
         data: {
           status: postStatus,
           postTypeId: postType.id,
-          profileId: profileId,
+          profileId,
           fields: content,
           globalStatus: GlobalStatus.ACTIVE,
           task: unix
@@ -90,40 +90,8 @@ export class PostsService extends Service {
       return newPost;
     } catch (error) {
       console.error('Error creating post:', error);
-
       throw new Error('There was an error creating the post.');
     }
-<<<<<<< Updated upstream
-
-    if (!profileId) {
-      throw new Error(
-        `No se encontró un perfil asociado al proveedor "${provider}".`,
-      );
-    }
-
-    const postStatus = unix ? PostStatus.QUEUED : PostStatus.PUBLISHED;
-    const taskStatus = unix ? TaskStatus.PENDING : TaskStatus.COMPLETED;
-    const unixCurrentTimestamp = new Date().getTime() / 1000;
-    const newPost = await this.prisma.post.create({
-      data: {
-        status: postStatus,
-        postTypeId: postType.id,
-        profileId: profileId,
-        fields: content,
-        globalStatus: GlobalStatus.ACTIVE,
-        task: unix
-          ? { create: { status: taskStatus, unix } }
-          : { create: { status: taskStatus, unix: unixCurrentTimestamp } },
-      },
-    });
-
-    if (unix) {
-      await this.taskQueueService.scheduleTask(profileId, newPost.id, unix);
-    }
-
-    return newPost;
-=======
->>>>>>> Stashed changes
   }
 
   async getPostsByProfile(profileId: number) {
@@ -161,7 +129,7 @@ export class PostsService extends Service {
       });
 
       await this.prisma.task.updateMany({
-        where: { postId: postId },
+        where: { postId },
         data: { status: TaskStatus.FAILED },
       });
     }
@@ -186,12 +154,8 @@ export class PostsService extends Service {
 
     if (post.task) {
       await this.prisma.task.update({
-        where: {
-          id: post.task.id,
-        },
-        data: {
-          status: TaskStatus.COMPLETED,
-        },
+        where: { id: post.task.id },
+        data: { status: TaskStatus.COMPLETED },
       });
     }
 
