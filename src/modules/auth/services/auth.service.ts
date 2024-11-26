@@ -64,7 +64,7 @@ export class AuthService {
     return { user: updatedUser };
   }
 
-  async getProfile(userId: number): Promise<{ user: User }> {
+  async getUser(userId: number): Promise<{ user: User }> {
     const user = await this.userService.findUserById(userId);
     if (!user) throw new NotFoundException('User not found');
     return { user };
