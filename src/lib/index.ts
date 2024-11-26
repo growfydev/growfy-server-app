@@ -12,7 +12,7 @@ import { WhatsappModule } from '../modules/socials/whatsapp/whatsapp.module';
 import { WebModule } from '../modules/socials/web/web.module';
 import { MetaModule } from '../modules/ads/meta/meta.module';
 import { GoogleModule } from '../modules/ads/google/google.module';
-import { TwilioModule } from '../modules/third-parties/twilio/twilio.module';
+import { TwilioModule } from '../modules/third-parties/sms/sms.module';
 import { DriveModule } from '../modules/third-parties/drive/drive.module';
 import { EmailModule } from '../modules/third-parties/email/email.module';
 import { CanvasModule } from '../modules/socials/canvas/canvas.module';

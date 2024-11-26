@@ -109,6 +109,17 @@ model Profile {
     createdAt    DateTime     @default(now())
     updatedAt    DateTime?    @updatedAt
     User         User         @relation(fields: [userId], references: [id])
+    customers    Customer[]
+}
+
+model Customer {
+    id           Int          @id @default(autoincrement())
+    name         String
+    profileId    Int // Campo obligatorio para la relación
+    globalStatus GlobalStatus @default(ACTIVE)
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime?    @updatedAt
+    Profile      Profile      @relation(fields: [profileId], references: [id]) // Relación con Profile
 }
 
 model Social {
