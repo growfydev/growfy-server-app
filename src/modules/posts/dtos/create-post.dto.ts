@@ -11,9 +11,6 @@ export class CreatePostDto {
   @IsString()
   readonly typePost: string; // El nombre del tipo de post para las validaciones.
 
-  @IsString()
-  readonly status: PostStatus; // Estado inicial del post (por ejemplo: "DRAFT" o "PUBLISHED").
-
   @IsNumber()
   @IsOptional()
   readonly unix?: number; // Campo opcional para programar tareas relacionadas con el post.
