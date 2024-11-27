@@ -2,6 +2,7 @@ import {
   PermissionFlags,
   PrismaClient,
   ProfileMemberRoles,
+  ProviderNames,
 } from '@prisma/client';
 import { hashPassword } from '../src/modules/auth/utils/crypt';
 
@@ -18,24 +19,24 @@ async function main() {
   }
 
   const profileRolePermissions: Record<ProfileMemberRoles, PermissionFlags[]> =
-    {
-      OWNER: [
-        PermissionFlags.VIEW,
-        PermissionFlags.MANAGEMENT,
-        PermissionFlags.EDIT,
-      ],
-      MEMBER: [PermissionFlags.VIEW],
-      ANALYST: [PermissionFlags.VIEW_ANALYTICS],
-      EDITOR: [PermissionFlags.EDIT],
-      MANAGER: [
-        PermissionFlags.VIEW,
-        PermissionFlags.MANAGEMENT,
-        PermissionFlags.REVIEW_POSTS,
-      ],
-      CONTENT_CREATOR: [PermissionFlags.VIEW, PermissionFlags.PLAN_AND_PUBLISH],
-      CLIENT: [PermissionFlags.VIEW],
-      GUEST: [],
-    };
+  {
+    OWNER: [
+      PermissionFlags.VIEW,
+      PermissionFlags.MANAGEMENT,
+      PermissionFlags.EDIT,
+    ],
+    MEMBER: [PermissionFlags.VIEW],
+    ANALYST: [PermissionFlags.VIEW_ANALYTICS],
+    EDITOR: [PermissionFlags.EDIT],
+    MANAGER: [
+      PermissionFlags.VIEW,
+      PermissionFlags.MANAGEMENT,
+      PermissionFlags.REVIEW_POSTS,
+    ],
+    CONTENT_CREATOR: [PermissionFlags.VIEW, PermissionFlags.PLAN_AND_PUBLISH],
+    CLIENT: [PermissionFlags.VIEW],
+    GUEST: [],
+  };
 
   for (const [role, permissions] of Object.entries(profileRolePermissions)) {
     const profileRole = role as ProfileMemberRoles;
@@ -67,56 +68,44 @@ async function main() {
 }
 
 async function fillProvidersAndSocials() {
-  // Lista de nombres de redes sociales
-  const socialNetworks = [
-    'facebook',
-    'instagram',
-    'twitter',
-    'linterest',
-    'linkedIn',
-    'youTube',
-    'tikTok',
-  ];
 
-  // Construir los objetos con datos para insertar
+  const socialNetworks = Object.values(ProviderNames);
+
   const providers = socialNetworks.map((network) => ({
     name: network,
-    createdAt: new Date(),
-    updatedAt: new Date(),
   }));
 
-  // Insertar los registros en la base de datos
   await prisma.provider.createMany({
     data: providers,
-    skipDuplicates: true, // Evita errores si ya existen registros duplicados
+    skipDuplicates: true,
   });
 
   console.log('Providers seeded successfully with social network names.');
 }
+
+
 async function seedPostTypesAndRelations() {
-  // Definir los tipos de post
   const postTypes = [
     {
       name: 'text',
-      fields: { title: 'string', content: 'string' },
+      fields: ({ title: 'string', content: 'string' }),
       createdAt: new Date(),
       updatedAt: new Date(),
     },
     {
       name: 'image',
-      fields: { caption: 'string', imgUrl: 'string' },
+      fields: ({ caption: 'string', imgUrl: 'string' }),
       createdAt: new Date(),
       updatedAt: new Date(),
     },
     {
       name: 'message',
-      fields: { message: 'string' },
+      fields: ({ message: 'string' }),
       createdAt: new Date(),
       updatedAt: new Date(),
     },
   ];
 
-  // Crear los tipos de post en la base de datos
   await prisma.postType.createMany({
     data: postTypes,
     skipDuplicates: true,
@@ -124,54 +113,56 @@ async function seedPostTypesAndRelations() {
 
   console.log('PostTypes seeded successfully.');
 
-  // Obtener todos los proveedores y tipos de post
   const providers = await prisma.provider.findMany();
+  console.log(`${providers.length} providers found.`);
+
+  const profile = await prisma.profile.findFirst();
+
+  if (!profile) {
+    console.warn('No profile found to associate with providers.');
+    return;
+  }
+
+  const socials = providers.map((provider) => ({
+    token: `token-${provider.name}`,
+    providerId: provider.id,
+    profileId: profile.id,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }));
+
+
+  if (socials.length > 0) {
+    await prisma.social.createMany({
+      data: socials,
+      skipDuplicates: true,
+    });
+
+    console.log('Socials seeded successfully for all providers.');
+  } else {
+    console.warn('No socials to create.');
+  }
+
   const postTypeIds = await prisma.postType.findMany({ select: { id: true } });
 
-  // Relacionar los proveedores con los tipos de post
   const providerPostTypes = providers.flatMap((provider) =>
     postTypeIds.map((postType) => ({
       providerId: provider.id,
       posttypeId: postType.id,
-    })),
+    }))
   );
 
-  await prisma.providerPostType.createMany({
-    data: providerPostTypes,
-    skipDuplicates: true,
-  });
-
-  console.log('ProviderPostTypes linked successfully.');
-
-  const providerNameToSearch = 'facebook';
-  const provider = await prisma.provider.findFirst({
-    where: { name: providerNameToSearch },
-  });
-
-  // Obtener un perfil para asociarlo con la red social
-  const profile = await prisma.profile.findFirst();
-
-  if (provider && profile) {
-    // Crear la relación Social
-    await prisma.social.createMany({
-      data: [
-        {
-          token: 'sample-token',
-          providerId: provider.id,
-          profileId: profile.id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ],
+  if (providerPostTypes.length > 0) {
+    await prisma.providerPostType.createMany({
+      data: providerPostTypes,
       skipDuplicates: true,
     });
 
-    console.log('Social linked successfully.');
+    console.log('ProviderPostTypes linked successfully.');
   } else {
-    console.warn(
-      'No provider or profile found to link Social, Post, and Task.',
-    );
+    console.warn('No ProviderPostTypes to link.');
   }
+
 }
 
 async function createExampleUser() {
