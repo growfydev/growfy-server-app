@@ -82,6 +82,23 @@ export class PostsService extends Service {
             ? { create: { status: taskStatus, unix } }
             : { create: { status: taskStatus, unix: unixCurrentTimestamp } },
         },
+        include: {
+          ProviderPostType: {
+            include: {
+              provider: {
+                select: {
+                  name: true,
+                },
+              },
+              posttype: {
+                select: {
+                  name: true,
+                  fields: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       if (unix) {
@@ -106,24 +123,24 @@ export class PostsService extends Service {
             task: {
               select: {
                 status: true,
-                unix: true
-              }
+                unix: true,
+              },
             },
             ProviderPostType: {
               include: {
                 provider: {
                   select: {
-                    name: true
-                  }
+                    name: true,
+                  },
                 },
                 posttype: {
                   select: {
                     name: true,
-                    fields: true
-                  }
-                }
-              }
-            }
+                    fields: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
