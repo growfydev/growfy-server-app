@@ -7,81 +7,91 @@ import { Service } from 'src/service';
 
 @Injectable()
 export class PostsService extends Service {
-  constructor(private readonly prisma: PrismaService, private readonly taskQueueService: TaskQueueService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly taskQueueService: TaskQueueService,
+  ) {
     super();
   }
 
   async createPost(postData: CreatePostDto, profileId: number) {
-    const { typePost, provider, content, status, unix } = postData;
+    const { typePost, provider, content, unix } = postData;
 
-    const postType = await this.prisma.postType.findFirst({
-      where: { name: typePost },
-    });
-    if (!postType) {
-      throw new Error(`Tipo de post "${typePost}" no encontrado.`);
-    }
+    try {
+      const postType = await this.prisma.postType.findFirst({
+        where: { name: typePost },
+      });
+      if (!postType) {
+        throw new Error(`Post type "${typePost}" not found.`);
+      }
 
-    const providerData = await this.prisma.provider.findFirst({
-      where: { name: provider },
-    });
-    if (!providerData) {
-      throw new Error(`Proveedor "${provider}" no encontrado.`);
-    }
+      const providerData = await this.prisma.provider.findFirst({
+        where: { name: provider },
+      });
+      if (!providerData) {
+        throw new Error(`Provider "${provider}" not found.`);
+      }
 
-    const isValidProviderPostType =
-      await this.prisma.providerPostType.findFirst({
-        where: {
-          providerId: providerData.id,
-          posttypeId: postType.id,
+      const isValidProviderPostType =
+        await this.prisma.providerPostType.findFirst({
+          where: {
+            providerId: providerData.id,
+            posttypeId: postType.id,
+          },
+        });
+      if (!isValidProviderPostType) {
+        throw new Error(
+          `The type of post "${typePost}" is not supported by the supplier "${provider}".`,
+        );
+      }
+
+      const requiredFields = postType.fields as Record<string, string>;
+      for (const [field, fieldType] of Object.entries(requiredFields)) {
+        if (!(field in content)) {
+          throw new Error(
+            `The field "${field}" is required for the type of post "${typePost}".`,
+          );
+        }
+
+        if (typeof content[field] !== fieldType) {
+          throw new Error(
+            `The field "${field}" must be of type "${fieldType}", but received "${typeof content[field]}".`,
+          );
+        }
+      }
+
+      if (!profileId) {
+        throw new Error(
+          `No profile associated with the provider "${provider}".`,
+        );
+      }
+
+      const postStatus = unix ? PostStatus.QUEUED : PostStatus.PUBLISHED;
+      const taskStatus = unix ? TaskStatus.PENDING : TaskStatus.COMPLETED;
+      const unixCurrentTimestamp = Math.floor(new Date().getTime() / 1000);
+
+      const newPost = await this.prisma.post.create({
+        data: {
+          status: postStatus,
+          postTypeId: postType.id,
+          profileId,
+          fields: content,
+          globalStatus: GlobalStatus.ACTIVE,
+          task: unix
+            ? { create: { status: taskStatus, unix } }
+            : { create: { status: taskStatus, unix: unixCurrentTimestamp } },
         },
       });
-    if (!isValidProviderPostType) {
-      throw new Error(
-        `El tipo de post "${typePost}" no es compatible con el proveedor "${provider}".`,
-      );
-    }
 
-    const requiredFields = postType.fields as Record<string, string>;
-    for (const [field, fieldType] of Object.entries(requiredFields)) {
-      if (!(field in content)) {
-        throw new Error(
-          `El campo "${field}" es requerido para el tipo de post "${typePost}".`,
-        );
+      if (unix) {
+        await this.taskQueueService.scheduleTask(profileId, newPost.id, unix);
       }
 
-      if (typeof content[field] !== fieldType) {
-        throw new Error(
-          `El campo "${field}" debe ser de tipo "${fieldType}", pero se recibió "${typeof content[field]}".`,
-        );
-      }
+      return newPost;
+    } catch (error) {
+      console.error('Error creating post:', error);
+      throw new Error('There was an error creating the post.');
     }
-
-    if (!profileId) {
-      throw new Error(
-        `No se encontró un perfil asociado al proveedor "${provider}".`,
-      );
-    }
-
-    const newPost = await this.prisma.post.create({
-      data: {
-        status: status,
-        postTypeId: postType.id,
-        profileId: profileId,
-        fields: content,
-        globalStatus: GlobalStatus.ACTIVE,
-        task: unix
-          ? {
-            create: { status: TaskStatus.PENDING, unix },
-          }
-          : undefined,
-      },
-    });
-
-    if (unix) {
-      await this.taskQueueService.scheduleTask(profileId, newPost.id, unix);
-    }
-
-    return newPost;
   }
 
   async getPostsByProfile(profileId: number) {
@@ -107,18 +117,34 @@ export class PostsService extends Service {
         },
       },
     });
-
   }
 
-
   async publishPost(profileId: number, postId: number): Promise<void> {
+    try {
+      await this.update(profileId, postId);
+    } catch (error) {
+      await this.prisma.post.update({
+        where: { id: postId },
+        data: { status: PostStatus.FAILED },
+      });
+
+      await this.prisma.task.updateMany({
+        where: { postId },
+        data: { status: TaskStatus.FAILED },
+      });
+    }
+  }
+
+  async update(profileId: number, postId: number) {
     const post = await this.prisma.post.findFirst({
       where: { id: postId, profileId },
       include: { task: true },
     });
 
     if (!post) {
-      throw new Error(`Post with ID ${postId} not found for profile ${profileId}.`);
+      throw new Error(
+        `Post with ID ${postId} not found for profile ${profileId}.`,
+      );
     }
 
     await this.prisma.post.update({
@@ -128,12 +154,9 @@ export class PostsService extends Service {
 
     if (post.task) {
       await this.prisma.task.update({
-        where: {
-          id: post.task.id
-        }, data: {
-          status: TaskStatus.COMPLETED
-        }
-      })
+        where: { id: post.task.id },
+        data: { status: TaskStatus.COMPLETED },
+      });
     }
 
     this.logger.log(`Post ${postId} has been published.`);
