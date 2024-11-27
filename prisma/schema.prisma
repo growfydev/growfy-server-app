@@ -132,7 +132,7 @@ enum ProviderNames {
 
 model Provider {
     id               Int                @id @default(autoincrement())
-    name             ProviderNames      @unique
+    name             String
     socials          Social[]
     globalStatus     GlobalStatus       @default(ACTIVE)
     createdAt        DateTime           @default(now())
