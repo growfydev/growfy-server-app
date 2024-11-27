@@ -9,7 +9,7 @@ export class ProviderController {
 
   @Get(':name/provider')
   @Auth([Role.USER])
-  async getProviderByname(@Param('name') name: string) {
-    return await this.providerService.getProviderByName(name);
+  async getProviderByname(@Param('name') id: number) {
+    return await this.providerService.getProviderById(id);
   }
 }

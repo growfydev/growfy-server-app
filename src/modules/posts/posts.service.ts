@@ -25,8 +25,8 @@ export class PostsService extends Service {
         throw new Error(`Post type "${typePost}" not found.`);
       }
 
-      const providerData = await this.prisma.provider.findFirst({
-        where: { name: provider },
+      const providerData = await this.prisma.provider.findUnique({
+        where: { id: provider },
       });
       if (!providerData) {
         throw new Error(`Provider "${provider}" not found.`);
@@ -74,6 +74,7 @@ export class PostsService extends Service {
         data: {
           status: postStatus,
           postTypeId: postType.id,
+          providerPostTypeId: isValidProviderPostType.id,
           profileId,
           fields: content,
           globalStatus: GlobalStatus.ACTIVE,
@@ -102,17 +103,27 @@ export class PostsService extends Service {
       include: {
         posts: {
           include: {
-            task: true,
-            postType: true,
-            profile: {
-              include: {
-                socials: {
-                  include: {
-                    provider: true,
-                  },
-                },
-              },
+            task: {
+              select: {
+                status: true,
+                unix: true
+              }
             },
+            ProviderPostType: {
+              include: {
+                provider: {
+                  select: {
+                    name: true
+                  }
+                },
+                posttype: {
+                  select: {
+                    name: true,
+                    fields: true
+                  }
+                }
+              }
+            }
           },
         },
       },
