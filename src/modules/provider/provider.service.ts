@@ -3,12 +3,12 @@ import { PrismaService } from 'src/core/prisma.service';
 
 @Injectable()
 export class ProviderService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
-  async getProviderByName(providerName: string) {
+  async getProviderById(id: number) {
     try {
       const provider = await this.prisma.provider.findFirst({
-        where: { name: providerName },
+        where: { id: id },
         include: {
           ProviderPostType: {
             include: {
@@ -19,7 +19,7 @@ export class ProviderService {
       });
 
       if (!provider) {
-        throw new Error(`Provider ${providerName} not found`);
+        throw new Error(`Provider ${id} not found`);
       }
 
       return provider;
