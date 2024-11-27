@@ -98,6 +98,7 @@ export class PostsService extends Service {
               },
             },
           },
+          task: { select: { status: true, unix: true } },
         },
       });
 
