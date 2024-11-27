@@ -11,10 +11,10 @@ CREATE TYPE "PermissionFlags" AS ENUM ('VIEW', 'VIEW_ANALYTICS', 'VIEW_INBOX', '
 CREATE TYPE "GlobalStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'DELETED');
 
 -- CreateEnum
-CREATE TYPE "TaskStatus" AS ENUM ('SCHEDULED', 'PEDNING', 'PROCESSING', 'COMPLETED', 'CANCELED', 'FAILED');
+CREATE TYPE "TaskStatus" AS ENUM ('SCHEDULED', 'PENDING', 'PROCESSING', 'COMPLETED', 'CANCELED', 'FAILED');
 
 -- CreateEnum
-CREATE TYPE "PostStatus" AS ENUM ('QUEUED', 'COMPLETED', 'CANCELED', 'FAILED');
+CREATE TYPE "PostStatus" AS ENUM ('QUEUED', 'COMPLETED', 'CANCELED', 'FAILED', 'PUBLISHED');
 
 -- CreateEnum
 CREATE TYPE "ProviderNames" AS ENUM ('FACEBOOK', 'INSTAGRAM', 'TWITTER', 'PINTEREST');
@@ -90,13 +90,14 @@ CREATE TABLE "Provider" (
 -- CreateTable
 CREATE TABLE "Post" (
     "id" SERIAL NOT NULL,
-    "status" "PostStatus",
-    "postTypeId" INTEGER,
+    "status" "PostStatus" NOT NULL,
+    "providerPostTypeId" INTEGER,
     "profileId" INTEGER NOT NULL,
     "fields" JSONB NOT NULL,
     "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
+    "postTypeId" INTEGER,
 
     CONSTRAINT "Post_pkey" PRIMARY KEY ("id")
 );
@@ -165,9 +166,6 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "Member_userId_profileId_key" ON "Member"("userId", "profileId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Provider_name_key" ON "Provider"("name");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Task_postId_key" ON "Task"("postId");
 
 -- CreateIndex
@@ -192,10 +190,13 @@ ALTER TABLE "Social" ADD CONSTRAINT "Social_providerId_fkey" FOREIGN KEY ("provi
 ALTER TABLE "Social" ADD CONSTRAINT "Social_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Post" ADD CONSTRAINT "Post_postTypeId_fkey" FOREIGN KEY ("postTypeId") REFERENCES "PostType"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Post" ADD CONSTRAINT "Post_providerPostTypeId_fkey" FOREIGN KEY ("providerPostTypeId") REFERENCES "ProviderPostType"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Post" ADD CONSTRAINT "Post_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Post" ADD CONSTRAINT "Post_postTypeId_fkey" FOREIGN KEY ("postTypeId") REFERENCES "PostType"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Task" ADD CONSTRAINT "Task_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
