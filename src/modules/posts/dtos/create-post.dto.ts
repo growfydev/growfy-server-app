@@ -1,4 +1,4 @@
-import { IsString, IsObject, IsNumber, IsOptional } from 'class-validator';
+import { IsObject, IsNumber, IsOptional } from 'class-validator';
 
 
 export class CreatePostDto {
@@ -8,8 +8,8 @@ export class CreatePostDto {
   @IsNumber()
   readonly provider: number;
 
-  @IsString()
-  readonly typePost: string;
+  @IsNumber()
+  readonly typePost: number;
 
   @IsNumber()
   @IsOptional()
