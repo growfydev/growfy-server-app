@@ -18,8 +18,8 @@ export class PostsService extends Service {
     const { typePost, provider, content, unix } = postData;
 
     try {
-      const postType = await this.prisma.postType.findFirst({
-        where: { name: typePost },
+      const postType = await this.prisma.postType.findUnique({
+        where: { id: typePost },
       });
       if (!postType) {
         throw new Error(`Post type "${typePost}" not found.`);
