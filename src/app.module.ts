@@ -5,6 +5,8 @@ import { ResponseInterceptor } from './lib/ResponseInterceptor';
 import { AppController } from './app.controller';
 import { JwtService } from '@nestjs/jwt';
 import { LoggerConfiguredModule } from './lib/logger.config';
+import { CustomerModule } from './modules/customer/customer.module';
+
 
 @Module({
   imports: [...Modules, LoggerConfiguredModule],
