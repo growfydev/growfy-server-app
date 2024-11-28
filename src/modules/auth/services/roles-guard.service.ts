@@ -94,7 +94,7 @@ export class RolesGuardService {
     requiredRoles: Role[],
     user: JwtPayloadType['user'],
   ): boolean {
-    if (!requiredRoles?.length) return true; // No specific roles required
+    if (!requiredRoles?.length) return true;
     const userRoles = Array.isArray(user.role) ? user.role : [user.role];
     const hasAllRoles = requiredRoles.every((role) => userRoles.includes(role));
 

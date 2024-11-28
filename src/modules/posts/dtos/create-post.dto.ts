@@ -1,17 +1,17 @@
-import { PostStatus, ProviderNames } from '@prisma/client';
-import { IsString, IsObject, IsNumber, IsOptional } from 'class-validator';
+import { IsObject, IsNumber, IsOptional } from 'class-validator';
+
 
 export class CreatePostDto {
   @IsObject()
-  readonly content: Record<string, any>; // Representa los campos dinámicos (fields).
+  readonly content: Record<string, any>;
 
-  @IsString()
-  readonly provider: ProviderNames; // Identifica el proveedor.
+  @IsNumber()
+  readonly provider: number;
 
-  @IsString()
-  readonly typePost: string; // El nombre del tipo de post para las validaciones.
+  @IsNumber()
+  readonly typePost: number;
 
   @IsNumber()
   @IsOptional()
-  readonly unix?: number; // Campo opcional para programar tareas relacionadas con el post.
+  readonly unix?: number;
 }

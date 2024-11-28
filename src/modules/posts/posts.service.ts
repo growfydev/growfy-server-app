@@ -18,15 +18,15 @@ export class PostsService extends Service {
     const { typePost, provider, content, unix } = postData;
 
     try {
-      const postType = await this.prisma.postType.findFirst({
-        where: { name: typePost },
+      const postType = await this.prisma.postType.findUnique({
+        where: { id: typePost },
       });
       if (!postType) {
         throw new Error(`Post type "${typePost}" not found.`);
       }
 
-      const providerData = await this.prisma.provider.findFirst({
-        where: { name: provider },
+      const providerData = await this.prisma.provider.findUnique({
+        where: { id: provider },
       });
       if (!providerData) {
         throw new Error(`Provider "${provider}" not found.`);
@@ -74,12 +74,31 @@ export class PostsService extends Service {
         data: {
           status: postStatus,
           postTypeId: postType.id,
+          providerPostTypeId: isValidProviderPostType.id,
           profileId,
           fields: content,
           globalStatus: GlobalStatus.ACTIVE,
           task: unix
             ? { create: { status: taskStatus, unix } }
             : { create: { status: taskStatus, unix: unixCurrentTimestamp } },
+        },
+        include: {
+          ProviderPostType: {
+            include: {
+              provider: {
+                select: {
+                  name: true,
+                },
+              },
+              posttype: {
+                select: {
+                  name: true,
+                  fields: true,
+                },
+              },
+            },
+          },
+          task: { select: { status: true, unix: true } },
         },
       });
 
@@ -102,13 +121,23 @@ export class PostsService extends Service {
       include: {
         posts: {
           include: {
-            task: true,
-            postType: true,
-            profile: {
+            task: {
+              select: {
+                status: true,
+                unix: true,
+              },
+            },
+            ProviderPostType: {
               include: {
-                socials: {
-                  include: {
-                    provider: true,
+                provider: {
+                  select: {
+                    name: true,
+                  },
+                },
+                posttype: {
+                  select: {
+                    name: true,
+                    fields: true,
                   },
                 },
               },

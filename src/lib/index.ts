@@ -22,8 +22,9 @@ import { StripeModule } from '../modules/payments/stripe/stripe.module';
 import { TaskModule } from 'src/modules/tasks/tasks.module';
 import { ProfilesModule } from 'src/modules/profiles/profiles.module';
 import { PostsModule } from '../modules/posts/posts.module';
+import { ProviderModule } from '../modules/provider/provider.module';
 
-const CoreModules = [SetupModule, PostsModule];
+const CoreModules = [SetupModule, PostsModule, ProviderModule];
 
 const AuthModules = [AuthModule];
 

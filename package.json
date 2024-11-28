@@ -51,6 +51,7 @@
     "passport-local": "^1.0.0",
     "passport-twitter-oauth2.0": "^1.1.0",
     "pino": "^9.5.0",
+    "pino-http": "^10.3.0",
     "qrcode": "^1.5.4",
     "qs": "^6.13.1",
     "reflect-metadata": "^0.2.2",

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma.service';
-import { ProviderNames } from '@prisma/client';
 
 @Injectable()
 export class PostsRepository {
@@ -10,9 +9,9 @@ export class PostsRepository {
     return this.prisma.postType.findFirst({ where: { name } });
   }
 
-  async findProviderByName(name: ProviderNames) {
-    return this.prisma.provider.findFirst({ where: { name } });
-  }
+  // async findProviderByName(name: LocalProviderNames) {
+  //   return this.prisma.provider.findFirst({ where: { name } });
+  // }
 
   async findProfileByProvider(providerId: number) {
     return this.prisma.profile.findFirst({

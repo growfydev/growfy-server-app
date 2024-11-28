@@ -143,7 +143,7 @@ enum ProviderNames {
 
 model Provider {
     id               Int                @id @default(autoincrement())
-    name             ProviderNames      @unique
+    name             ProviderNames
     socials          Social[]
     globalStatus     GlobalStatus       @default(ACTIVE)
     createdAt        DateTime           @default(now())
@@ -152,17 +152,19 @@ model Provider {
 }
 
 model Post {
-    id           Int          @id @default(autoincrement())
-    status       PostStatus
-    postTypeId   Int?
-    profileId    Int
-    postType     PostType?    @relation(fields: [postTypeId], references: [id])
-    profile      Profile      @relation(fields: [profileId], references: [id])
-    task         Task?
-    fields       Json
-    globalStatus GlobalStatus @default(ACTIVE)
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime?    @updatedAt
+    id                 Int               @id @default(autoincrement())
+    status             PostStatus
+    providerPostTypeId Int?
+    profileId          Int
+    ProviderPostType   ProviderPostType? @relation(fields: [providerPostTypeId], references: [id])
+    profile            Profile           @relation(fields: [profileId], references: [id])
+    task               Task?
+    fields             Json
+    globalStatus       GlobalStatus      @default(ACTIVE)
+    createdAt          DateTime          @default(now())
+    updatedAt          DateTime?         @updatedAt
+    PostType           PostType?         @relation(fields: [postTypeId], references: [id])
+    postTypeId         Int?
 }
 
 model Task {
@@ -194,6 +196,7 @@ model ProviderPostType {
     posttypeId Int
     provider   Provider @relation(fields: [providerId], references: [id])
     posttype   PostType @relation(fields: [posttypeId], references: [id])
+    Post       Post[]
 }
 
 model Permission {
