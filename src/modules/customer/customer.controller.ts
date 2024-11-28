@@ -7,7 +7,7 @@ import * as ExcelJS from 'exceljs';
 import { ApiTags } from '@nestjs/swagger';
 
 
-@ApiTags('customers')
+
 @Controller('customers')
 export class CustomerController {
   constructor(private readonly customerService: CustomerService) { }
@@ -43,7 +43,7 @@ export class CustomerController {
     return this.customerService.deleteCustomer(customerId, profileId);
   }
 
-  @Post('customers')
+  @Post('upload')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024 } }))
   async uploadFile(
     @UploadedFile() file: any,

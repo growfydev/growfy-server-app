@@ -23,8 +23,9 @@ import { TaskModule } from 'src/modules/tasks/tasks.module';
 import { ProfilesModule } from 'src/modules/profiles/profiles.module';
 import { PostsModule } from '../modules/posts/posts.module';
 import { ProviderModule } from '../modules/provider/provider.module';
+import { CustomerModule } from '../modules/customer/customer.module';
 
-const CoreModules = [SetupModule, PostsModule, ProviderModule];
+const CoreModules = [SetupModule, PostsModule, ProviderModule, CustomerModule];
 
 const AuthModules = [AuthModule];
 
