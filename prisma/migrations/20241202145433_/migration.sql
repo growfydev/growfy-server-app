@@ -159,6 +159,16 @@ CREATE TABLE "ProfileRolePermission" (
     CONSTRAINT "ProfileRolePermission_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "ExportFormat" (
+    "id" SERIAL NOT NULL,
+    "format" TEXT NOT NULL,
+    "description" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ExportFormat_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
