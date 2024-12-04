@@ -114,6 +114,7 @@ model Profile {
 model Social {
     id           Int          @id @default(autoincrement())
     token        String
+    accountId    String
     providerId   Int
     profileId    Int
     provider     Provider     @relation(fields: [providerId], references: [id])

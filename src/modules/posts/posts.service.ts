@@ -6,6 +6,7 @@ import { GlobalStatus, PostStatus, TaskStatus } from '@prisma/client';
 import { Service } from 'src/service';
 import { ExportPostsDto } from './dtos/export-posts.dto';
 import { ExportFactory } from './exporter/export.factory';
+import { PostFactorySelector } from '../socials/common/post-factory/post.selector.factory';
 
 @Injectable()
 export class PostsService extends Service {
@@ -152,6 +153,59 @@ export class PostsService extends Service {
 
   async publishPost(profileId: number, postId: number): Promise<void> {
     try {
+      const post = await this.prisma.post.findUnique({
+        where: {
+          id: postId,
+        },
+        include: {
+          profile: {
+            select: {
+              socials: {
+                select: {
+                  providerId: true,
+                  token: true,
+                  accountId: true,
+                },
+              },
+            },
+          },
+          ProviderPostType: {
+            include: {
+              provider: {
+                select: {
+                  name: true,
+                  id: true,
+                },
+              },
+              posttype: {
+                select: {
+                  name: true,
+                  fields: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!post || !post.ProviderPostType) {
+        throw new Error('Post not found');
+      }
+
+      const typePostName = post.ProviderPostType.posttype.name;
+      const provider = post.ProviderPostType.provider;
+      const accountId = post.profile.socials.find(
+        (social) => social.providerId === provider.id,
+      ).accountId;
+      const token = post.profile.socials.find(
+        (social) => social.providerId === provider.id,
+      ).token;
+      const fields = post.fields;
+
+      const factory = PostFactorySelector.getFactory(provider.name);
+      const publisher = factory.createPublisher();
+      await publisher.publish(accountId, token, typePostName, fields);
+
       await this.update(profileId, postId);
     } catch (error) {
       await this.prisma.post.update({
