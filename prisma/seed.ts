@@ -19,24 +19,24 @@ async function main() {
   }
 
   const profileRolePermissions: Record<ProfileMemberRoles, PermissionFlags[]> =
-  {
-    OWNER: [
-      PermissionFlags.VIEW,
-      PermissionFlags.MANAGEMENT,
-      PermissionFlags.EDIT,
-    ],
-    MEMBER: [PermissionFlags.VIEW],
-    ANALYST: [PermissionFlags.VIEW_ANALYTICS],
-    EDITOR: [PermissionFlags.EDIT],
-    MANAGER: [
-      PermissionFlags.VIEW,
-      PermissionFlags.MANAGEMENT,
-      PermissionFlags.REVIEW_POSTS,
-    ],
-    CONTENT_CREATOR: [PermissionFlags.VIEW, PermissionFlags.PLAN_AND_PUBLISH],
-    CLIENT: [PermissionFlags.VIEW],
-    GUEST: [],
-  };
+    {
+      OWNER: [
+        PermissionFlags.VIEW,
+        PermissionFlags.MANAGEMENT,
+        PermissionFlags.EDIT,
+      ],
+      MEMBER: [PermissionFlags.VIEW],
+      ANALYST: [PermissionFlags.VIEW_ANALYTICS],
+      EDITOR: [PermissionFlags.EDIT],
+      MANAGER: [
+        PermissionFlags.VIEW,
+        PermissionFlags.MANAGEMENT,
+        PermissionFlags.REVIEW_POSTS,
+      ],
+      CONTENT_CREATOR: [PermissionFlags.VIEW, PermissionFlags.PLAN_AND_PUBLISH],
+      CLIENT: [PermissionFlags.VIEW],
+      GUEST: [],
+    };
 
   for (const [role, permissions] of Object.entries(profileRolePermissions)) {
     const profileRole = role as ProfileMemberRoles;
@@ -68,7 +68,6 @@ async function main() {
 }
 
 async function fillProvidersAndSocials() {
-
   const socialNetworks = Object.values(ProviderNames);
 
   const providers = socialNetworks.map((network) => ({
@@ -83,24 +82,23 @@ async function fillProvidersAndSocials() {
   console.log('Providers seeded successfully with social network names.');
 }
 
-
 async function seedPostTypesAndRelations() {
   const postTypes = [
     {
       name: 'text',
-      fields: ({ title: 'string', content: 'string' }),
+      fields: { title: 'string', content: 'string' },
       createdAt: new Date(),
       updatedAt: new Date(),
     },
     {
       name: 'image',
-      fields: ({ caption: 'string', imgUrl: 'string' }),
+      fields: { caption: 'string', imgUrl: 'string' },
       createdAt: new Date(),
       updatedAt: new Date(),
     },
     {
       name: 'message',
-      fields: ({ message: 'string' }),
+      fields: { message: 'string' },
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -125,12 +123,12 @@ async function seedPostTypesAndRelations() {
 
   const socials = providers.map((provider) => ({
     token: `token-${provider.name}`,
+    accountId: `account-${provider.name}`,
     providerId: provider.id,
     profileId: profile.id,
     createdAt: new Date(),
     updatedAt: new Date(),
   }));
-
 
   if (socials.length > 0) {
     await prisma.social.createMany({
@@ -149,7 +147,7 @@ async function seedPostTypesAndRelations() {
     postTypeIds.map((postType) => ({
       providerId: provider.id,
       posttypeId: postType.id,
-    }))
+    })),
   );
 
   if (providerPostTypes.length > 0) {
@@ -162,7 +160,6 @@ async function seedPostTypesAndRelations() {
   } else {
     console.warn('No ProviderPostTypes to link.');
   }
-
 }
 
 async function createExampleUser() {
