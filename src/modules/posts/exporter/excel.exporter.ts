@@ -3,7 +3,6 @@ import { Exporter } from './export.interface';
 
 export class ExcelExporter implements Exporter {
   async export(posts: any[]): Promise<{ fileBuffer: any; header: any }> {
-    console.log('Posts a exportar:', posts); // Verifica los datos que llegan
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Publicaciones');
     const header = {
