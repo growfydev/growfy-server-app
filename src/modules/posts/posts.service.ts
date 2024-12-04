@@ -220,7 +220,6 @@ export class PostsService extends Service {
           gte: start,
           lte: end,
         },
-        // Si `providerIds` es undefined, no se aplica filtro, pero si es un array vacío, se asegura no traer resultados
         ...(providerIds !== undefined && providerIds.length > 0
           ? { ProviderPostType: { providerId: { in: providerIds } } }
           : providerIds?.length === 0
@@ -245,6 +244,28 @@ export class PostsService extends Service {
         'No se encontraron publicaciones en el rango de fechas especificado.',
       );
     }
+
+    // Transformar los posts a un formato más fácil de mapear y guardar
+    const transformedPosts = posts.map((post) => ({
+      id: post.id,
+      content: post.fields,
+      postTypeId: post.postTypeId,
+      provider: post.ProviderPostType?.provider.name,
+      postType: post.ProviderPostType?.posttype.name,
+      profileName: post.profile?.name,
+      taskStatus: post.task?.status,
+      taskUnix: post.task?.unix,
+    }));
+
+    // Registrar la exportación con los datos transformados
+    await this.prisma.export.create({
+      data: {
+        startDate: start,
+        endDate: end,
+        posts: transformedPosts, // Almacenar los datos de los posts de forma más estructurada
+        format: format.format, // Almacenar el formato de exportación
+      },
+    });
 
     // Exportar según el formato
     const exporter = ExportFactory.getExporter(format.format);
