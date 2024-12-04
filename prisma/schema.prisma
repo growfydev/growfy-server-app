@@ -219,3 +219,9 @@ model ProfileRolePermission {
 
     @@unique([profileRoles, permissionId])
 }
+
+model ExportFormat {
+    id        Int      @id @default(autoincrement())
+    format    String
+    createdAt DateTime @default(now())
+}
