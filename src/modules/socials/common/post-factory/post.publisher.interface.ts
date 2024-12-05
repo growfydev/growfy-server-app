@@ -1,8 +1,3 @@
 export interface PostPublisher {
-  publish(
-    accountId: string,
-    token: string,
-    typePostName: string,
-    fields: any,
-  ): Promise<void>;
+  publish(typePostName: string, fields: any, data: any): Promise<void>;
 }
