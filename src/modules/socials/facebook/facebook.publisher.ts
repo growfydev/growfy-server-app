@@ -4,12 +4,7 @@ import { PostPublisher } from '../common/post-factory/post.publisher.interface';
 export class FacebookPublisher implements PostPublisher {
   private readonly graphUrl = 'https://graph.facebook.com/v21.0/';
 
-  async publish(
-    accountId: string,
-    token: string,
-    typePostName: string,
-    fields: any,
-  ): Promise<void> {
+  async publish(typePostName: string, fields: any, data: any): Promise<void> {
     if (!fields) {
       throw new Error(
         'El campo "fields" es requerido en los datos de entrada.',
@@ -18,7 +13,7 @@ export class FacebookPublisher implements PostPublisher {
 
     switch (typePostName) {
       case 'message':
-        await this.createMessagePost(accountId, token, fields);
+        await this.createMessagePost(data.accountId, data.token, fields);
         break;
 
       default:

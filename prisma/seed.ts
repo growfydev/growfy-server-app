@@ -61,105 +61,12 @@ async function main() {
       }
     }
   }
+
   const exampleUser = await createExampleUser();
   console.log('Example user created:', exampleUser);
   await fillProvidersAndSocials();
   await seedPostTypesAndRelations();
-}
-
-async function fillProvidersAndSocials() {
-  const socialNetworks = Object.values(ProviderNames);
-
-  const providers = socialNetworks.map((network) => ({
-    name: network,
-  }));
-
-  await prisma.provider.createMany({
-    data: providers,
-    skipDuplicates: true,
-  });
-
-  console.log('Providers seeded successfully with social network names.');
-}
-
-async function seedPostTypesAndRelations() {
-  const postTypes = [
-    {
-      name: 'text',
-      fields: { title: 'string', content: 'string' },
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      name: 'image',
-      fields: { caption: 'string', imgUrl: 'string' },
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      name: 'message',
-      fields: { message: 'string' },
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ];
-
-  await prisma.postType.createMany({
-    data: postTypes,
-    skipDuplicates: true,
-  });
-
-  console.log('PostTypes seeded successfully.');
-
-  const providers = await prisma.provider.findMany();
-  console.log(`${providers.length} providers found.`);
-
-  const profile = await prisma.profile.findFirst();
-
-  if (!profile) {
-    console.warn('No profile found to associate with providers.');
-    return;
-  }
-
-  const socials = providers.map((provider) => ({
-    token: `token-${provider.name}`,
-    accountId: `account-${provider.name}`,
-    providerId: provider.id,
-    profileId: profile.id,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }));
-
-  if (socials.length > 0) {
-    await prisma.social.createMany({
-      data: socials,
-      skipDuplicates: true,
-    });
-
-    console.log('Socials seeded successfully for all providers.');
-  } else {
-    console.warn('No socials to create.');
-  }
-
-  const postTypeIds = await prisma.postType.findMany({ select: { id: true } });
-
-  const providerPostTypes = providers.flatMap((provider) =>
-    postTypeIds.map((postType) => ({
-      providerId: provider.id,
-      posttypeId: postType.id,
-    })),
-  );
-
-  if (providerPostTypes.length > 0) {
-    await prisma.providerPostType.createMany({
-      data: providerPostTypes,
-      skipDuplicates: true,
-    });
-
-    console.log('ProviderPostTypes linked successfully.');
-  } else {
-    console.warn('No ProviderPostTypes to link.');
-  }
+  await seedFormatExportPost();
 }
 
 async function createExampleUser() {
@@ -169,17 +76,13 @@ async function createExampleUser() {
       email: 'johndoe@example.com',
       phone: '123-456-7890',
       password: await hashPassword('123456'),
-      createdAt: new Date(),
-      updatedAt: new Date(),
     },
   });
 
   const profile = await prisma.profile.create({
     data: {
-      name: 'John Doe Profile',
+      name: 'John Company',
       userId: user.id,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     },
   });
 
@@ -188,12 +91,140 @@ async function createExampleUser() {
       userId: user.id,
       profileId: profile.id,
       role: ProfileMemberRoles.MANAGER,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     },
   });
 
   return { user, profile, member };
+}
+
+async function fillProvidersAndSocials() {
+  const socialNetworks = Object.values(ProviderNames);
+
+  const p = socialNetworks.map((network) => ({
+    name: network,
+  }));
+
+  const providers = await prisma.provider.createMany({
+    data: p,
+    skipDuplicates: true,
+  });
+
+  console.log('Providers seeded successfully.');
+
+  const profile = await prisma.profile.findFirst();
+  if (!profile) {
+    console.warn('No profile found to associate with socials.');
+    return;
+  }
+
+  const socials = [
+    {
+      token: 'facebook-token-example',
+      accountId: 'facebook-account-123',
+      providerId: 1,
+      profileId: profile.id,
+    },
+    {
+      token: 'youtube-token-example',
+      accountId: 'youtube-account-456',
+      providerId: 2,
+      profileId: profile.id,
+    },
+  ];
+
+  await prisma.social.createMany({
+    data: socials,
+    skipDuplicates: true,
+  });
+
+  console.log('Socials seeded successfully.');
+}
+
+async function seedPostTypesAndRelations() {
+  // Definir los tipos de publicación
+  const postTypes = [{ name: 'message' }, { name: 'short_video' }];
+
+  // Crear los postTypes si no existen
+  await prisma.postType.createMany({ data: postTypes, skipDuplicates: true });
+  console.log('PostTypes seeded successfully.');
+
+  // Obtener todos los proveedores y tipos de publicación
+  const providers = await prisma.provider.findMany();
+  const postTypeIds = await prisma.postType.findMany({
+    select: { id: true, name: true },
+  });
+
+  // Diccionario de configuraciones por proveedor
+  const providerConfig = {
+    FACEBOOK: {
+      characterLimit: 63206,
+      characterKey: 'message',
+      fields: {
+        message: 'string',
+      },
+      postTypeName: 'message',
+      providerPostTypeName: 'Facebook message',
+    },
+    YOUTUBE: {
+      characterLimit: 5000,
+      characterKey: 'snippet.description',
+      fields: {
+        snippet: {
+          title: 'string',
+          description: 'string',
+          tags: 'string[]',
+          categoryId: 'string',
+        },
+        status: {
+          privacyStatus: 'string',
+        },
+        media: {
+          url: 'string',
+        },
+      },
+      postTypeName: 'short_video',
+      providerPostTypeName: 'YouTube short',
+    },
+  };
+
+  // Crear las relaciones correctas
+  const providerPostTypes = providers.flatMap((provider) => {
+    const config = providerConfig[provider.name];
+    const postType = postTypeIds.find((pt) => pt.name === config.postTypeName);
+
+    if (postType) {
+      return {
+        providerId: provider.id,
+        posttypeId: postType.id,
+        name: config.providerPostTypeName,
+        characterLimit: config.characterLimit,
+        characterKey: config.characterKey,
+        fields: config.fields,
+      };
+    }
+    return [];
+  });
+
+  // Insertar las relaciones únicas
+  await prisma.providerPostType.createMany({
+    data: providerPostTypes,
+    skipDuplicates: true,
+  });
+
+  console.log('ProviderPostTypes seeded with character limits.');
+}
+
+async function seedFormatExportPost() {
+  await prisma.exportFormat.createMany({
+    data: [
+      {
+        format: 'PDF',
+      },
+      {
+        format: 'EXCEL',
+      },
+    ],
+  });
 }
 
 main()

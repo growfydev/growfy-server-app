@@ -17,103 +17,221 @@ export class PostsService extends Service {
     super();
   }
 
+  // async createPost(postData: CreatePostDto, profileId: number) {
+  //   const { typePost, provider, content, unix } = postData;
+
+  //   try {
+  //     const postType = await this.prisma.postType.findUnique({
+  //       where: { id: typePost },
+  //     });
+  //     if (!postType) {
+  //       throw new Error(`Post type "${typePost}" not found.`);
+  //     }
+
+  //     const providerData = await this.prisma.provider.findUnique({
+  //       where: { id: provider },
+  //     });
+  //     if (!providerData) {
+  //       throw new Error(`Provider "${provider}" not found.`);
+  //     }
+
+  //     const isValidProviderPostType =
+  //       await this.prisma.providerPostType.findFirst({
+  //         where: {
+  //           providerId: providerData.id,
+  //           posttypeId: postType.id,
+  //         },
+  //       });
+  //     if (!isValidProviderPostType) {
+  //       throw new Error(
+  //         `The type of post "${typePost}" is not supported by the supplier "${provider}".`,
+  //       );
+  //     }
+
+  //     const requiredFields = postType.fields as Record<string, string>;
+  //     for (const [field, fieldType] of Object.entries(requiredFields)) {
+  //       if (!(field in content)) {
+  //         throw new Error(
+  //           `The field "${field}" is required for the type of post "${typePost}".`,
+  //         );
+  //       }
+
+  //       if (typeof content[field] !== fieldType) {
+  //         throw new Error(
+  //           `The field "${field}" must be of type "${fieldType}", but received "${typeof content[field]}".`,
+  //         );
+  //       }
+  //     }
+
+  //     if (!profileId) {
+  //       throw new Error(
+  //         `No profile associated with the provider "${provider}".`,
+  //       );
+  //     }
+
+  //     const postStatus = unix ? PostStatus.QUEUED : PostStatus.PUBLISHED;
+  //     const taskStatus = unix ? TaskStatus.PENDING : TaskStatus.COMPLETED;
+  //     const unixCurrentTimestamp = Math.floor(new Date().getTime() / 1000);
+
+  //     const newPost = await this.prisma.post.create({
+  //       data: {
+  //         status: postStatus,
+  //         postTypeId: postType.id,
+  //         providerPostTypeId: isValidProviderPostType.id,
+  //         profileId,
+  //         fields: content,
+  //         globalStatus: GlobalStatus.ACTIVE,
+  //         task: unix
+  //           ? { create: { status: taskStatus, unix } }
+  //           : { create: { status: taskStatus, unix: unixCurrentTimestamp } },
+  //       },
+  //       include: {
+  //         ProviderPostType: {
+  //           include: {
+  //             provider: {
+  //               select: {
+  //                 name: true,
+  //               },
+  //             },
+  //             posttype: {
+  //               select: {
+  //                 name: true,
+  //                 fields: true,
+  //               },
+  //             },
+  //           },
+  //         },
+  //         task: { select: { status: true, unix: true } },
+  //       },
+  //     });
+
+  //     if (unix) {
+  //       await this.taskQueueService.scheduleTask(profileId, newPost.id, unix);
+  //     }
+
+  //     return newPost;
+  //   } catch (error) {
+  //     console.error('Error creating post:', error);
+  //     throw new Error('There was an error creating the post.');
+  //   }
+  // }
+
   async createPost(postData: CreatePostDto, profileId: number) {
     const { typePost, provider, content, unix } = postData;
 
-    try {
-      const postType = await this.prisma.postType.findUnique({
-        where: { id: typePost },
-      });
-      if (!postType) {
-        throw new Error(`Post type "${typePost}" not found.`);
-      }
+    const postType = await this.prisma.postType.findUnique({
+      where: { id: typePost },
+    });
+    if (!postType) {
+      throw new Error(`Post type "${typePost}" not found.`);
+    }
 
-      const providerData = await this.prisma.provider.findUnique({
-        where: { id: provider },
-      });
-      if (!providerData) {
-        throw new Error(`Provider "${provider}" not found.`);
-      }
+    const providerData = await this.prisma.provider.findUnique({
+      where: { id: provider },
+    });
+    if (!providerData) {
+      throw new Error(`Provider "${provider}" not found.`);
+    }
 
-      const isValidProviderPostType =
-        await this.prisma.providerPostType.findFirst({
-          where: {
-            providerId: providerData.id,
-            posttypeId: postType.id,
-          },
-        });
-      if (!isValidProviderPostType) {
-        throw new Error(
-          `The type of post "${typePost}" is not supported by the supplier "${provider}".`,
-        );
-      }
-
-      const requiredFields = postType.fields as Record<string, string>;
-      for (const [field, fieldType] of Object.entries(requiredFields)) {
-        if (!(field in content)) {
-          throw new Error(
-            `The field "${field}" is required for the type of post "${typePost}".`,
-          );
-        }
-
-        if (typeof content[field] !== fieldType) {
-          throw new Error(
-            `The field "${field}" must be of type "${fieldType}", but received "${typeof content[field]}".`,
-          );
-        }
-      }
-
-      if (!profileId) {
-        throw new Error(
-          `No profile associated with the provider "${provider}".`,
-        );
-      }
-
-      const postStatus = unix ? PostStatus.QUEUED : PostStatus.PUBLISHED;
-      const taskStatus = unix ? TaskStatus.PENDING : TaskStatus.COMPLETED;
-      const unixCurrentTimestamp = Math.floor(new Date().getTime() / 1000);
-
-      const newPost = await this.prisma.post.create({
-        data: {
-          status: postStatus,
-          postTypeId: postType.id,
-          providerPostTypeId: isValidProviderPostType.id,
-          profileId,
-          fields: content,
-          globalStatus: GlobalStatus.ACTIVE,
-          task: unix
-            ? { create: { status: taskStatus, unix } }
-            : { create: { status: taskStatus, unix: unixCurrentTimestamp } },
+    const isValidProviderPostType =
+      await this.prisma.providerPostType.findFirst({
+        where: {
+          providerId: providerData.id,
+          posttypeId: postType.id,
         },
-        include: {
-          ProviderPostType: {
-            include: {
-              provider: {
-                select: {
-                  name: true,
-                },
-              },
-              posttype: {
-                select: {
-                  name: true,
-                  fields: true,
-                },
-              },
+      });
+    if (!isValidProviderPostType) {
+      throw new Error(
+        `The type of post "${typePost}" is not supported by the supplier "${provider}".`,
+      );
+    }
+
+    const {
+      characterLimit,
+      characterKey,
+      fields: requiredFields,
+    } = isValidProviderPostType;
+    if (!characterLimit || !characterKey) {
+      throw new Error(
+        `Character limit or characterKey is not set for provider "${provider}" and post type "${typePost}".`,
+      );
+    }
+
+    // Acceder al valor usando characterKey (soporta anidación)
+    const contentValue = characterKey
+      .split('.')
+      .reduce((obj, key) => obj && obj[key], content);
+
+    if (typeof contentValue !== 'string') {
+      throw new Error(
+        `The content specified by "${characterKey}" must be a string.`,
+      );
+    }
+
+    // Validar la longitud del contenido
+    if (contentValue.length > characterLimit) {
+      throw new Error(
+        `The content exceeds the character limit for provider "${provider}". Maximum allowed: ${characterLimit}, current length: ${contentValue.length}.`,
+      );
+    }
+
+    // Validación de campos requeridos
+    for (const [field, fieldType] of Object.entries(
+      requiredFields as Record<string, string>,
+    )) {
+      if (!(field in content)) {
+        throw new Error(
+          `The field "${field}" is required for the type of post "${typePost}".`,
+        );
+      }
+
+      if (typeof content[field] !== fieldType) {
+        throw new Error(
+          `The field "${field}" must be of type "${fieldType}", but received "${typeof content[field]}".`,
+        );
+      }
+    }
+
+    if (!profileId) {
+      throw new Error(`No profile associated with the provider "${provider}".`);
+    }
+
+    const postStatus = unix ? PostStatus.QUEUED : PostStatus.PUBLISHED;
+    const taskStatus = unix ? TaskStatus.PENDING : TaskStatus.COMPLETED;
+    const unixCurrentTimestamp = Math.floor(new Date().getTime() / 1000);
+
+    const newPost = await this.prisma.post.create({
+      data: {
+        status: postStatus,
+        postTypeId: postType.id,
+        providerPostTypeId: isValidProviderPostType.id,
+        profileId,
+        fields: content,
+        globalStatus: GlobalStatus.ACTIVE,
+        task: unix
+          ? { create: { status: taskStatus, unix } }
+          : { create: { status: taskStatus, unix: unixCurrentTimestamp } },
+      },
+      include: {
+        ProviderPostType: {
+          include: {
+            provider: {
+              select: { name: true },
+            },
+            posttype: {
+              select: { name: true },
             },
           },
-          task: { select: { status: true, unix: true } },
         },
-      });
+        task: { select: { status: true, unix: true } },
+      },
+    });
 
-      if (unix) {
-        await this.taskQueueService.scheduleTask(profileId, newPost.id, unix);
-      }
-
-      return newPost;
-    } catch (error) {
-      console.error('Error creating post:', error);
-      throw new Error('There was an error creating the post.');
+    if (unix) {
+      await this.taskQueueService.scheduleTask(profileId, newPost.id, unix);
     }
+
+    return newPost;
   }
 
   async getPostsByProfile(profileId: number) {
@@ -140,7 +258,6 @@ export class PostsService extends Service {
                 posttype: {
                   select: {
                     name: true,
-                    fields: true,
                   },
                 },
               },
@@ -180,7 +297,6 @@ export class PostsService extends Service {
               posttype: {
                 select: {
                   name: true,
-                  fields: true,
                 },
               },
             },
@@ -204,7 +320,7 @@ export class PostsService extends Service {
 
       const factory = PostFactorySelector.getFactory(provider.name);
       const publisher = factory.createPublisher();
-      await publisher.publish(accountId, token, typePostName, fields);
+      await publisher.publish(typePostName, fields, { accountId, token });
 
       await this.update(profileId, postId);
     } catch (error) {
