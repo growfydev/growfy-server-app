@@ -1,3 +1,8 @@
+import { Post } from '../dtos/export-format.dto';
+
 export interface Exporter {
-  export(posts: any[]): Promise<{ fileBuffer: any; header: any }>;
+  export(posts: Post[]): Promise<{
+    fileBuffer: Buffer;
+    header: { 'Content-Type': string };
+  }>;
 }
