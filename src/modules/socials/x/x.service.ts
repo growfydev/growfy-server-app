@@ -49,7 +49,7 @@ export class XService {
   /**
    * Publicar un Tweet
    */
-  async postTweet(text: string, accessToken: string): Promise<any> {
+  async postTweet(text: string, accessToken: string): Promise<void> {
     const url = `${this.apiUrl}/tweets`;
     const headers = {
       Authorization: `Bearer ${accessToken}`,
