@@ -6,13 +6,13 @@ import { TiktokModule } from '../modules/socials/tiktok/tiktok.module';
 import { TiktokAdsModule } from '../modules/ads/tiktok/tiktok.module';
 import { XModule } from '../modules/socials/x/x.module';
 import { PinterestModule } from '../modules/socials/pinterest/pinterest.module';
-import { YoutubeModule } from '../modules/socials/youtube/youtube.module';
+import { YouTubeModule } from '../modules/socials/youtube/youtube.module';
 import { TwitchModule } from '../modules/socials/twitch/twitch.module';
 import { WhatsappModule } from '../modules/socials/whatsapp/whatsapp.module';
 import { WebModule } from '../modules/socials/web/web.module';
 import { MetaModule } from '../modules/ads/meta/meta.module';
 import { GoogleModule } from '../modules/ads/google/google.module';
-import { TwilioModule } from '../modules/third-parties/twilio/twilio.module';
+import { TwilioModule } from '../modules/third-parties/sms/sms.module';
 import { DriveModule } from '../modules/third-parties/drive/drive.module';
 import { EmailModule } from '../modules/third-parties/email/email.module';
 import { CanvasModule } from '../modules/socials/canvas/canvas.module';
@@ -23,8 +23,9 @@ import { TaskModule } from 'src/modules/tasks/tasks.module';
 import { ProfilesModule } from 'src/modules/profiles/profiles.module';
 import { PostsModule } from '../modules/posts/posts.module';
 import { ProviderModule } from '../modules/provider/provider.module';
+import { CustomerModule } from '../modules/customer/customer.module';
 
-const CoreModules = [SetupModule, PostsModule, ProviderModule];
+const CoreModules = [SetupModule, PostsModule, ProviderModule, CustomerModule];
 
 const AuthModules = [AuthModule];
 
@@ -34,7 +35,7 @@ const SocialModules = [
   XModule,
   LinkedInModule,
   PinterestModule,
-  YoutubeModule,
+  YouTubeModule,
   TwitchModule,
   WhatsappModule,
   WebModule,

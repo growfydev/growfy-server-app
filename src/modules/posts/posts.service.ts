@@ -4,6 +4,8 @@ import { CreatePostDto } from './dtos/create-post.dto';
 import { TaskQueueService } from '../tasks/tasks-queue.service';
 import { GlobalStatus, PostStatus, TaskStatus } from '@prisma/client';
 import { Service } from 'src/service';
+import { ExportPostsDto } from './dtos/export-posts.dto';
+import { ExportFactory } from './exporter/export.factory';
 
 @Injectable()
 export class PostsService extends Service {
@@ -189,5 +191,63 @@ export class PostsService extends Service {
     }
 
     this.logger.log(`Post ${postId} has been published.`);
+  }
+
+  async exportPosts(
+    profileId: number,
+    exportPostsDto: ExportPostsDto,
+  ): Promise<{ fileBuffer: any; header: any }> {
+    const { startDate, endDate, providerIds, formatId } = exportPostsDto;
+
+    const start = new Date(startDate);
+    start.setUTCHours(0, 0, 0, 0);
+
+    const end = new Date(endDate);
+    end.setUTCHours(23, 59, 59, 999);
+
+    const format = await this.prisma.exportFormat.findUnique({
+      where: { id: formatId },
+    });
+
+    if (!format) {
+      throw new Error('Formato no encontrado');
+    }
+
+    const posts = await this.prisma.post.findMany({
+      where: {
+        profileId,
+        createdAt: {
+          gte: start,
+          lte: end,
+        },
+        // Si `providerIds` es undefined, no se aplica filtro, pero si es un array vacío, se asegura no traer resultados
+        ...(providerIds !== undefined && providerIds.length > 0
+          ? { ProviderPostType: { providerId: { in: providerIds } } }
+          : providerIds?.length === 0
+            ? { ProviderPostType: { providerId: { in: [] } } }
+            : {}),
+      },
+      include: {
+        ProviderPostType: {
+          include: {
+            provider: true,
+            posttype: true,
+          },
+        },
+        profile: true,
+        task: true,
+        PostType: true,
+      },
+    });
+
+    if (!posts.length) {
+      throw new Error(
+        'No se encontraron publicaciones en el rango de fechas especificado.',
+      );
+    }
+
+    // Exportar según el formato
+    const exporter = ExportFactory.getExporter(format.format);
+    return exporter.export(posts);
   }
 }
