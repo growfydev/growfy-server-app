@@ -14,7 +14,7 @@ $ yarn install
 $ bun install
 ```
 
-> [!WARN]  
+> [!WARNING]  
 > You must have an instance of PostgreSQL and Redis running on your system, highly recommended to use [Docker](https://www.docker.com/products/docker-desktop/)
 
 Once this is covered, we must migrate the database and seeds to our PostgreSQL local instance, you can do just as follow:
