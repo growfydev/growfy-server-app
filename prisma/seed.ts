@@ -19,24 +19,24 @@ async function main() {
   }
 
   const profileRolePermissions: Record<ProfileMemberRoles, PermissionFlags[]> =
-    {
-      OWNER: [
-        PermissionFlags.VIEW,
-        PermissionFlags.MANAGEMENT,
-        PermissionFlags.EDIT,
-      ],
-      MEMBER: [PermissionFlags.VIEW],
-      ANALYST: [PermissionFlags.VIEW_ANALYTICS],
-      EDITOR: [PermissionFlags.EDIT],
-      MANAGER: [
-        PermissionFlags.VIEW,
-        PermissionFlags.MANAGEMENT,
-        PermissionFlags.REVIEW_POSTS,
-      ],
-      CONTENT_CREATOR: [PermissionFlags.VIEW, PermissionFlags.PLAN_AND_PUBLISH],
-      CLIENT: [PermissionFlags.VIEW],
-      GUEST: [],
-    };
+  {
+    OWNER: [
+      PermissionFlags.VIEW,
+      PermissionFlags.MANAGEMENT,
+      PermissionFlags.EDIT,
+    ],
+    MEMBER: [PermissionFlags.VIEW],
+    ANALYST: [PermissionFlags.VIEW_ANALYTICS],
+    EDITOR: [PermissionFlags.EDIT],
+    MANAGER: [
+      PermissionFlags.VIEW,
+      PermissionFlags.MANAGEMENT,
+      PermissionFlags.REVIEW_POSTS,
+    ],
+    CONTENT_CREATOR: [PermissionFlags.VIEW, PermissionFlags.PLAN_AND_PUBLISH],
+    CLIENT: [PermissionFlags.VIEW],
+    GUEST: [],
+  };
 
   for (const [role, permissions] of Object.entries(profileRolePermissions)) {
     const profileRole = role as ProfileMemberRoles;
@@ -142,7 +142,7 @@ async function fillProvidersAndSocials() {
 
 async function seedPostTypesAndRelations() {
   // Definir los tipos de publicación
-  const postTypes = [{ name: 'message' }, { name: 'short_video' }];
+  const postTypes = [{ name: 'message' }, { name: 'short_video' }, { name: 'image' }];
 
   // Crear los postTypes si no existen
   await prisma.postType.createMany({ data: postTypes, skipDuplicates: true });
@@ -156,53 +156,68 @@ async function seedPostTypesAndRelations() {
 
   // Diccionario de configuraciones por proveedor
   const providerConfig = {
-    FACEBOOK: {
-      characterLimit: 63206,
-      characterKey: 'message',
-      fields: {
-        message: 'string',
+    FACEBOOK: [
+      {
+        characterLimit: 63206,
+        characterKey: 'message',
+        fields: {
+          message: 'string',
+        },
+        postTypeName: 'message',
+        providerPostTypeName: 'Facebook message',
       },
-      postTypeName: 'message',
-      providerPostTypeName: 'Facebook message',
-    },
-    YOUTUBE: {
-      characterLimit: 5000,
-      characterKey: 'snippet.description',
-      fields: {
-        snippet: {
-          title: 'string',
-          description: 'string',
-          tags: 'string[]',
-          categoryId: 'string',
-        },
-        status: {
-          privacyStatus: 'string',
-        },
-        media: {
+      {
+        characterLimit: 63206,
+        characterKey: 'message',
+        fields: {
+          message: 'string',
           url: 'string',
         },
+        postTypeName: 'image',
+        providerPostTypeName: 'Facebook image',
       },
-      postTypeName: 'short_video',
-      providerPostTypeName: 'YouTube short',
-    },
+    ],
+    YOUTUBE: [
+      {
+        characterLimit: 5000,
+        characterKey: 'snippet.description',
+        fields: {
+          snippet: {
+            title: 'string',
+            description: 'string',
+            tags: 'string[]',
+            categoryId: 'string',
+          },
+          status: {
+            privacyStatus: 'string',
+          },
+          media: {
+            url: 'string',
+          },
+        },
+        postTypeName: 'short_video',
+        providerPostTypeName: 'YouTube short',
+      },
+    ],
   };
 
   // Crear las relaciones correctas
   const providerPostTypes = providers.flatMap((provider) => {
-    const config = providerConfig[provider.name];
-    const postType = postTypeIds.find((pt) => pt.name === config.postTypeName);
-
-    if (postType) {
-      return {
-        providerId: provider.id,
-        posttypeId: postType.id,
-        name: config.providerPostTypeName,
-        characterLimit: config.characterLimit,
-        characterKey: config.characterKey,
-        fields: config.fields,
-      };
-    }
-    return [];
+    const configs = providerConfig[provider.name] || [];
+    return configs.flatMap((config) => {
+      const postType = postTypeIds.find((pt) => pt.name === config.postTypeName);
+      if (postType) {
+        return {
+          providerId: provider.id,
+          posttypeId: postType.id,
+          name: config.providerPostTypeName,
+          characterLimit: config.characterLimit,
+          characterKey: config.characterKey,
+          fields: config.fields,
+        };
+      }
+      return [];
+    });
   });
 
   // Insertar las relaciones únicas

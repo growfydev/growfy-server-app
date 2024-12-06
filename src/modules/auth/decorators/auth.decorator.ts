@@ -11,11 +11,14 @@ import { ProfileMemberRoles, Role } from '@prisma/client';
  * @param profileMemberRoles - List of required team roles to have access to a specific feature.
  */
 
-export function Auth(roles?: Role[], profileMemberRoles: ProfileMemberRoles[] = []) {
-    const effectiveRoles = roles?.length ? roles : [Role.USER];
-    return applyDecorators(
-        SetMetadata(ROLES_KEY, effectiveRoles),
-        SetMetadata(PROFILE_ROLES_KEY, profileMemberRoles),
-        UseGuards(AuthGuard, RolesGuard),
-    );
+export function Auth(
+	roles?: Role[],
+	profileMemberRoles: ProfileMemberRoles[] = [],
+) {
+	const effectiveRoles = roles?.length ? roles : [Role.USER];
+	return applyDecorators(
+		SetMetadata(ROLES_KEY, effectiveRoles),
+		SetMetadata(PROFILE_ROLES_KEY, profileMemberRoles),
+		UseGuards(AuthGuard, RolesGuard),
+	);
 }

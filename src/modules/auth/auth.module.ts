@@ -13,28 +13,28 @@ import { ProfileService } from './services/profile.service';
 import { UserService } from './services/users.service';
 
 @Module({
-  imports: [
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: () => ({
-        secret: configLoader().jwt.secret_key,
-        signOptions: { expiresIn: '7d' },
-      }),
-    }),
-  ],
-  providers: [
-    AuthService,
-    PrismaService,
-    TwoFactorAuthService,
-    RolesGuardService,
-    AuthenticationService,
-    MemberService,
-    ProfileService,
-    UserService,
-    JwtService,
-  ],
-  controllers: [AuthController],
-  exports: [AuthService, RolesGuardService, JwtService],
+	imports: [
+		JwtModule.registerAsync({
+			imports: [ConfigModule],
+			inject: [ConfigService],
+			useFactory: () => ({
+				secret: configLoader().jwt.secret_key,
+				signOptions: { expiresIn: '7d' },
+			}),
+		}),
+	],
+	providers: [
+		AuthService,
+		PrismaService,
+		TwoFactorAuthService,
+		RolesGuardService,
+		AuthenticationService,
+		MemberService,
+		ProfileService,
+		UserService,
+		JwtService,
+	],
+	controllers: [AuthController],
+	exports: [AuthService, RolesGuardService, JwtService],
 })
 export class AuthModule {}

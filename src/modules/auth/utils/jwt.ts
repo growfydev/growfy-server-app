@@ -12,17 +12,21 @@ const REFRESH_SECRET_KEY = configLoader().jwt.refresh_key;
  * @returns Signed JWT access token
  */
 export function generateAccessToken(user: {
-  id: number;
-  role: Role;
-  profiles: { id: number; roles: ProfileMemberRoles[]; permissions: string[] }[];
+	id: number;
+	role: Role;
+	profiles: {
+		id: number;
+		roles: ProfileMemberRoles[];
+		permissions: string[];
+	}[];
 }): string {
-  return jwt.sign(
-    {
-      user,
-    },
-    SECRET_KEY,
-    { expiresIn: '1h' },
-  );
+	return jwt.sign(
+		{
+			user,
+		},
+		SECRET_KEY,
+		{ expiresIn: '1h' },
+	);
 }
 
 /**
@@ -32,22 +36,22 @@ export function generateAccessToken(user: {
  * @returns Signed JWT refresh token
  */
 export function generateRefreshToken(
-  userId: number,
-  fingerprint?: string,
+	userId: number,
+	fingerprint?: string,
 ): string {
-  const payload: Record<string, any> = {
-    userId,
-    iat: Math.floor(Date.now() / 1000),
-  };
+	const payload: Record<string, unknown> = {
+		userId,
+		iat: Math.floor(Date.now() / 1000),
+	};
 
-  if (fingerprint) {
-    payload.fingerprint = fingerprint;
-  }
+	if (fingerprint) {
+		payload.fingerprint = fingerprint;
+	}
 
-  try {
-    return jwt.sign(payload, REFRESH_SECRET_KEY, { expiresIn: '7d' });
-  } catch (error) {
-    console.error('Error generating refresh token:', error);
-    throw new Error('Could not generate refresh token');
-  }
+	try {
+		return jwt.sign(payload, REFRESH_SECRET_KEY, { expiresIn: '7d' });
+	} catch (error) {
+		console.error('Error generating refresh token:', error);
+		throw new Error('Could not generate refresh token');
+	}
 }
