@@ -1,19 +1,20 @@
-import { ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import { ExecutionContext, Injectable } from '@nestjs/common';
 import { Role, ProfileMemberRoles } from '@prisma/client';
 import { PROFILE_ROLES_KEY, ROLES_KEY } from '../keys/roles.keys';
 import { JwtPayloadType } from '../types/auth';
 import { Reflector } from '@nestjs/core';
 import { RequestDataType } from '../types/auth';
 import { PrismaService } from 'src/core/prisma.service';
+import { Service } from 'src/service';
 
 @Injectable()
-export class RolesGuardService {
-	private readonly logger = new Logger(RolesGuardService.name);
-
+export class RolesGuardService extends Service {
 	constructor(
 		private readonly reflector: Reflector,
 		private readonly prisma: PrismaService,
-	) {}
+	) {
+		super(RolesGuardService.name);
+	}
 
 	getRequiredRoles(context: ExecutionContext): Role[] {
 		return this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
