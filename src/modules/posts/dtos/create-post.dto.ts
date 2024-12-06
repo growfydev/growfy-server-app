@@ -2,7 +2,7 @@ import { IsObject, IsNumber, IsOptional } from 'class-validator';
 
 export class CreatePostDto {
 	@IsObject()
-	readonly content: Record<string, any>;
+	readonly content: Record<string, unknown>;
 
 	@IsNumber()
 	readonly provider: number;

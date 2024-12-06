@@ -1,14 +1,19 @@
 import axios from 'axios';
 import { PostPublisher } from '../common/post-factory/post.publisher.interface';
-import { JsonValue } from '@prisma/client/runtime/library';
+import {
+	PostFields,
+	PostData,
+	FacebookMessagePostFields,
+	FacebookPhotoPostFields,
+} from './types';
 
 export class FacebookPublisher implements PostPublisher {
 	private readonly graphUrl = 'https://graph.facebook.com/v21.0/';
 
 	async publish(
-		typePostName: string,
-		fields: JsonValue,
-		data: any,
+		typePostName: 'message' | 'image',
+		fields: PostFields,
+		data: PostData,
 	): Promise<void> {
 		if (!fields) {
 			throw new Error(
@@ -21,11 +26,15 @@ export class FacebookPublisher implements PostPublisher {
 				await this.createMessagePost(
 					data.accountId,
 					data.token,
-					fields,
+					fields as FacebookMessagePostFields,
 				);
 				break;
 			case 'image':
-				await this.createPhotoPost(data.accountId, data.token, fields);
+				await this.createPhotoPost(
+					data.accountId,
+					data.token,
+					fields as FacebookPhotoPostFields,
+				);
 				break;
 			default:
 				throw new Error('No se encontró el tipo de post');
@@ -35,13 +44,8 @@ export class FacebookPublisher implements PostPublisher {
 	private async createMessagePost(
 		accountId: string,
 		token: string,
-		fields: JsonValue,
+		fields: FacebookMessagePostFields,
 	): Promise<void> {
-		if (typeof fields !== 'object' || !fields || !('message' in fields)) {
-			throw new Error(
-				'El campo "message" es requerido en los datos de entrada.',
-			);
-		}
 		const url = `${this.graphUrl}${accountId}/feed`;
 		const payload = {
 			message: fields.message,
@@ -50,9 +54,11 @@ export class FacebookPublisher implements PostPublisher {
 
 		try {
 			await axios.post(url, payload);
-		} catch (error: any) {
+		} catch (error) {
 			throw new Error(
-				`Error al realizar la publicación: ${error.response?.data?.error?.message || error.message}`,
+				`Error al realizar la publicación: ${
+					error.response?.data?.error?.message || error.message
+				}`,
 			);
 		}
 	}
@@ -60,18 +66,8 @@ export class FacebookPublisher implements PostPublisher {
 	private async createPhotoPost(
 		accountId: string,
 		token: string,
-		fields: JsonValue,
+		fields: FacebookPhotoPostFields,
 	): Promise<void> {
-		if (
-			typeof fields !== 'object' ||
-			!fields ||
-			!('url' in fields) ||
-			!('message' in fields)
-		) {
-			throw new Error(
-				'El campo "url" es requerido en los datos de entrada.',
-			);
-		}
 		const url = `${this.graphUrl}${accountId}/photos`;
 		const payload = {
 			url: fields.url,
@@ -81,10 +77,13 @@ export class FacebookPublisher implements PostPublisher {
 
 		try {
 			await axios.post(url, payload);
-		} catch (error: any) {
+		} catch (error) {
 			throw new Error(
-				`Error al realizar la publicación: ${error.response?.data?.error?.message || error.message}`,
+				`Error al realizar la publicación: ${
+					error.response?.data?.error?.message || error.message
+				}`,
 			);
 		}
 	}
 }
+export { PostFields, PostData };
