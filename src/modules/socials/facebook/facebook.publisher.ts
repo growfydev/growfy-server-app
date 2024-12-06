@@ -1,10 +1,15 @@
 import axios from 'axios';
 import { PostPublisher } from '../common/post-factory/post.publisher.interface';
+import { JsonObject } from '@prisma/client/runtime/library';
 
 export class FacebookPublisher implements PostPublisher {
   private readonly graphUrl = 'https://graph.facebook.com/v21.0/';
 
-  async publish(typePostName: string, fields: any, data: any): Promise<void> {
+  async publish(
+    typePostName: string,
+    fields: JsonObject,
+    data: any,
+  ): Promise<void> {
     if (!fields) {
       throw new Error(
         'El campo "fields" es requerido en los datos de entrada.',
@@ -24,7 +29,7 @@ export class FacebookPublisher implements PostPublisher {
   private async createMessagePost(
     accountId: string,
     token: string,
-    fields: any,
+    fields: JsonObject,
   ): Promise<void> {
     if (!fields.message) {
       throw new Error(

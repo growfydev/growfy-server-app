@@ -1,8 +1,13 @@
+import { Buffer } from 'buffer';
 import * as ExcelJS from 'exceljs';
 import { Exporter } from './export.interface';
+import { Post } from '../dtos/export-format.dto';
 
 export class ExcelExporter implements Exporter {
-  async export(posts: any[]): Promise<{ fileBuffer: any; header: any }> {
+  async export(posts: Post[]): Promise<{
+    fileBuffer: Buffer;
+    header: { 'Content-Type': string };
+  }> {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Publicaciones');
     const header = {
@@ -43,6 +48,6 @@ export class ExcelExporter implements Exporter {
         throw new Error('Error al generar el archivo Excel');
       });
 
-    return { fileBuffer, header };
+    return { fileBuffer: fileBuffer as Buffer, header };
   }
 }

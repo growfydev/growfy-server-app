@@ -2,7 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma.service';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { TaskQueueService } from '../tasks/tasks-queue.service';
-import { GlobalStatus, PostStatus, TaskStatus } from '@prisma/client';
+import {
+  GlobalStatus,
+  Post,
+  PostStatus,
+  Profile,
+  TaskStatus,
+} from '@prisma/client';
 import { Service } from 'src/service';
 import { ExportPostsDto } from './dtos/export-posts.dto';
 import { ExportFactory } from './exporter/export.factory';
@@ -17,106 +23,7 @@ export class PostsService extends Service {
     super();
   }
 
-  // async createPost(postData: CreatePostDto, profileId: number) {
-  //   const { typePost, provider, content, unix } = postData;
-
-  //   try {
-  //     const postType = await this.prisma.postType.findUnique({
-  //       where: { id: typePost },
-  //     });
-  //     if (!postType) {
-  //       throw new Error(`Post type "${typePost}" not found.`);
-  //     }
-
-  //     const providerData = await this.prisma.provider.findUnique({
-  //       where: { id: provider },
-  //     });
-  //     if (!providerData) {
-  //       throw new Error(`Provider "${provider}" not found.`);
-  //     }
-
-  //     const isValidProviderPostType =
-  //       await this.prisma.providerPostType.findFirst({
-  //         where: {
-  //           providerId: providerData.id,
-  //           posttypeId: postType.id,
-  //         },
-  //       });
-  //     if (!isValidProviderPostType) {
-  //       throw new Error(
-  //         `The type of post "${typePost}" is not supported by the supplier "${provider}".`,
-  //       );
-  //     }
-
-  //     const requiredFields = postType.fields as Record<string, string>;
-  //     for (const [field, fieldType] of Object.entries(requiredFields)) {
-  //       if (!(field in content)) {
-  //         throw new Error(
-  //           `The field "${field}" is required for the type of post "${typePost}".`,
-  //         );
-  //       }
-
-  //       if (typeof content[field] !== fieldType) {
-  //         throw new Error(
-  //           `The field "${field}" must be of type "${fieldType}", but received "${typeof content[field]}".`,
-  //         );
-  //       }
-  //     }
-
-  //     if (!profileId) {
-  //       throw new Error(
-  //         `No profile associated with the provider "${provider}".`,
-  //       );
-  //     }
-
-  //     const postStatus = unix ? PostStatus.QUEUED : PostStatus.PUBLISHED;
-  //     const taskStatus = unix ? TaskStatus.PENDING : TaskStatus.COMPLETED;
-  //     const unixCurrentTimestamp = Math.floor(new Date().getTime() / 1000);
-
-  //     const newPost = await this.prisma.post.create({
-  //       data: {
-  //         status: postStatus,
-  //         postTypeId: postType.id,
-  //         providerPostTypeId: isValidProviderPostType.id,
-  //         profileId,
-  //         fields: content,
-  //         globalStatus: GlobalStatus.ACTIVE,
-  //         task: unix
-  //           ? { create: { status: taskStatus, unix } }
-  //           : { create: { status: taskStatus, unix: unixCurrentTimestamp } },
-  //       },
-  //       include: {
-  //         ProviderPostType: {
-  //           include: {
-  //             provider: {
-  //               select: {
-  //                 name: true,
-  //               },
-  //             },
-  //             posttype: {
-  //               select: {
-  //                 name: true,
-  //                 fields: true,
-  //               },
-  //             },
-  //           },
-  //         },
-  //         task: { select: { status: true, unix: true } },
-  //       },
-  //     });
-
-  //     if (unix) {
-  //       await this.taskQueueService.scheduleTask(profileId, newPost.id, unix);
-  //     }
-
-  //     return newPost;
-  //   } catch (error) {
-  //     console.error('Error creating post:', error);
-  //     throw new Error('There was an error creating the post.');
-  //   }
-  // }
-
-  async createPost(postData: CreatePostDto, profileId: number) {
+  async createPost(postData: CreatePostDto, profileId: number): Promise<Post> {
     const { typePost, provider, content, unix } = postData;
 
     const postType = await this.prisma.postType.findUnique({
@@ -234,7 +141,7 @@ export class PostsService extends Service {
     return newPost;
   }
 
-  async getPostsByProfile(profileId: number) {
+  async getPostsByProfile(profileId: number): Promise<Profile> {
     return this.prisma.profile.findUnique({
       where: {
         id: profileId,
@@ -336,7 +243,7 @@ export class PostsService extends Service {
     }
   }
 
-  async update(profileId: number, postId: number) {
+  async update(profileId: number, postId: number): Promise<void> {
     const post = await this.prisma.post.findFirst({
       where: { id: postId, profileId },
       include: { task: true },
@@ -366,7 +273,7 @@ export class PostsService extends Service {
   async exportPosts(
     profileId: number,
     exportPostsDto: ExportPostsDto,
-  ): Promise<{ fileBuffer: any; header: any }> {
+  ): Promise<{ fileBuffer: Buffer; header: { 'Content-Type': string } }> {
     const { startDate, endDate, providerIds, formatId } = exportPostsDto;
 
     const start = new Date(startDate);
