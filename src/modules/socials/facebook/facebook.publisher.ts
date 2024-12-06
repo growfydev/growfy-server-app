@@ -16,17 +16,21 @@ export class FacebookPublisher implements PostPublisher {
 			);
 		}
 
-    switch (typePostName) {
-      case 'message':
-        await this.createMessagePost(data.accountId, data.token, fields);
-        break;
-      case 'image':
-        await this.createPhotoPost(data.accountId, data.token, fields);
-        break;
-      default:
-        throw new Error('No se encontró el tipo de post');
-    }
-  }
+		switch (typePostName) {
+			case 'message':
+				await this.createMessagePost(
+					data.accountId,
+					data.token,
+					fields,
+				);
+				break;
+			case 'image':
+				await this.createPhotoPost(data.accountId, data.token, fields);
+				break;
+			default:
+				throw new Error('No se encontró el tipo de post');
+		}
+	}
 
 	private async createMessagePost(
 		accountId: string,
@@ -44,39 +48,43 @@ export class FacebookPublisher implements PostPublisher {
 			access_token: token,
 		};
 
-    try {
-      await axios.post(url, payload);
-    } catch (error: any) {
-      throw new Error(
-        `Error al realizar la publicación: ${error.response?.data?.error?.message || error.message}`,
-      );
-    }
-  }
+		try {
+			await axios.post(url, payload);
+		} catch (error: any) {
+			throw new Error(
+				`Error al realizar la publicación: ${error.response?.data?.error?.message || error.message}`,
+			);
+		}
+	}
 
-  private async createPhotoPost(
-    accountId: string,
-    token: string,
-    fields: JsonValue,
-  ): Promise<void> {
+	private async createPhotoPost(
+		accountId: string,
+		token: string,
+		fields: JsonValue,
+	): Promise<void> {
+		if (
+			typeof fields !== 'object' ||
+			!fields ||
+			!('url' in fields) ||
+			!('message' in fields)
+		) {
+			throw new Error(
+				'El campo "url" es requerido en los datos de entrada.',
+			);
+		}
+		const url = `${this.graphUrl}${accountId}/photos`;
+		const payload = {
+			url: fields.url,
+			message: fields.message,
+			access_token: token,
+		};
 
-
-
-    if (typeof fields !== 'object' || !fields || !('url' in fields) || !('message' in fields)) {
-      throw new Error('El campo "url" es requerido en los datos de entrada.');
-    }
-    const url = `${this.graphUrl}${accountId}/photos`;
-    const payload = {
-      url: fields.url,
-      message: fields.message,
-      access_token: token,
-    };
-
-    try {
-      await axios.post(url, payload);
-    } catch (error: any) {
-      throw new Error(
-        `Error al realizar la publicación: ${error.response?.data?.error?.message || error.message}`,
-      );
-    }
-  }
+		try {
+			await axios.post(url, payload);
+		} catch (error: any) {
+			throw new Error(
+				`Error al realizar la publicación: ${error.response?.data?.error?.message || error.message}`,
+			);
+		}
+	}
 }
