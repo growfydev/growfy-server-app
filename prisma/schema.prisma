@@ -134,16 +134,17 @@ model Customer {
 }
 
 model Social {
-    id           Int          @id @default(autoincrement())
-    token        String
-    accountId    String
-    providerId   Int
-    profileId    Int
-    provider     Provider     @relation(fields: [providerId], references: [id])
-    profile      Profile      @relation(fields: [profileId], references: [id])
-    globalStatus GlobalStatus @default(ACTIVE)
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime?    @updatedAt
+    id            Int          @id @default(autoincrement())
+    access_token  String
+    refresh_token String?
+    accountId     String
+    providerId    Int
+    profileId     Int
+    provider      Provider     @relation(fields: [providerId], references: [id])
+    profile       Profile      @relation(fields: [profileId], references: [id])
+    globalStatus  GlobalStatus @default(ACTIVE)
+    createdAt     DateTime     @default(now())
+    updatedAt     DateTime?    @updatedAt
 }
 
 model Provider {
@@ -243,4 +244,3 @@ model Export {
     createdAt DateTime  @default(now())
     updatedAt DateTime? @updatedAt
 }
-

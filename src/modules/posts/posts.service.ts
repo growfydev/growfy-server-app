@@ -188,7 +188,7 @@ export class PostsService extends Service {
               socials: {
                 select: {
                   providerId: true,
-                  token: true,
+                  access_token: true,
                   accountId: true,
                 },
               },
@@ -223,7 +223,7 @@ export class PostsService extends Service {
       ).accountId;
       const token = post.profile.socials.find(
         (social) => social.providerId === provider.id,
-      ).token;
+      ).access_token;
       const fields = post.fields;
 
       const factory = PostFactorySelector.getFactory(provider.name);

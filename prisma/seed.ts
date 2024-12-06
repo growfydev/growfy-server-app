@@ -119,13 +119,13 @@ async function fillProvidersAndSocials() {
 
   const socials = [
     {
-      token: 'facebook-token-example',
+      access_token: 'facebook-token-example',
       accountId: 'facebook-account-123',
       providerId: 1,
       profileId: profile.id,
     },
     {
-      token: 'youtube-token-example',
+      access_token: 'youtube-token-example',
       accountId: 'youtube-account-456',
       providerId: 2,
       profileId: profile.id,
