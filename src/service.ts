@@ -1,5 +1,5 @@
-import { Logger } from "@nestjs/common";
+import { Logger } from '@nestjs/common';
 
 export class Service {
-    readonly logger = new Logger();
+	readonly logger = new Logger();
 }

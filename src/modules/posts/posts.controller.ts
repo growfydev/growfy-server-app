@@ -1,12 +1,12 @@
 import {
-  Body,
-  Controller,
-  Get,
-  NotFoundException,
-  Param,
-  Post,
-  Res,
-  HttpStatus,
+	Body,
+	Controller,
+	Get,
+	NotFoundException,
+	Param,
+	Post,
+	Res,
+	HttpStatus,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dtos/create-post.dto';
@@ -18,42 +18,42 @@ import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
 
 @Controller('posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+	constructor(private readonly postsService: PostsService) {}
 
-  @Post(':profileId/create')
-  @ResponseMessage('Posts creado exitosamente')
-  @Auth([Role.USER], [ProfileMemberRoles.MANAGER])
-  async create(
-    @Body() createPostDto: CreatePostDto,
-    @Param('profileId') profileId: number,
-  ) {
-    return this.postsService.createPost(createPostDto, +profileId);
-  }
+	@Post(':profileId/create')
+	@ResponseMessage('Posts creado exitosamente')
+	@Auth([Role.USER], [ProfileMemberRoles.MANAGER])
+	async create(
+		@Body() createPostDto: CreatePostDto,
+		@Param('profileId') profileId: number,
+	) {
+		return this.postsService.createPost(createPostDto, +profileId);
+	}
 
-  @Get(':profileId/posts')
-  @Auth([Role.USER], [ProfileMemberRoles.MANAGER])
-  async getPostsByProfile(@Param('profileId') profileId: number) {
-    const posts = await this.postsService.getPostsByProfile(+profileId);
-    if (!posts) {
-      throw new NotFoundException(
-        `No se encontraron posts para el perfil con ID ${profileId}.`,
-      );
-    }
-    return posts;
-  }
-  @Post(':profileId/export')
-  @Auth([Role.USER], [ProfileMemberRoles.MANAGER])
-  async exportPosts(
-    @Body() exportPostsDto: ExportPostsDto,
-    @Param('profileId') profileId: number,
-    @Res() res: Response,
-  ) {
-    const { fileBuffer, header } = await this.postsService.exportPosts(
-      +profileId,
-      exportPostsDto,
-    );
+	@Get(':profileId/posts')
+	@Auth([Role.USER], [ProfileMemberRoles.MANAGER])
+	async getPostsByProfile(@Param('profileId') profileId: number) {
+		const posts = await this.postsService.getPostsByProfile(+profileId);
+		if (!posts) {
+			throw new NotFoundException(
+				`No se encontraron posts para el perfil con ID ${profileId}.`,
+			);
+		}
+		return posts;
+	}
+	@Post(':profileId/export')
+	@Auth([Role.USER], [ProfileMemberRoles.MANAGER])
+	async exportPosts(
+		@Body() exportPostsDto: ExportPostsDto,
+		@Param('profileId') profileId: number,
+		@Res() res: Response,
+	) {
+		const { fileBuffer, header } = await this.postsService.exportPosts(
+			+profileId,
+			exportPostsDto,
+		);
 
-    res.set(header);
-    res.status(HttpStatus.OK).send(fileBuffer);
-  }
+		res.set(header);
+		res.status(HttpStatus.OK).send(fileBuffer);
+	}
 }

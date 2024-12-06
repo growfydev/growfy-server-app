@@ -14,7 +14,9 @@ type LoggerConfig = {
 			};
 		};
 		serializers?: {
-			req?: (req: IncomingMessage & { method?: string; url?: string }) => {
+			req?: (
+				req: IncomingMessage & { method?: string; url?: string },
+			) => {
 				method?: string;
 				url?: string;
 			};
@@ -38,7 +40,9 @@ const loggerConfig: LoggerConfig = {
 			},
 		},
 		serializers: {
-			req: (req: IncomingMessage & { method?: string; url?: string }) => ({
+			req: (
+				req: IncomingMessage & { method?: string; url?: string },
+			) => ({
 				method: req.method || 'unknown',
 				url: req.url || 'unknown',
 			}),
@@ -55,4 +59,5 @@ const loggerConfigAsync = {
 	},
 };
 
-export const LoggerConfiguredModule = LoggerModule.forRootAsync(loggerConfigAsync);
+export const LoggerConfiguredModule =
+	LoggerModule.forRootAsync(loggerConfigAsync);

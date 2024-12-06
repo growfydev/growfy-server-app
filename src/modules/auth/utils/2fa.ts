@@ -9,17 +9,17 @@ import * as qrcode from 'qrcode';
  * @returns Instancia TOTP.
  */
 export function createTOTP(
-  secret: string,
-  label: string,
-  issuer: string,
+	secret: string,
+	label: string,
+	issuer: string,
 ): OTPAuth.TOTP {
-  return new OTPAuth.TOTP({
-    issuer,
-    label,
-    algorithm: 'SHA1',
-    digits: 6,
-    secret,
-  });
+	return new OTPAuth.TOTP({
+		issuer,
+		label,
+		algorithm: 'SHA1',
+		digits: 6,
+		secret,
+	});
 }
 
 /**
@@ -28,5 +28,5 @@ export function createTOTP(
  * @returns URL del código QR.
  */
 export async function generateQRCodeUrl(otpauthUrl: string): Promise<string> {
-  return await qrcode.toDataURL(otpauthUrl);
+	return await qrcode.toDataURL(otpauthUrl);
 }

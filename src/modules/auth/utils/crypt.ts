@@ -7,16 +7,16 @@ import * as crypto from 'crypto';
  * @returns Clave secreta base32.
  */
 export function generateRandomBase32(length: number = 32): string {
-  const buffer = crypto.randomBytes(Math.ceil((length * 5) / 8));
-  const base32Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-  let base32 = '';
+	const buffer = crypto.randomBytes(Math.ceil((length * 5) / 8));
+	const base32Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+	let base32 = '';
 
-  for (let i = 0; i < buffer.length; i++) {
-    const byte = buffer[i];
-    base32 += base32Chars[byte % 32];
-  }
+	for (let i = 0; i < buffer.length; i++) {
+		const byte = buffer[i];
+		base32 += base32Chars[byte % 32];
+	}
 
-  return base32.substring(0, length);
+	return base32.substring(0, length);
 }
 
 /**
@@ -25,8 +25,8 @@ export function generateRandomBase32(length: number = 32): string {
  * @returns Contraseña hasheada.
  */
 export async function hashPassword(password: string): Promise<string> {
-  const salt = await bcrypt.genSalt(10);
-  return await bcrypt.hash(password, salt);
+	const salt = await bcrypt.genSalt(10);
+	return await bcrypt.hash(password, salt);
 }
 
 /**
@@ -36,8 +36,8 @@ export async function hashPassword(password: string): Promise<string> {
  * @returns Verdadero si coinciden.
  */
 export async function comparePasswords(
-  password: string,
-  hashedPassword: string,
+	password: string,
+	hashedPassword: string,
 ): Promise<boolean> {
-  return await bcrypt.compare(password, hashedPassword);
+	return await bcrypt.compare(password, hashedPassword);
 }
