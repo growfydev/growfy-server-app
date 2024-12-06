@@ -67,7 +67,7 @@ export class YouTubeService {
     async uploadVideo(
         file: Express.Multer.File,
         options: UploadVideoDto
-    ): Promise<any> {
+    ): Promise<string[]> {
         if (!this.youtube) {
             throw new InternalServerErrorException('YouTube client not initialized');
         }
@@ -102,7 +102,7 @@ export class YouTubeService {
     async uploadShort(
         file: Express.Multer.File,
         options: UploadShortDto
-    ): Promise<any> {
+    ): Promise<string[]> {
         if (!this.youtube) {
             throw new InternalServerErrorException('YouTube client not initialized');
         }

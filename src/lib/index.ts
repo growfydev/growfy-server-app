@@ -30,16 +30,16 @@ const CoreModules = [SetupModule, PostsModule, ProviderModule, CustomerModule];
 const AuthModules = [AuthModule];
 
 const SocialModules = [
-  ThreadsModule,
-  TiktokModule,
-  XModule,
-  LinkedInModule,
-  PinterestModule,
-  YouTubeModule,
-  TwitchModule,
-  WhatsappModule,
-  WebModule,
-  CanvasModule,
+	ThreadsModule,
+	TiktokModule,
+	XModule,
+	LinkedInModule,
+	PinterestModule,
+	YouTubeModule,
+	TwitchModule,
+	WhatsappModule,
+	WebModule,
+	CanvasModule,
 ];
 
 const AdsModules = [TiktokAdsModule, MetaModule, GoogleModule];
@@ -53,14 +53,14 @@ const PaymentModules = [StripeModule];
 const TaskManagementModules = [ProfilesModule, TaskModule];
 
 const Modules = [
-  ...CoreModules,
-  ...AuthModules,
-  ...SocialModules,
-  ...AdsModules,
-  ...ThirdPartyModules,
-  ...AnalyticsModules,
-  ...PaymentModules,
-  ...TaskManagementModules,
+	...CoreModules,
+	...AuthModules,
+	...SocialModules,
+	...AdsModules,
+	...ThirdPartyModules,
+	...AnalyticsModules,
+	...PaymentModules,
+	...TaskManagementModules,
 ];
 
 export default Modules;

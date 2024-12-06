@@ -17,7 +17,7 @@ CREATE TYPE "TaskStatus" AS ENUM ('SCHEDULED', 'PENDING', 'PROCESSING', 'COMPLET
 CREATE TYPE "PostStatus" AS ENUM ('QUEUED', 'COMPLETED', 'CANCELED', 'FAILED', 'PUBLISHED');
 
 -- CreateEnum
-CREATE TYPE "ProviderNames" AS ENUM ('FACEBOOK', 'INSTAGRAM', 'TWITTER', 'PINTEREST');
+CREATE TYPE "ProviderNames" AS ENUM ('FACEBOOK', 'YOUTUBE');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -78,7 +78,9 @@ CREATE TABLE "Customer" (
 -- CreateTable
 CREATE TABLE "Social" (
     "id" SERIAL NOT NULL,
-    "token" TEXT NOT NULL,
+    "access_token" TEXT NOT NULL,
+    "refresh_token" TEXT,
+    "accountId" TEXT NOT NULL,
     "providerId" INTEGER NOT NULL,
     "profileId" INTEGER NOT NULL,
     "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
@@ -131,7 +133,6 @@ CREATE TABLE "Task" (
 CREATE TABLE "PostType" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "fields" JSONB NOT NULL,
     "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
@@ -144,6 +145,10 @@ CREATE TABLE "ProviderPostType" (
     "id" SERIAL NOT NULL,
     "providerId" INTEGER NOT NULL,
     "posttypeId" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
+    "characterLimit" INTEGER NOT NULL,
+    "characterKey" TEXT NOT NULL,
+    "fields" JSONB NOT NULL,
 
     CONSTRAINT "ProviderPostType_pkey" PRIMARY KEY ("id")
 );
@@ -178,6 +183,19 @@ CREATE TABLE "ExportFormat" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "ExportFormat_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Export" (
+    "id" SERIAL NOT NULL,
+    "startDate" TIMESTAMP(3) NOT NULL,
+    "endDate" TIMESTAMP(3) NOT NULL,
+    "posts" JSONB,
+    "format" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+
+    CONSTRAINT "Export_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
