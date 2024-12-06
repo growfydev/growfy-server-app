@@ -29,4 +29,10 @@ export type Config = {
     host: string;
     port: number;
   };
+  s3: {
+    key_id: string;
+    access_key: string,
+    bucket_name: string,
+    region: string;
+  }
 };

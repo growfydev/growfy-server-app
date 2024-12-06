@@ -32,5 +32,12 @@ export const configLoader: () => Config = (): Config => {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT) || 6379,
     },
+    s3: {
+      key_id: process.env.AWS_ACCESS_KEY_ID,
+      access_key: process.env.AWS_SECRET_ACCESS_KEY,
+      bucket_name: process.env.AWS_S3_BUCKET_NAME,
+      region: process.env.AWS_REGION
+
+    }
   };
 };

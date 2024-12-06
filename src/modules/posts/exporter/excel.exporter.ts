@@ -8,6 +8,7 @@ export class ExcelExporter implements Exporter {
     fileBuffer: Buffer;
     header: { 'Content-Type': string };
   }> {
+
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Publicaciones');
     const header = {
@@ -49,5 +50,6 @@ export class ExcelExporter implements Exporter {
       });
 
     return { fileBuffer: fileBuffer as Buffer, header };
+
   }
 }

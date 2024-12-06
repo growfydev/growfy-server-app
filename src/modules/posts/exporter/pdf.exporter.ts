@@ -7,6 +7,7 @@ export class PdfExporter implements Exporter {
     fileBuffer: Buffer;
     header: { 'Content-Type': string };
   }> {
+
     const doc = new PdfKit();
     const buffers: Buffer[] = [];
     const header = { 'Content-Type': 'application/pdf' };
@@ -120,5 +121,6 @@ export class PdfExporter implements Exporter {
     });
 
     return { fileBuffer: fileBuffer as Buffer, header };
+
   }
 }

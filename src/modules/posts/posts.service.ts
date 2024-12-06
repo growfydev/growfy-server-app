@@ -14,6 +14,7 @@ import { ExportPostsDto } from './dtos/export-posts.dto';
 import { ExportFactory } from './exporter/export.factory';
 import { PostFactorySelector } from '../socials/common/post-factory/post.selector.factory';
 
+
 @Injectable()
 export class PostsService extends Service {
   constructor(
@@ -273,7 +274,9 @@ export class PostsService extends Service {
   async exportPosts(
     profileId: number,
     exportPostsDto: ExportPostsDto,
+
   ): Promise<{ fileBuffer: Buffer; header: { 'Content-Type': string } }> {
+
     const { startDate, endDate, providerIds, formatId } = exportPostsDto;
 
     const start = new Date(startDate);
@@ -297,6 +300,7 @@ export class PostsService extends Service {
           gte: start,
           lte: end,
         },
+        
         ...(providerIds !== undefined && providerIds.length > 0
           ? { ProviderPostType: { providerId: { in: providerIds } } }
           : providerIds?.length === 0
@@ -321,6 +325,7 @@ export class PostsService extends Service {
         'No se encontraron publicaciones en el rango de fechas especificado.',
       );
     }
+
 
     // Transformar los posts a un formato más fácil de mapear y guardar
     const transformedPosts = posts.map((post) => ({
