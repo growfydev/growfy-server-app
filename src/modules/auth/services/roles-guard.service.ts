@@ -1,5 +1,5 @@
 import { ExecutionContext, Injectable, Logger } from '@nestjs/common';
-import { Role, ProfileMemberRoles, Profile } from '@prisma/client';
+import { Role, ProfileMemberRoles } from '@prisma/client';
 import { PROFILE_ROLES_KEY, ROLES_KEY } from '../keys/roles.keys';
 import { JwtPayloadType } from '../types/auth';
 import { Reflector } from '@nestjs/core';
@@ -13,7 +13,7 @@ export class RolesGuardService {
 	constructor(
 		private readonly reflector: Reflector,
 		private readonly prisma: PrismaService,
-	) { }
+	) {}
 
 	getRequiredRoles(context: ExecutionContext): Role[] {
 		return this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
@@ -33,12 +33,15 @@ export class RolesGuardService {
 		const request = context.switchToHttp().getRequest();
 		return {
 			user: request.user as JwtPayloadType['user'],
-			params: request.params as Record<string, any>,
-			body: request.body as Record<string, any>,
+			params: request.params as Record<string, unknown>,
+			body: request.body as Record<string, unknown>,
 		};
 	}
 
-	isAdminAccess(requiredRoles: Role[], user: JwtPayloadType['user']): boolean {
+	isAdminAccess(
+		requiredRoles: Role[],
+		user: JwtPayloadType['user'],
+	): boolean {
 		if (requiredRoles?.includes(Role.ADMIN) && user.role === Role.ADMIN) {
 			this.logger.debug('User is ADMIN. Access granted.');
 			return true;
@@ -56,8 +59,8 @@ export class RolesGuardService {
 	}
 
 	getProfileId(
-		params: Record<string, any>,
-		body: Record<string, any>,
+		params: Record<string, unknown>,
+		body: Record<string, unknown>,
 	): number | null {
 		const profileId = Number(params?.profileId || body?.profileId);
 		return isNaN(profileId) ? null : profileId;
@@ -96,7 +99,9 @@ export class RolesGuardService {
 	): boolean {
 		if (!requiredRoles?.length) return true;
 		const userRoles = Array.isArray(user.role) ? user.role : [user.role];
-		const hasAllRoles = requiredRoles.every((role) => userRoles.includes(role));
+		const hasAllRoles = requiredRoles.every((role) =>
+			userRoles.includes(role),
+		);
 
 		if (!hasAllRoles) {
 			this.logger.warn(

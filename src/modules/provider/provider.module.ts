@@ -5,9 +5,9 @@ import { PrismaService } from 'src/core/prisma.service';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [AuthModule],
-  controllers: [ProviderController],
-  providers: [ProviderService, PrismaService],
-  exports: [ProviderService],
+	imports: [AuthModule],
+	controllers: [ProviderController],
+	providers: [ProviderService, PrismaService],
+	exports: [ProviderService],
 })
 export class ProviderModule {}

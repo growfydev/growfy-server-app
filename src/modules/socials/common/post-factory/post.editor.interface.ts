@@ -1,3 +1,3 @@
 export interface PostEditor {
-  edit(Object): Promise<void>;
+	edit(Object): Promise<void>;
 }

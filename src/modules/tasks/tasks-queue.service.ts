@@ -5,23 +5,25 @@ import { Service } from 'src/service';
 
 @Injectable()
 export class TaskQueueService extends Service {
-    constructor(@InjectQueue('taskQueue') private readonly taskQueue: Queue) {
-        super();
-    }
+	constructor(@InjectQueue('taskQueue') private readonly taskQueue: Queue) {
+		super();
+	}
 
-    async scheduleTask(
-        profileId: number,
-        postId: number,
-        unixTime: number,
-    ): Promise<void> {
-        const delay = Math.max(unixTime * 1000 - Date.now(), 0);
+	async scheduleTask(
+		profileId: number,
+		postId: number,
+		unixTime: number,
+	): Promise<void> {
+		const delay = Math.max(unixTime * 1000 - Date.now(), 0);
 
-        await this.taskQueue.add(
-            'publishPost',
-            { profileId, postId },
-            { delay },
-        );
+		await this.taskQueue.add(
+			'publishPost',
+			{ profileId, postId },
+			{ delay },
+		);
 
-        this.logger.debug(`New task added to the queue for profile id: ${profileId}, and post id ${postId}`)
-    }
+		this.logger.debug(
+			`New task added to the queue for profile id: ${profileId}, and post id ${postId}`,
+		);
+	}
 }

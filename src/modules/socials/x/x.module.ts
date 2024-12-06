@@ -3,7 +3,7 @@ import { XService } from './x.service';
 import { XController } from './x.controller';
 
 @Module({
-  providers: [XService],
-  controllers: [XController],
+	providers: [XService],
+	controllers: [XController],
 })
 export class XModule {}

@@ -5,14 +5,13 @@ import { GlobalStatus } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateProfileDto extends PartialType(CreateProfileDto) {
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  name?: string;
+	@ApiProperty()
+	@IsOptional()
+	@IsString()
+	name?: string;
 
-
-  @ApiProperty()
-  @IsOptional()
-  @IsEnum(GlobalStatus)
-  globalStatus?: GlobalStatus;
+	@ApiProperty()
+	@IsOptional()
+	@IsEnum(GlobalStatus)
+	globalStatus?: GlobalStatus;
 }
