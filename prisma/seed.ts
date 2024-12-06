@@ -109,7 +109,7 @@ async function fillProvidersAndSocials() {
 		name: network,
 	}));
 
-	const providers = await prisma.provider.createMany({
+	await prisma.provider.createMany({
 		data: p,
 		skipDuplicates: true,
 	});
