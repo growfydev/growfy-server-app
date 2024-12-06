@@ -1,28 +1,25 @@
-import {
-	Injectable,
-	Logger,
-	InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 import * as fs from 'fs';
 import { UploadVideoDto } from './types/upload-video.dto';
 import { UploadShortDto } from './types/upload-short.dto';
+import { Service } from 'src/service';
 
 @Injectable()
-export class YouTubeService {
-	private readonly logger = new Logger(YouTubeService.name);
+export class YouTubeService extends Service {
 	private oauth2Client: OAuth2Client;
 	private youtube: any;
 
 	constructor(private configService: ConfigService) {
-		console.log(this.configService.get('youtube.clientId'));
+		super(YouTubeService.name);
+		this.logger.log(this.configService.get('youtube.clientId'));
 		const clientId = '';
 		const clientSecret = '';
 		const redirectUri = '';
 
-		console.log('HOLA MUNDO');
+		this.logger.log('HOLA MUNDO');
 		this.oauth2Client = new google.auth.OAuth2(
 			clientId,
 			clientSecret,
@@ -58,7 +55,7 @@ export class YouTubeService {
 
 			this.logger.log('Access token obtained:', tokens.access_token);
 		} catch (error) {
-			console.log(error);
+			this.logger.error(error);
 			this.logger.error('Credential setup failed', error);
 			throw new InternalServerErrorException(
 				'YouTube authentication failed',

@@ -2,8 +2,12 @@ import { Buffer } from 'buffer';
 import * as ExcelJS from 'exceljs';
 import { Exporter } from './export.interface';
 import { Post } from '../dtos/export-format.dto';
+import { Service } from 'src/service';
 
-export class ExcelExporter implements Exporter {
+export class ExcelExporter extends Service implements Exporter {
+	constructor() {
+		super(ExcelExporter.name);
+	}
 	async export(posts: Post[]): Promise<{
 		fileBuffer: Buffer;
 		header: { 'Content-Type': string };
@@ -40,7 +44,7 @@ export class ExcelExporter implements Exporter {
 		const fileBuffer = await workbook.xlsx
 			.writeBuffer()
 			.then((buffer) => {
-				console.log('Excel generado correctamente.');
+				this.logger.log('Excel generado correctamente.');
 				return buffer;
 			})
 			.catch((err) => {

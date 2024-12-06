@@ -20,7 +20,7 @@ export class PostsService extends Service {
 		private readonly prisma: PrismaService,
 		private readonly taskQueueService: TaskQueueService,
 	) {
-		super();
+		super(PostsService.name);
 	}
 
 	async createPost(
