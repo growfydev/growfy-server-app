@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProfileMemberRoles } from '@prisma/client';
+import { Member, ProfileMemberRoles } from '@prisma/client';
 import { PrismaService } from 'src/core/prisma.service';
 
 @Injectable()
@@ -10,8 +10,17 @@ export class MemberService {
     userId: number,
     profileId: number,
     role: ProfileMemberRoles,
-  ): Promise<any> {
-    return this.prisma.member.create({ data: { userId, profileId, role } });
+  ): Promise<Member> {
+    return await this.prisma.member.create(
+      {
+        data:
+        {
+          userId,
+          profileId,
+          role
+        }
+      }
+    );
   }
 
   async getRolePermissions(role: ProfileMemberRoles): Promise<string[]> {
