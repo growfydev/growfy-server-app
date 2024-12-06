@@ -1,11 +1,11 @@
 interface JwtPayload {
-  user: {
-    id: number;
-    role: string;
-    profiles: Profile[];
-  };
-  iat: number;
-  exp: number;
+	user: {
+		id: number;
+		role: string;
+		profiles: Profile[];
+	};
+	iat: number;
+	exp: number;
 }
 
 // interface UserActiveInterface {
@@ -14,15 +14,15 @@ interface JwtPayload {
 // }
 
 interface Profile {
-  id: number;
-  roles: string;
-  permissions: string[];
+	id: number;
+	roles: string;
+	permissions: string[];
 }
 
 interface RequestData {
-  user: JwtPayload['user'] | undefined;
-  params: Record<string, any>;
-  body: Record<string, any>;
+	user: JwtPayload['user'] | undefined;
+	params: Record<string, unknown>;
+	body: Record<string, unknown>;
 }
 
 // export type UserType = {

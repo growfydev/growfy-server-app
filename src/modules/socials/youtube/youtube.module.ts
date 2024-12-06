@@ -6,15 +6,15 @@ import { YouTubeController } from './youtube.controller';
 import youtubeConfig from '../../../common/youtube.config';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      load: [youtubeConfig]
-    }),
-    MulterModule.register({
-      dest: './uploads'
-    })
-  ],
-  controllers: [YouTubeController],
-  providers: [YouTubeService]
+	imports: [
+		ConfigModule.forRoot({
+			load: [youtubeConfig],
+		}),
+		MulterModule.register({
+			dest: './uploads',
+		}),
+	],
+	controllers: [YouTubeController],
+	providers: [YouTubeService],
 })
-export class YouTubeModule { }
+export class YouTubeModule {}

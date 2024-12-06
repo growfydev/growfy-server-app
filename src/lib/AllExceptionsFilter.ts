@@ -19,7 +19,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
 			status = exception.getStatus();
 			const responseMessage = exception.getResponse();
 
-			if (typeof responseMessage === 'object' && responseMessage['message']) {
+			if (
+				typeof responseMessage === 'object' &&
+				responseMessage['message']
+			) {
 				if (Array.isArray(responseMessage['message'])) {
 					errors = responseMessage['message'];
 				} else {

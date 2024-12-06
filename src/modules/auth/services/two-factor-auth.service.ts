@@ -9,7 +9,7 @@ import { generateRandomBase32 } from '../utils/crypt';
 
 @Injectable()
 export class TwoFactorAuthService {
-	constructor(private prisma: PrismaService) { }
+	constructor(private prisma: PrismaService) {}
 	/**
 	 * Genera el secreto TOTP y el código QR para configurar 2FA.
 	 * @param userId ID del usuario.
@@ -51,7 +51,9 @@ export class TwoFactorAuthService {
 	 * @returns Verdadero si el token es válido.
 	 */
 	async verify2FAToken(userId: number, token: string): Promise<boolean> {
-		const user = await this.prisma.user.findUnique({ where: { id: userId } });
+		const user = await this.prisma.user.findUnique({
+			where: { id: userId },
+		});
 
 		if (!user) {
 			throw new UnauthorizedException('User does not exist');
@@ -88,10 +90,14 @@ export class TwoFactorAuthService {
 	async enable2FA(
 		userId: number,
 	): Promise<{ qrCodeUrl: string; base32: string }> {
-		const user = await this.prisma.user.findUnique({ where: { id: userId } });
+		const user = await this.prisma.user.findUnique({
+			where: { id: userId },
+		});
 
 		if (user?.otpEnabled) {
-			throw new BadRequestException('2FA is already enabled for this user');
+			throw new BadRequestException(
+				'2FA is already enabled for this user',
+			);
 		}
 		return this.generateTwoFASecret(userId, user.name);
 	}

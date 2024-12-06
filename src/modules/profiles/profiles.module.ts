@@ -6,8 +6,8 @@ import { PrismaService } from 'src/core/prisma.service';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [AuthModule],
-  controllers: [ProfilesController],
-  providers: [ProfilesService, PrismaService, JwtService],
+	imports: [AuthModule],
+	controllers: [ProfilesController],
+	providers: [ProfilesService, PrismaService, JwtService],
 })
 export class ProfilesModule {}
