@@ -7,10 +7,11 @@ import { JwtService } from '@nestjs/jwt';
 import { LoggerConfiguredModule } from './lib/logger.config';
 import { CustomerModule } from './modules/customer/customer.module';
 import { S3GlobalModule } from './common/s3-config/s3-module';
+import { S3Service } from './common/s3-config';
 
 @Module({
   imports: [...Modules, LoggerConfiguredModule, S3GlobalModule.register()],
   controllers: [AppController],
-  providers: [PrismaService, ResponseInterceptor, JwtService],
+  providers: [PrismaService, ResponseInterceptor, JwtService, S3Service],
 })
 export class AppModule { }

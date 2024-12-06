@@ -1,42 +1,33 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { S3Service } from 'src/common/s3-config';
 import { Auth } from 'src/modules/auth/decorators/auth.decorator';
-import { ActiveUser } from './modules/auth/decorators/session.decorator';
-import { ProfileMemberRoles, Role, User } from '@prisma/client';
+import { Role } from '@prisma/client';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller()
 export class AppController {
-  /**
-   *
-   * @param user
-   * @param profileId
-   * @returns User Info, used to check the @Auth user decorator as an example, pass an array of roles, first a core role either user or admin,
-   * then pass the profile roles
-   */
+  constructor(private readonly s3Service: S3Service) { }
 
-  @Get('view/:profileId')
-  @Auth(
-    [Role.USER],
-    [
-      ProfileMemberRoles.MANAGER,
-      ProfileMemberRoles.ANALYST,
-      ProfileMemberRoles.EDITOR,
-    ],
-  )
-  async viewResource(
-    @ActiveUser() user: User,
-    @Param('profileId') profileId: number,
+  @Get('s3/presigned-url/:key')
+  @Auth([Role.USER, Role.ADMIN])
+  async getPresignedUrl(@Param('key') key: string) {
+    try {
+      const presignedUrl = await this.s3Service.getFile(key);
+      return { url: presignedUrl };
+    } catch (error) {
+      return { message: `Error generating presigned URL: ${error.message}` };
+    }
+  }
+
+  @Post('s3/upload')
+  @Auth([Role.USER, Role.ADMIN])
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('folder') folder: string
   ) {
-    return {
-      message: `You have access to view resources for profile ${profileId}.`,
-      user,
-    };
+    const uploadedUrl = await this.s3Service.uploadFile(file, folder || 'uploads');
+    return { url: uploadedUrl };
   }
 
-  @Get('manage/:profileId')
-  @Auth([Role.ADMIN]) // Requires `ADMIN` role
-  async manageResource(@Param('profileId') profileId: number) {
-    return {
-      message: `You have access to manage resources for profile ${profileId}.`,
-    };
-  }
 }
