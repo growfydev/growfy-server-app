@@ -19,6 +19,7 @@ scrapper/zinsta/Lib
 .env.development
 .env.production
 .env.local
+bun.lockb
 
 # OS
 .DS_Store

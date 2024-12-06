@@ -1,6 +1,7 @@
-import axios from 'axios';
-import { PostPublisher } from '../common/post-factory/post.publisher.interface';
 import { JsonValue } from '@prisma/client/runtime/library';
+import axios from 'axios';
+import { PostData } from 'src/types/types';
+import { PostPublisher } from '../common/post-factory/post.publisher.interface';
 
 export class FacebookPublisher implements PostPublisher {
 	private readonly graphUrl = 'https://graph.facebook.com/v21.0/';
@@ -8,7 +9,7 @@ export class FacebookPublisher implements PostPublisher {
 	async publish(
 		typePostName: string,
 		fields: JsonValue,
-		data: any,
+		data: PostData,
 	): Promise<void> {
 		if (!fields) {
 			throw new Error(
@@ -50,7 +51,7 @@ export class FacebookPublisher implements PostPublisher {
 
 		try {
 			await axios.post(url, payload);
-		} catch (error: any) {
+		} catch (error) {
 			throw new Error(
 				`Error al realizar la publicación: ${error.response?.data?.error?.message || error.message}`,
 			);
@@ -81,7 +82,7 @@ export class FacebookPublisher implements PostPublisher {
 
 		try {
 			await axios.post(url, payload);
-		} catch (error: any) {
+		} catch (error) {
 			throw new Error(
 				`Error al realizar la publicación: ${error.response?.data?.error?.message || error.message}`,
 			);

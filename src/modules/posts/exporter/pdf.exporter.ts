@@ -1,8 +1,12 @@
 import * as PdfKit from 'pdfkit';
 import { Exporter } from './export.interface';
 import { Post } from '../dtos/export-format.dto';
+import { Service } from 'src/service';
 
-export class PdfExporter implements Exporter {
+export class PDFExporter extends Service implements Exporter {
+	constructor() {
+		super(PDFExporter.name);
+	}
 	async export(posts: Post[]): Promise<{
 		fileBuffer: Buffer;
 		header: { 'Content-Type': string };
@@ -12,9 +16,9 @@ export class PdfExporter implements Exporter {
 		const header = { 'Content-Type': 'application/pdf' };
 
 		// Recopilar el contenido en un buffer
-		doc.on('data', (chunk) => buffers.push(chunk));
+		doc.on('data', (chunk: Buffer) => buffers.push(chunk));
 		doc.on('end', () => {
-			console.log('PDF generado correctamente');
+			this.logger.log('PDF generado correctamente');
 		});
 
 		// Encabezado principal

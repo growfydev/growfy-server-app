@@ -1,8 +1,12 @@
 import { JsonValue } from '@prisma/client/runtime/library';
 import { PostEditor } from '../common/post-factory/post.editor.interface';
+import { Service } from 'src/service';
 
-export class FacebookEditor implements PostEditor {
+export class FacebookEditor extends Service implements PostEditor {
+	constructor() {
+		super(FacebookEditor.name);
+	}
 	async edit(fields: JsonValue): Promise<void> {
-		console.log('Editando post en Facebook:', fields);
+		this.logger.log('Editando post en Facebook:', fields);
 	}
 }
