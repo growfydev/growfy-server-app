@@ -39,7 +39,7 @@ export function generateRefreshToken(
 	userId: number,
 	fingerprint?: string,
 ): string {
-	const payload: Record<string, any> = {
+	const payload: Record<string, unknown> = {
 		userId,
 		iat: Math.floor(Date.now() / 1000),
 	};

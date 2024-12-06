@@ -21,8 +21,8 @@ interface Profile {
 
 interface RequestData {
 	user: JwtPayload['user'] | undefined;
-	params: Record<string, any>;
-	body: Record<string, any>;
+	params: Record<string, unknown>;
+	body: Record<string, unknown>;
 }
 
 // export type UserType = {
