@@ -66,6 +66,17 @@ enum PostStatus {
     PUBLISHED
 }
 
+enum ProviderNames {
+    FACEBOOK
+    YOUTUBE
+    //INSTAGRAM
+    //TWITTER
+    //PINTEREST
+    //TWITCH
+    //TIKTOK
+    //LINKEDIN
+}
+
 model User {
     id           Int          @id @default(autoincrement())
     name         String
@@ -125,6 +136,7 @@ model Customer {
 model Social {
     id           Int          @id @default(autoincrement())
     token        String
+    accountId    String
     providerId   Int
     profileId    Int
     provider     Provider     @relation(fields: [providerId], references: [id])
@@ -132,13 +144,6 @@ model Social {
     globalStatus GlobalStatus @default(ACTIVE)
     createdAt    DateTime     @default(now())
     updatedAt    DateTime?    @updatedAt
-}
-
-enum ProviderNames {
-    FACEBOOK
-    INSTAGRAM
-    TWITTER
-    PINTEREST
 }
 
 model Provider {
@@ -181,7 +186,6 @@ model Task {
 model PostType {
     id           Int          @id @default(autoincrement())
     name         String
-    fields       Json
     posts        Post[]
     globalStatus GlobalStatus @default(ACTIVE)
     createdAt    DateTime     @default(now())
@@ -191,12 +195,16 @@ model PostType {
 }
 
 model ProviderPostType {
-    id         Int      @id @default(autoincrement())
-    providerId Int
-    posttypeId Int
-    provider   Provider @relation(fields: [providerId], references: [id])
-    posttype   PostType @relation(fields: [posttypeId], references: [id])
-    Post       Post[]
+    id             Int      @id @default(autoincrement())
+    providerId     Int
+    posttypeId     Int
+    name           String
+    characterLimit Int
+    characterKey   String
+    fields         Json
+    provider       Provider @relation(fields: [providerId], references: [id])
+    posttype       PostType @relation(fields: [posttypeId], references: [id])
+    Post           Post[]
 }
 
 model Permission {
@@ -225,3 +233,14 @@ model ExportFormat {
     format    String
     createdAt DateTime @default(now())
 }
+
+model Export {
+    id        Int       @id @default(autoincrement())
+    startDate DateTime
+    endDate   DateTime
+    posts     Json?
+    format    String
+    createdAt DateTime  @default(now())
+    updatedAt DateTime? @updatedAt
+}
+

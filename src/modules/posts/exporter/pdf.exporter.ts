@@ -1,8 +1,13 @@
 import * as PdfKit from 'pdfkit';
 import { Exporter } from './export.interface';
+import { Post } from '../dtos/export-format.dto';
 
 export class PdfExporter implements Exporter {
-  async export(posts: any[]): Promise<{ fileBuffer: any; header: any }> {
+  async export(posts: Post[]): Promise<{
+    fileBuffer: Buffer;
+    header: { 'Content-Type': string };
+  }> {
+
     const doc = new PdfKit();
     const buffers: Buffer[] = [];
     const header = { 'Content-Type': 'application/pdf' };
@@ -115,9 +120,7 @@ export class PdfExporter implements Exporter {
       doc.on('error', (err) => reject(err));
     });
 
-    return {
-      fileBuffer,
-      header,
-    };
+    return { fileBuffer: fileBuffer as Buffer, header };
+
   }
 }
