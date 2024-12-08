@@ -6,7 +6,7 @@ import { Service } from 'src/service';
 @Injectable()
 export class TaskQueueService extends Service {
 	constructor(@InjectQueue('taskQueue') private readonly taskQueue: Queue) {
-		super();
+		super(TaskQueueService.name);
 	}
 
 	async scheduleTask(

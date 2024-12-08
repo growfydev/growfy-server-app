@@ -1,6 +1,6 @@
 import { Exporter } from './export.interface';
 import { ExcelExporter } from './excel.exporter';
-import { PdfExporter } from './pdf.exporter';
+import { PDFExporter } from './pdf.exporter';
 
 export class ExportFactory {
 	static getExporter(format: string): Exporter {
@@ -8,7 +8,7 @@ export class ExportFactory {
 			case 'EXCEL':
 				return new ExcelExporter();
 			case 'PDF':
-				return new PdfExporter();
+				return new PDFExporter();
 			default:
 				throw new Error('Formato no soportado');
 		}

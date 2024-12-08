@@ -20,7 +20,7 @@ import { Service } from 'src/service';
 @Injectable()
 export class ProfilesService extends Service {
 	constructor(private readonly prisma: PrismaService) {
-		super();
+		super(ProfilesService.name);
 	}
 
 	async create(
