@@ -151,6 +151,7 @@ async function seedPostTypesAndRelations() {
 		{ name: 'message' },
 		{ name: 'short_video' },
 		{ name: 'image' },
+		{ name: 'reel' },
 	];
 
 	// Crear los postTypes si no existen
@@ -184,6 +185,18 @@ async function seedPostTypesAndRelations() {
 				},
 				postTypeName: 'image',
 				providerPostTypeName: 'Facebook image',
+			},
+			{
+				characterLimit: 63206,
+				characterKey: 'description',
+				fields: {
+					fileUrl: 'string',
+					description: 'string',
+					fileSize: 'number',
+					title: 'string',
+				},
+				postTypeName: 'reel',
+				providerPostTypeName: 'Facebook reel',
 			},
 		],
 		YOUTUBE: [
