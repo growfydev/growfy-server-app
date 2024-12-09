@@ -18,7 +18,7 @@ export class AppController {
 
 	@Get('s3/presigned-url/:key')
 	@Auth([Role.USER, Role.ADMIN])
-	async getPresignedUrl(@Param('key') key: string) {
+	async getPresidedUrl(@Param('key') key: string) {
 		try {
 			const presignedUrl = await this.s3Service.getFile(key);
 			return { url: presignedUrl };
