@@ -4,7 +4,7 @@ import { PostData } from 'src/types/types';
 import {
 	PostPublisher,
 	VideoMetadata,
-} from '../../../socials/common/post-factory/post.publisher.interface';
+} from '../common/post-factory/post.publisher.interface';
 
 export class FacebookPublisher implements PostPublisher {
 	private readonly graphUrl = 'https://graph.facebook.com/v21.0/';

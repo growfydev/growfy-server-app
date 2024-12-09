@@ -12,7 +12,7 @@ import {
 import { Service } from 'src/service';
 import { ExportPostsDto } from './dtos/export-posts.dto';
 import { ExportFactory } from './exporter/export.factory';
-import { PostFactorySelector } from '../socials/common/post-factory/post.selector.factory';
+import { PostFactorySelector } from './factories/common/post-factory/post.selector.factory';
 
 @Injectable()
 export class PostsService extends Service {

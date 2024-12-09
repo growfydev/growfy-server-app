@@ -1,4 +1,4 @@
-import { FacebookPostFactory } from '../../../posts/factories/facebook/facebook-post.factory';
+import { FacebookPostFactory } from '../../facebook/facebook-post.factory';
 import { PostFactory } from './post.factory';
 
 export class PostFactorySelector {

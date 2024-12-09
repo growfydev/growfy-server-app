@@ -1,5 +1,5 @@
 import { JsonValue } from '@prisma/client/runtime/library';
-import { PostEditor } from '../../../socials/common/post-factory/post.editor.interface';
+import { PostEditor } from '../common/post-factory/post.editor.interface';
 import { Service } from 'src/service';
 
 export class FacebookEditor extends Service implements PostEditor {
