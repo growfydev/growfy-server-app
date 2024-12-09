@@ -119,12 +119,15 @@ export class FacebookPublisher implements PostPublisher {
 			// Obtener el video según la fuente
 			if ('fileUrl' in fields) {
 				// Si es una URL
-				const videoResponse = await axios.get(fields.fileUrl as string, {
-					responseType: 'arraybuffer',
-					headers: {
-						Range: 'bytes=0-1024000',
+				const videoResponse = await axios.get(
+					fields.fileUrl as string,
+					{
+						responseType: 'arraybuffer',
+						headers: {
+							Range: 'bytes=0-1024000',
+						},
 					},
-				});
+				);
 				videoBuffer = Buffer.from(videoResponse.data);
 			} else if ('fileData' in fields) {
 				// Si es un archivo local
@@ -161,7 +164,10 @@ export class FacebookPublisher implements PostPublisher {
 			// Paso 2: Transferencia del archivo
 			const chunkSize = 1024 * 1024; // 1MB por chunk
 			for (let start = 0; start < fileSize; start += chunkSize) {
-				const chunk = videoBuffer.slice(start, Math.min(start + chunkSize, fileSize));
+				const chunk = videoBuffer.slice(
+					start,
+					Math.min(start + chunkSize, fileSize),
+				);
 				await axios.post(startUrl, {
 					upload_phase: 'transfer',
 					upload_session_id: uploadSessionId,
@@ -201,7 +207,9 @@ export class FacebookPublisher implements PostPublisher {
 
 			ffmpeg(streamBuffer).ffprobe((err: any, metadata: any) => {
 				if (err) {
-					reject(new Error(`Error al obtener metadatos: ${err.message}`));
+					reject(
+						new Error(`Error al obtener metadatos: ${err.message}`),
+					);
 					return;
 				}
 
@@ -244,11 +252,15 @@ export class FacebookPublisher implements PostPublisher {
 		}
 
 		if (duration < 3 || duration > 90) {
-			throw new Error('La duración del video debe estar entre 3 y 90 segundos.');
+			throw new Error(
+				'La duración del video debe estar entre 3 y 90 segundos.',
+			);
 		}
 
 		if (frameRate < 24 || frameRate > 60) {
-			throw new Error('La velocidad de fotogramas debe estar entre 24 y 60 fps.');
+			throw new Error(
+				'La velocidad de fotogramas debe estar entre 24 y 60 fps.',
+			);
 		}
 	}
 }
