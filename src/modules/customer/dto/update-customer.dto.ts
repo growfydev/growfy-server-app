@@ -21,5 +21,5 @@ export class UpdateCustomerDto {
 	phone?: string;
 
 	@IsOptional()
-	metadata?: Record<string, any>;
+	metadata?: Record<string, object>;
 }

@@ -35,4 +35,17 @@ export type Config = {
 		bucket_name: string;
 		region: string;
 	};
+	youtube: {
+		clientId: string;
+		clientSecret: string;
+		redirectUri: string;
+		scopes: Array<string>;
+	};
+	sms: {
+		accountSid: string;
+		authToken: string;
+		from: string;
+		to: string;
+		message: string;
+	};
 };

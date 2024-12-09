@@ -10,7 +10,6 @@ export class CustomerService {
 		profileId,
 		page = 1,
 		limit = 10,
-		status,
 	}: {
 		profileId: number;
 		page?: number;
@@ -32,28 +31,15 @@ export class CustomerService {
 		// Calculate pagination
 		const offset = (page - 1) * limit;
 
-		// Build where conditions
-		const whereConditions: any = {
-			profileId,
-		};
-
-		// Add status filter if provided
-		if (status) {
-			whereConditions.globalStatus = status;
-		}
-
 		// Fetch customers
 		const customers = await this.prisma.customer.findMany({
-			where: whereConditions,
 			skip: offset,
 			take: limit,
 			orderBy: { createdAt: 'desc' },
 		});
 
 		// Count total customers
-		const total = await this.prisma.customer.count({
-			where: whereConditions,
-		});
+		const total = await this.prisma.customer.count({});
 
 		return {
 			customers,

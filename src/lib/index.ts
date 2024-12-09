@@ -6,7 +6,6 @@ import { TiktokModule } from '../modules/socials/tiktok/tiktok.module';
 import { TiktokAdsModule } from '../modules/ads/tiktok/tiktok.module';
 import { XModule } from '../modules/socials/x/x.module';
 import { PinterestModule } from '../modules/socials/pinterest/pinterest.module';
-import { YouTubeModule } from '../modules/socials/youtube/youtube.module';
 import { TwitchModule } from '../modules/socials/twitch/twitch.module';
 import { WhatsappModule } from '../modules/socials/whatsapp/whatsapp.module';
 import { WebModule } from '../modules/socials/web/web.module';
@@ -35,7 +34,6 @@ const SocialModules = [
 	XModule,
 	LinkedInModule,
 	PinterestModule,
-	YouTubeModule,
 	TwitchModule,
 	WhatsappModule,
 	WebModule,

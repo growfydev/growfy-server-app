@@ -38,5 +38,21 @@ export const configLoader: () => Config = (): Config => {
 			bucket_name: process.env.AWS_S3_BUCKET_NAME,
 			region: process.env.AWS_REGION,
 		},
+		youtube: {
+			clientId: process.env.YOUTUBE_CLIENT_ID,
+			clientSecret: process.env.YOUTUBE_CLIENT_SECRET,
+			redirectUri: process.env.YOUTUBE_REDIRECT_URI,
+			scopes: [
+				'https://www.googleapis.com/auth/youtube.upload',
+				'https://www.googleapis.com/auth/youtube',
+			],
+		},
+		sms: {
+			accountSid: process.env.TWILIO_ACCOUNT_SID,
+			authToken: process.env.TWILIO_AUTH_TOKEN,
+			from: process.env.TWILIO_PHONE_NUMBER,
+			to: process.env.TWILIO_TARGET_PHONE_NUMBER,
+			message: process.env.TWILIO_MESSAGE,
+		},
 	};
 };
