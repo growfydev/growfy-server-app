@@ -5,6 +5,7 @@ import { PostsModule } from '../posts/posts.module';
 import { TaskQueueProcessor } from './task.processor';
 import { TaskQueueService } from './tasks-queue.service';
 import { Module } from '@nestjs/common';
+import { Queues } from './constants';
 
 @Module({
 	imports: [
@@ -15,7 +16,7 @@ import { Module } from '@nestjs/common';
 			},
 		}),
 		BullModule.registerQueue({
-			name: 'taskQueue',
+			name: Queues.TASK,
 		}),
 		PostsModule,
 	],
