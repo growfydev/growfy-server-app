@@ -73,4 +73,12 @@ export class AuthController {
 
 		return { isVerified };
 	}
+
+	@Post('refresh')
+	@ResponseMessage('Token refreshed successfully')
+	async refreshToken(
+		@Body('token') refreshToken: string,
+	): Promise<TokensDto> {
+		return this.authService.refreshToken(refreshToken);
+	}
 }

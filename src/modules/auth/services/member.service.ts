@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Member, ProfileMemberRoles } from '@prisma/client';
+import { GlobalStatus, Member, ProfileMemberRoles } from '@prisma/client';
 import { PrismaService } from 'src/core/prisma.service';
 
 @Injectable()
@@ -37,7 +37,7 @@ export class MemberService {
 		}[]
 	> {
 		const members = await this.prisma.member.findMany({
-			where: { userId, globalStatus: 'ACTIVE' },
+			where: { userId, globalStatus: GlobalStatus.ACTIVE },
 			include: {
 				profile: true,
 			},
