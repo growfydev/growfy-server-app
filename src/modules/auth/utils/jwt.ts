@@ -1,6 +1,6 @@
 import { ProfileMemberRoles, Role } from '@prisma/client';
 import * as jwt from 'jsonwebtoken';
-import { configLoader } from 'src/lib/config.loader';
+import { configLoader } from 'src/lib/ConfigLoader';
 
 const SECRET_KEY = configLoader().jwt.secret_key;
 const REFRESH_SECRET_KEY = configLoader().jwt.refresh_key;

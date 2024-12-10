@@ -14,7 +14,7 @@ import {
 	Member,
 } from '@prisma/client';
 import { InviteUserDto } from './dto/invite-user.dto';
-import { configLoader } from 'src/lib/config.loader';
+import { configLoader } from 'src/lib/ConfigLoader';
 import { Service } from 'src/service';
 
 @Injectable()
