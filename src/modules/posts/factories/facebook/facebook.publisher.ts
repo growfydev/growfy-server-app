@@ -103,26 +103,23 @@ export class FacebookPublisher implements PostPublisher {
 		token: string,
 		fields: JsonValue,
 	): Promise<void> {
-		
-
 		let videoBuffer: Buffer;
 
 		try {
-
-			if (typeof fields !== 'object' || !fields || !('fileUrl' in fields)) {
-				throw new Error('El campo "fileUrl" es requerido en los datos de entrada.');
-			}
-			
-				const videoResponse = await axios.get(
-					fields.fileUrl as string,
-					{
-						responseType: 'arraybuffer',
-					},
+			if (
+				typeof fields !== 'object' ||
+				!fields ||
+				!('fileUrl' in fields)
+			) {
+				throw new Error(
+					'El campo "fileUrl" es requerido en los datos de entrada.',
 				);
-				videoBuffer = Buffer.from(videoResponse.data);
-			
+			}
 
-			
+			const videoResponse = await axios.get(fields.fileUrl as string, {
+				responseType: 'arraybuffer',
+			});
+			videoBuffer = Buffer.from(videoResponse.data);
 
 			// Verificar si es un archivo MP4 válido
 			// const signature = videoBuffer.toString('hex', 0, 8);
