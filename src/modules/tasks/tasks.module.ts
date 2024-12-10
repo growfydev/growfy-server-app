@@ -20,7 +20,6 @@ import { Queues } from './constants';
 		}),
 		PostsModule,
 	],
-	controllers: [],
 	providers: [PrismaService, TaskQueueService, TaskQueueProcessor],
 	exports: [TaskQueueService, TaskQueueProcessor, BullModule],
 })

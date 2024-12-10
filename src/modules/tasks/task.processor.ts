@@ -4,7 +4,7 @@ import { PostsService } from '../posts/posts.service';
 import { Service as ProcessorService } from 'src/service';
 import { TaskQueueService } from './tasks-queue.service';
 import { PublishPostJobData } from './types';
-import { Queues } from './constants';
+import { Queues, Tasks } from './constants';
 
 @Processor(Queues.TASK)
 export class TaskQueueProcessor extends ProcessorService {
@@ -15,7 +15,7 @@ export class TaskQueueProcessor extends ProcessorService {
 		super(TaskQueueProcessor.name);
 	}
 
-	@Process('publishPost')
+	@Process(Tasks.PUBLISH_POST)
 	async handlePostPublish(job: Job<PublishPostJobData>) {
 		const { profileId, postId } = job.data;
 		await this.postsService.publishPost(profileId, postId);
