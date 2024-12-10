@@ -66,6 +66,6 @@ export class AuthenticationService {
 		const accessToken = generateAccessToken(jwtPayload);
 		const refreshToken = generateRefreshToken(user.id);
 
-		return { accessToken, refreshToken };
+		return { accessToken, refreshToken, user };
 	}
 }
