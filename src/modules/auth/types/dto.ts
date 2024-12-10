@@ -81,7 +81,7 @@ export class TokensDto {
 
 	@ApiProperty()
 	@IsObject()
-	user: User;
+	user?: User;
 }
 
 export class Enable2FADto {

@@ -6,10 +6,9 @@ import {
 import { AuthenticateDto, TokensDto } from '../types/dto';
 import { comparePasswords } from '../utils/crypt';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
-import { MemberService } from './member.service';
 import { TwoFactorAuthService } from './two-factor-auth.service';
 import { UserService } from './users.service';
-import { Role, ProfileMemberRoles, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { UserJWTCreatePayloadType } from '../types/auth';
 
 @Injectable()
@@ -17,7 +16,6 @@ export class AuthenticationService {
 	constructor(
 		private readonly userService: UserService,
 		private readonly twoFactorAuthService: TwoFactorAuthService,
-		private readonly memberService: MemberService,
 	) {}
 
 	async authenticate(params: AuthenticateDto): Promise<TokensDto> {
@@ -30,7 +28,7 @@ export class AuthenticationService {
 		const accessToken = generateAccessToken(jwtPayload);
 		const refreshToken = generateRefreshToken(user.id);
 
-		return { accessToken, refreshToken, user };
+		return { accessToken, refreshToken };
 	}
 
 	private async validateUser(email: string, password: string): Promise<User> {
@@ -62,18 +60,8 @@ export class AuthenticationService {
 	public async createJwtPayload(
 		user: User,
 	): Promise<UserJWTCreatePayloadType> {
-		const profiles = await this.memberService.getUserProfilesAndRoles(
-			user.id,
-		);
-
 		return {
 			id: user.id,
-			role: user.role as Role,
-			profiles: profiles.map((profile) => ({
-				id: profile.id,
-				roles: profile.roles.map((role) => role as ProfileMemberRoles),
-				permissions: profile.permissions,
-			})),
 		};
 	}
 }

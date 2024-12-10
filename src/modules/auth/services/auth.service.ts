@@ -102,4 +102,15 @@ export class AuthService {
 			throw new BadRequestException('Invalid refresh token', error);
 		}
 	}
+
+	async getUserProfiles(userId: number) {
+		const profiles =
+			await this.memberService.getUserProfilesAndRoles(userId);
+		if (!profiles || profiles.length === 0) {
+			throw new NotFoundException(
+				`No profiles found for user ID ${userId}`,
+			);
+		}
+		return profiles;
+	}
 }
