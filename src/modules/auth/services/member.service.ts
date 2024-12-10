@@ -6,12 +6,19 @@ import { PrismaService } from 'src/core/prisma.service';
 export class MemberService {
 	constructor(private prisma: PrismaService) {}
 
+	/**
+	 * Creates a new member with a role in a specific profile.
+	 * @param userId - ID of the user.
+	 * @param profileId - ID of the profile.
+	 * @param role - Role assigned to the user in the profile.
+	 * @returns The created member record.
+	 */
 	async createMember(
 		userId: number,
 		profileId: number,
 		role: ProfileMemberRoles,
 	): Promise<Member> {
-		return await this.prisma.member.create({
+		return this.prisma.member.create({
 			data: {
 				userId,
 				profileId,
@@ -20,6 +27,11 @@ export class MemberService {
 		});
 	}
 
+	/**
+	 * Retrieves permissions associated with a specific role.
+	 * @param role - Role for which permissions are required.
+	 * @returns A list of permission names.
+	 */
 	async getRolePermissions(role: ProfileMemberRoles): Promise<string[]> {
 		const permissions = await this.prisma.profileRolePermission.findMany({
 			where: { profileRoles: role },
@@ -28,6 +40,11 @@ export class MemberService {
 		return permissions.map((p) => p.permission.name);
 	}
 
+	/**
+	 * Fetches active profiles and their roles for a specific user.
+	 * @param userId - ID of the user.
+	 * @returns A list of profiles with roles and permissions.
+	 */
 	async getUserProfilesAndRoles(userId: number): Promise<
 		{
 			id: number;
@@ -38,12 +55,10 @@ export class MemberService {
 	> {
 		const members = await this.prisma.member.findMany({
 			where: { userId, globalStatus: GlobalStatus.ACTIVE },
-			include: {
-				profile: true,
-			},
+			include: { profile: true },
 		});
 
-		if (members.length === 0) return [];
+		if (!members.length) return [];
 
 		const roles = members.map((member) => member.role);
 

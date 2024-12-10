@@ -1,4 +1,4 @@
-import { Role, ProfileMemberRoles } from '@prisma/client';
+import { Role } from '@prisma/client';
 
 interface JwtPayload {
 	user: {
@@ -39,11 +39,6 @@ interface RequestData {
 interface UserJWTCreatePayload {
 	id: number;
 	role: Role;
-	profiles: {
-		id: number;
-		roles: ProfileMemberRoles[];
-		permissions: string[];
-	}[];
 }
 
 export type UserJWTCreatePayloadType = UserJWTCreatePayload;

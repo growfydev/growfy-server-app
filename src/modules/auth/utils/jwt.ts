@@ -1,5 +1,5 @@
-import { ProfileMemberRoles, Role } from '@prisma/client';
 import * as jwt from 'jsonwebtoken';
+import { Role } from '@prisma/client';
 import { configLoader } from 'src/lib/ConfigLoader';
 
 const SECRET_KEY = configLoader().jwt.secret_key;
@@ -11,15 +11,7 @@ const REFRESH_SECRET_KEY = configLoader().jwt.refresh_key;
  * @param userRoles - User's roles and associated profile information
  * @returns Signed JWT access token
  */
-export function generateAccessToken(user: {
-	id: number;
-	role: Role;
-	profiles: {
-		id: number;
-		roles: ProfileMemberRoles[];
-		permissions: string[];
-	}[];
-}): string {
+export function generateAccessToken(user: { id: number; role: Role }): string {
 	return jwt.sign(
 		{
 			user,
