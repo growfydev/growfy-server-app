@@ -190,7 +190,8 @@ async function seedPostTypesAndRelations() {
 				characterLimit: 63206,
 				characterKey: 'description',
 				fields: {
-					fileUrl: 'string',
+					fileUrl: 'string | null',
+					fileData: 'string | null',
 					description: 'string',
 					fileSize: 'number',
 					title: 'string',
