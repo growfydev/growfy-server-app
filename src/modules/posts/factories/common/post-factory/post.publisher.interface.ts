@@ -10,10 +10,10 @@ export interface PostPublisher {
 }
 
 export interface VideoMetadata {
-	width: number;
-	height: number;
-	duration: number;
-	frameRate: number;
+	width: string;
+	height: string;
+	duration: string;
+	frameRate: string;
 	audioCodec: string;
 	videoCodec: string;
 }

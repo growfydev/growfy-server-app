@@ -22,7 +22,7 @@ export class PostsController {
 
 	@Post(':profileId/create')
 	@ResponseMessage('Posts creado exitosamente')
-	@Auth([Role.USER], [ProfileMemberRoles.MANAGER])
+	// @Auth([Role.USER], [ProfileMemberRoles.MANAGER])
 	async create(
 		@Body() createPostDto: CreatePostDto,
 		@Param('profileId') profileId: number,
