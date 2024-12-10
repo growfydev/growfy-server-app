@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue, Job } from 'bull';
 import { Service } from 'src/service';
@@ -51,10 +51,9 @@ export class TaskQueueService extends Service {
 		const existingJob = await this.findExistingJob(profileId, postId);
 
 		if (!existingJob) {
-			this.logger.warn(
+			throw new NotFoundException(
 				`No task found for profileId: ${profileId}, postId: ${postId}`,
 			);
-			return;
 		}
 
 		await existingJob.remove();
@@ -82,7 +81,7 @@ export class TaskQueueService extends Service {
 		});
 
 		if (!post) {
-			throw new Error(`Post with id ${id} not found`);
+			throw new NotFoundException(`Post with id ${id} not found`);
 		}
 
 		return { status: post.status };

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/core/prisma.service';
 
 @Injectable()
@@ -19,7 +19,7 @@ export class ProviderService {
 			});
 
 			if (!provider) {
-				throw new Error(`Provider ${id} not found`);
+				throw new NotFoundException(`Provider ${id} not found`);
 			}
 
 			return provider;
