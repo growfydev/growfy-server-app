@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { User } from '@prisma/client';
 import {
 	IsEmail,
 	IsNotEmpty,
@@ -6,6 +7,7 @@ import {
 	MinLength,
 	IsOptional,
 	IsNumber,
+	IsObject,
 } from 'class-validator';
 
 export class RegisterDto {
@@ -76,6 +78,10 @@ export class TokensDto {
 	@ApiProperty()
 	@IsString()
 	refreshToken: string;
+
+	@ApiProperty()
+	@IsObject()
+	user: User;
 }
 
 export class Enable2FADto {
