@@ -6,10 +6,9 @@ import {
 import { AuthenticateDto, TokensDto } from '../types/dto';
 import { comparePasswords } from '../utils/crypt';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
-import { MemberService } from './member.service';
 import { TwoFactorAuthService } from './two-factor-auth.service';
 import { UserService } from './users.service';
-import { Role, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { UserJWTCreatePayloadType } from '../types/auth';
 
 @Injectable()
@@ -17,7 +16,6 @@ export class AuthenticationService {
 	constructor(
 		private readonly userService: UserService,
 		private readonly twoFactorAuthService: TwoFactorAuthService,
-		private readonly memberService: MemberService,
 	) {}
 
 	async authenticate(params: AuthenticateDto): Promise<TokensDto> {
@@ -64,7 +62,6 @@ export class AuthenticationService {
 	): Promise<UserJWTCreatePayloadType> {
 		return {
 			id: user.id,
-			role: user.role as Role,
 		};
 	}
 }

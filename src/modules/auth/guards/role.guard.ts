@@ -1,71 +1,68 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { RolesGuardService } from '../services/roles-guard.service';
-import { Role } from '@prisma/client';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
 	constructor(private readonly rolesGuardService: RolesGuardService) {}
 
 	async canActivate(context: ExecutionContext): Promise<boolean> {
-		const requiredRoles = this.rolesGuardService.getRequiredRoles(context);
-		const requiredProfileRoles =
-			this.rolesGuardService.getRequiredProfileRoles(context);
-
-		// Extract request data
-		const { user, params, body } =
-			this.rolesGuardService.getRequestData(context);
-
-		// Validate the presence of userId
-		if (!user?.id) {
-			this.rolesGuardService.logger.warn(
-				'Invalid or missing user information in request.',
+		const { user, requiredRoles, requiredProfileRoles, profileId } =
+			await this.extractContextData(context);
+		if (await this.rolesGuardService.isAdmin(user.id)) {
+			this.rolesGuardService.logger.log(
+				`Access granted for User ID: ${user.id} as ADMIN.`,
 			);
-			return false;
-		}
-
-		// Check for global roles (e.g., Admin)
-		if (requiredRoles.includes(Role.ADMIN)) {
-			const isAdmin = await this.rolesGuardService.isAdminAccess(
-				requiredRoles,
-				user.id,
-			);
-			if (!isAdmin) {
-				this.rolesGuardService.logger.warn(
-					`Access denied. User ID ${user.id} does not have ADMIN role.`,
-				);
-				return false;
-			}
 			return true;
 		}
-
-		// Skip profile-specific role checks if not required
-		if (!requiredProfileRoles.length) {
-			return true;
-		}
-
-		// Validate profile-specific roles
-		const profileId = this.rolesGuardService.getProfileId(params, body);
-		if (!profileId) {
-			this.rolesGuardService.logger.warn(
-				'Invalid or missing profile ID.',
-			);
-			return false;
-		}
-
-		const accessGranted = await this.rolesGuardService.validateAccess(
+		const hasAccess = await this.rolesGuardService.validateAccess(
+			user.id,
 			requiredRoles,
 			requiredProfileRoles,
-			user.id,
 			profileId,
 		);
 
-		if (!accessGranted) {
-			this.rolesGuardService.logger.warn(
-				`Access denied for user ID: ${user.id} on profile ID: ${profileId}`,
-			);
-			return false;
+		this.logAccessDecision(hasAccess, user.id, profileId);
+		return hasAccess;
+	}
+
+	/**
+	 * Extract relevant data from the context.
+	 */
+	private async extractContextData(context: ExecutionContext) {
+		const { user, params, body } =
+			this.rolesGuardService.getRequestData(context);
+		const requiredRoles = this.rolesGuardService.getRequiredRoles(context);
+		const requiredProfileRoles =
+			this.rolesGuardService.getRequiredProfileRoles(context);
+		const profileId = this.rolesGuardService.getProfileId(params, body);
+
+		if (!user?.id) {
+			throw new Error('Invalid or missing user information in request.');
 		}
 
-		return true;
+		return { user, requiredRoles, requiredProfileRoles, profileId };
+	}
+
+	/**
+	 * Log the access decision.
+	 */
+	private logAccessDecision(
+		hasAccess: boolean,
+		userId: number,
+		profileId: number | null,
+	) {
+		if (hasAccess) {
+			this.rolesGuardService.logger.log(
+				`Access granted for User ID: ${userId}${
+					profileId ? `, Profile ID: ${profileId}` : ''
+				}.`,
+			);
+		} else {
+			this.rolesGuardService.logger.warn(
+				`Access denied for User ID: ${userId}${
+					profileId ? `, Profile ID: ${profileId}` : ''
+				}.`,
+			);
+		}
 	}
 }
