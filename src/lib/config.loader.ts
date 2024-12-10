@@ -38,5 +38,10 @@ export const configLoader: () => Config = (): Config => {
 			bucket_name: process.env.AWS_S3_BUCKET_NAME,
 			region: process.env.AWS_REGION,
 		},
+		sms: {
+			accountSid: process.env.SMS_ACCOUNTID,
+			authToken: process.env.SMS_AUTH_TOKEN,
+			from: process.env.SMS_FROM,
+		},
 	};
 };

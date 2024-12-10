@@ -14,12 +14,11 @@ export class YouTubeService extends Service {
 
 	constructor(private configService: ConfigService) {
 		super(YouTubeService.name);
-		this.logger.log(this.configService.get('youtube.clientId'));
+
 		const clientId = '';
 		const clientSecret = '';
 		const redirectUri = '';
 
-		this.logger.log('HOLA MUNDO');
 		this.oauth2Client = new google.auth.OAuth2(
 			clientId,
 			clientSecret,

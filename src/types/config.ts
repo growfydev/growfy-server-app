@@ -35,4 +35,9 @@ export type Config = {
 		bucket_name: string;
 		region: string;
 	};
+	sms: {
+		accountSid: string;
+		authToken: string;
+		from: string;
+	};
 };

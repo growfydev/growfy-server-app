@@ -15,6 +15,12 @@ import {
 import { CustomerService } from './customer.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as ExcelJS from 'exceljs';
+import { Express } from 'express';
+
+interface CustomerUpload {
+	name: string;
+	globalStatus?: string;
+}
 
 @Controller('customers')
 export class CustomerController {
@@ -33,7 +39,6 @@ export class CustomerController {
 				HttpStatus.BAD_REQUEST,
 			);
 		}
-
 		return this.customerService.listCustomers({
 			profileId,
 			page: +page,
@@ -53,7 +58,6 @@ export class CustomerController {
 				HttpStatus.BAD_REQUEST,
 			);
 		}
-
 		return this.customerService.deleteCustomer(customerId, profileId);
 	}
 
@@ -62,45 +66,37 @@ export class CustomerController {
 		FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024 } }),
 	)
 	async uploadFile(
-		@UploadedFile() file: any,
+		@UploadedFile() file: Express.Multer.File,
 		@Body('profileId') profileId: number,
 	) {
 		if (!file) {
 			throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);
 		}
-
 		if (!profileId) {
 			throw new HttpException(
 				'Profile ID is required',
 				HttpStatus.BAD_REQUEST,
 			);
 		}
-
 		if (!file.originalname.match(/\.(xls|xlsx)$/)) {
 			throw new HttpException(
 				'Only Excel files are allowed!',
 				HttpStatus.BAD_REQUEST,
 			);
 		}
-
 		const customers = await this.parseExcel(file.buffer);
 		return this.customerService.saveCustomers(customers, profileId);
 	}
 
-	private async parseExcel(
-		buffer: Buffer,
-	): Promise<Array<{ name: string; globalStatus?: string }>> {
+	private async parseExcel(buffer: Buffer): Promise<CustomerUpload[]> {
 		const workbook = new ExcelJS.Workbook();
 		await workbook.xlsx.load(buffer);
-
 		const worksheet = workbook.getWorksheet(1);
-		const customers = [];
+		const customers: CustomerUpload[] = [];
 
 		worksheet.eachRow((row, rowNumber) => {
 			if (rowNumber === 1) return;
-
 			const [name, globalStatus] = row.values as string[];
-
 			if (name) {
 				customers.push({
 					name: name.toString().trim(),

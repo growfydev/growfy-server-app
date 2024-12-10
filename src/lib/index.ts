@@ -1,7 +1,7 @@
 import { SetupModule } from '../modules/config/setup.module';
 import { AuthModule } from '../modules/auth/auth.module';
 import { YouTubeModule } from '../modules/socials/youtube/youtube.module';
-import { TwilioModule } from '../modules/third-parties/sms/sms.module';
+import { SmsModule } from '../modules/third-parties/sms/sms.module';
 import { StripeModule } from '../modules/payments/stripe/stripe.module';
 import { TaskModule } from 'src/modules/tasks/tasks.module';
 import { ProfilesModule } from 'src/modules/profiles/profiles.module';
@@ -15,7 +15,7 @@ const AuthModules = [AuthModule];
 
 const SocialModules = [YouTubeModule];
 
-const ThirdPartyModules = [TwilioModule];
+const ThirdPartyModules = [SmsModule];
 
 const PaymentModules = [StripeModule];
 
