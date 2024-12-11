@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { configLoader } from '../../lib/ConfigLoader';
+import configLoader from '../../lib/ConfigLoader';
 import { envSchema } from '../../lib/SchemaValidator';
 
 @Module({

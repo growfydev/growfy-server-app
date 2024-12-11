@@ -14,7 +14,7 @@ import {
 	Member,
 } from '@prisma/client';
 import { InviteUserDto } from './dto/invite-user.dto';
-import { configLoader } from 'src/lib/ConfigLoader';
+import configLoader from 'src/lib/ConfigLoader';
 import { Service } from 'src/service';
 
 @Injectable()
@@ -195,7 +195,6 @@ export class ProfilesService extends Service {
 				},
 			});
 
-			// Optional: Send invitation email
 			this.logger.log(`Invitation email sent to ${email}`);
 			this.logger.log(
 				`Invitation link: ${configLoader().client_url}/complete-registration/?email=${email}`,

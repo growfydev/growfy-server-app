@@ -1,7 +1,7 @@
 import { Module, Global, DynamicModule } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3Client } from '@aws-sdk/client-s3';
-import { configLoader } from 'src/lib/ConfigLoader';
+import configLoader from 'src/lib/ConfigLoader';
 @Global()
 @Module({})
 export class S3GlobalModule {

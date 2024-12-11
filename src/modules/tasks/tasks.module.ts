@@ -1,6 +1,6 @@
 import { BullModule } from '@nestjs/bull';
 import { PrismaService } from 'src/core/prisma.service';
-import { configLoader } from 'src/lib/ConfigLoader';
+import configLoader from 'src/lib/ConfigLoader';
 import { PostsModule } from '../posts/posts.module';
 import { TaskQueueProcessor } from './task.processor';
 import { TaskQueueService } from './tasks-queue.service';

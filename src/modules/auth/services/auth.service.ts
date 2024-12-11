@@ -16,7 +16,7 @@ import { MemberService } from './member.service';
 import { ProfileService } from './profile.service';
 import { UserService } from './users.service';
 import * as jwt from 'jsonwebtoken';
-import { configLoader } from 'src/lib/ConfigLoader';
+import configLoader from 'src/lib/ConfigLoader';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
 
 const REFRESH_SECRET_KEY = configLoader().jwt.refresh_key;

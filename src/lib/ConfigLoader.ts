@@ -1,10 +1,16 @@
 import { Config } from 'src/types/config';
 
-export const configLoader: () => Config = (): Config => {
+function configLoader(): Config {
 	return {
 		port: process.env.PORT,
-		database: process.env.DATABASE_URL,
 		client_url: process.env.CLIENT_URL,
+		database: {
+			user: process.env.DB_USER,
+			password: process.env.DB_PASSWORD,
+			host: process.env.DB_HOST,
+			port: Number(process.env.DB_PORT),
+			name: process.env.DB_NAME,
+		},
 		jwt: {
 			secret_key: process.env.JWT_SECRET,
 			refresh_key: process.env.REFRESH_SECRET_KEY,
@@ -30,7 +36,7 @@ export const configLoader: () => Config = (): Config => {
 		},
 		redis: {
 			host: process.env.REDIS_HOST,
-			port: Number(process.env.REDIS_PORT) || 6379,
+			port: Number(process.env.REDIS_PORT),
 		},
 		s3: {
 			key_id: process.env.AWS_ACCESS_KEY_ID,
@@ -44,4 +50,6 @@ export const configLoader: () => Config = (): Config => {
 			from: process.env.SMS_FROM,
 		},
 	};
-};
+}
+
+export default configLoader;

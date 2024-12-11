@@ -1,5 +1,5 @@
 import * as jwt from 'jsonwebtoken';
-import { configLoader } from 'src/lib/ConfigLoader';
+import configLoader from 'src/lib/ConfigLoader';
 
 const SECRET_KEY = configLoader().jwt.secret_key;
 const REFRESH_SECRET_KEY = configLoader().jwt.refresh_key;
