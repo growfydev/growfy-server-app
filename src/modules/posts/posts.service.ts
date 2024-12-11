@@ -88,6 +88,110 @@ export class PostsService extends Service {
 	}
 
 	/**
+	 * Reprograma un post existente para una nueva fecha de publicación
+	 * @param profileId - ID del perfil propietario del post
+	 * @param postId - ID del post a reprogramar
+	 * @param newUnixTime - Nuevo timestamp para la publicación
+	 * @throws {NotFoundException} Si el post no existe o no pertenece al perfil
+	 * @throws {Error} Si el post no está en estado QUEUED
+	 */
+	async reschedulePost(
+		profileId: number,
+		postId: number,
+		newUnixTime: number,
+	): Promise<void> {
+		const post = await this.findAndValidatePost(profileId, postId);
+		await this.validatePostStatus(post);
+		await this.updateScheduledTask(post, profileId, postId, newUnixTime);
+
+		this.logger.debug(
+			`Post ${postId} reprogramado exitosamente para el timestamp ${newUnixTime}`,
+		);
+	}
+
+	/**
+	 * Exporta las publicaciones según los criterios especificados.
+	 * @param profileId - ID del perfil del cual exportar las publicaciones.
+	 * @param exportPostsDto - DTO con los criterios de exportación.
+	 * @returns Buffer del archivo exportado y su tipo de contenido.
+	 * @throws {NotFoundException} Si no se encuentra el formato o no hay publicaciones.
+	 */
+	async exportPosts(
+		profileId: number,
+		exportPostsDto: ExportPostsDto,
+	): Promise<{ fileBuffer: Buffer; header: { 'Content-Type': string } }> {
+		const { startDate, endDate, providerIds, formatId } = exportPostsDto;
+		const dateRange = this.createDateRange(startDate, endDate);
+		const format = await this.getAndValidateFormat(formatId);
+
+		const posts = await this.fetchPosts(profileId, dateRange, providerIds);
+		const transformedPosts = this.transformPosts(posts);
+
+		await this.createExportRecord(
+			dateRange,
+			JSON.parse(JSON.stringify(transformedPosts)) as Prisma.JsonValue,
+			format.format,
+		);
+
+		return this.generateExport(
+			format.format,
+			posts as PostWithRelationsForExport[],
+		);
+	}
+
+	/**
+	 * Actualiza el estado de un post y su tarea asociada después de una publicación exitosa.
+	 * @param profileId - ID del perfil propietario del post.
+	 * @param postId - ID del post a actualizar.
+	 * @throws {NotFoundException} Si el post no existe o no pertenece al perfil especificado.
+	 */
+	async update(profileId: number, postId: number): Promise<void> {
+		const post = await this.findPostWithTask(profileId, postId);
+		await this.updatePostStatus(postId);
+		await this.updateTaskIfExists(post.task);
+
+		this.logUpdateSuccess(postId);
+	}
+
+	/**
+	 * Publica un post en la red social correspondiente.
+	 * @param profileId - ID del perfil que realiza la publicación.
+	 * @param postId - ID del post a publicar.
+	 * @throws {Error} Si el post no existe o si falla la publicación.
+	 */
+	async publishPost(profileId: number, postId: number): Promise<void> {
+		try {
+			const post = await this.getPostWithRelations(postId);
+			const publishData = await this.extractPublishData(post);
+			await this.executePublish(publishData);
+			await this.update(profileId, postId);
+		} catch (error) {
+			await this.handlePublishError(postId, error);
+		}
+	}
+
+	/**
+	 * Obtiene todas las publicaciones asociadas a un perfil específico.
+	 * @param profileId - ID del perfil del cual se quieren obtener las publicaciones.
+	 * @returns Perfil con sus publicaciones y relaciones asociadas.
+	 * @throws {NotFoundException} Si el perfil no existe.
+	 */
+	async getPostsByProfile(profileId: number): Promise<Profile> {
+		const profileWithPosts = await this.prisma.profile.findUnique({
+			where: { id: profileId },
+			include: this.getPostsIncludeQuery(),
+		});
+
+		if (!profileWithPosts) {
+			throw new NotFoundException(
+				`No se encontró el perfil con ID: ${profileId}`,
+			);
+		}
+
+		return profileWithPosts;
+	}
+
+	/**
 	 * Maneja la lógica de publicación del post según si está programado o no
 	 * @param profileId - ID del perfil que realiza la publicación
 	 * @param postId - ID del post a publicar
@@ -321,26 +425,6 @@ export class PostsService extends Service {
 			},
 		});
 	}
-	/**
-	 * Obtiene todas las publicaciones asociadas a un perfil específico.
-	 * @param profileId - ID del perfil del cual se quieren obtener las publicaciones.
-	 * @returns Perfil con sus publicaciones y relaciones asociadas.
-	 * @throws {NotFoundException} Si el perfil no existe.
-	 */
-	async getPostsByProfile(profileId: number): Promise<Profile> {
-		const profileWithPosts = await this.prisma.profile.findUnique({
-			where: { id: profileId },
-			include: this.getPostsIncludeQuery(),
-		});
-
-		if (!profileWithPosts) {
-			throw new NotFoundException(
-				`No se encontró el perfil con ID: ${profileId}`,
-			);
-		}
-
-		return profileWithPosts;
-	}
 
 	/**
 	 * Define la estructura de inclusión para la consulta de publicaciones.
@@ -392,23 +476,6 @@ export class PostsService extends Service {
 				},
 			},
 		};
-	}
-
-	/**
-	 * Publica un post en la red social correspondiente.
-	 * @param profileId - ID del perfil que realiza la publicación.
-	 * @param postId - ID del post a publicar.
-	 * @throws {Error} Si el post no existe o si falla la publicación.
-	 */
-	async publishPost(profileId: number, postId: number): Promise<void> {
-		try {
-			const post = await this.getPostWithRelations(postId);
-			const publishData = await this.extractPublishData(post);
-			await this.executePublish(publishData);
-			await this.update(profileId, postId);
-		} catch (error) {
-			await this.handlePublishError(postId, error);
-		}
 	}
 
 	/**
@@ -535,20 +602,6 @@ export class PostsService extends Service {
 	}
 
 	/**
-	 * Actualiza el estado de un post y su tarea asociada después de una publicación exitosa.
-	 * @param profileId - ID del perfil propietario del post.
-	 * @param postId - ID del post a actualizar.
-	 * @throws {NotFoundException} Si el post no existe o no pertenece al perfil especificado.
-	 */
-	async update(profileId: number, postId: number): Promise<void> {
-		const post = await this.findPostWithTask(profileId, postId);
-		await this.updatePostStatus(postId);
-		await this.updateTaskIfExists(post.task);
-
-		this.logUpdateSuccess(postId);
-	}
-
-	/**
 	 * Busca un post y su tarea asociada verificando la propiedad.
 	 * @param {number} profileId - ID del perfil propietario.
 	 * @param {number} postId - ID del post a buscar.
@@ -615,36 +668,6 @@ export class PostsService extends Service {
 	 */
 	private logUpdateSuccess(postId: number): void {
 		this.logger.log(`Post ${postId} ha sido publicado exitosamente.`);
-	}
-
-	/**
-	 * Exporta las publicaciones según los criterios especificados.
-	 * @param profileId - ID del perfil del cual exportar las publicaciones.
-	 * @param exportPostsDto - DTO con los criterios de exportación.
-	 * @returns Buffer del archivo exportado y su tipo de contenido.
-	 * @throws {NotFoundException} Si no se encuentra el formato o no hay publicaciones.
-	 */
-	async exportPosts(
-		profileId: number,
-		exportPostsDto: ExportPostsDto,
-	): Promise<{ fileBuffer: Buffer; header: { 'Content-Type': string } }> {
-		const { startDate, endDate, providerIds, formatId } = exportPostsDto;
-		const dateRange = this.createDateRange(startDate, endDate);
-		const format = await this.getAndValidateFormat(formatId);
-
-		const posts = await this.fetchPosts(profileId, dateRange, providerIds);
-		const transformedPosts = this.transformPosts(posts);
-
-		await this.createExportRecord(
-			dateRange,
-			JSON.parse(JSON.stringify(transformedPosts)) as Prisma.JsonValue,
-			format.format,
-		);
-
-		return this.generateExport(
-			format.format,
-			posts as PostWithRelationsForExport[],
-		);
 	}
 
 	/**
@@ -814,28 +837,6 @@ export class PostsService extends Service {
 	): Promise<ExportResult> {
 		const exporter = ExportFactory.getExporter(format);
 		return exporter.export(posts);
-	}
-
-	/**
-	 * Reprograma un post existente para una nueva fecha de publicación
-	 * @param profileId - ID del perfil propietario del post
-	 * @param postId - ID del post a reprogramar
-	 * @param newUnixTime - Nuevo timestamp para la publicación
-	 * @throws {NotFoundException} Si el post no existe o no pertenece al perfil
-	 * @throws {Error} Si el post no está en estado QUEUED
-	 */
-	async reschedulePost(
-		profileId: number,
-		postId: number,
-		newUnixTime: number,
-	): Promise<void> {
-		const post = await this.findAndValidatePost(profileId, postId);
-		await this.validatePostStatus(post);
-		await this.updateScheduledTask(post, profileId, postId, newUnixTime);
-
-		this.logger.debug(
-			`Post ${postId} reprogramado exitosamente para el timestamp ${newUnixTime}`,
-		);
 	}
 
 	/**
