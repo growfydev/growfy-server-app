@@ -842,7 +842,10 @@ export class PostsService extends Service {
 	 * Busca y valida la existencia del post
 	 * @private
 	 */
-	private async findAndValidatePost(profileId: number, postId: number) {
+	private async findAndValidatePost(
+		profileId: number,
+		postId: number,
+	): Promise<PostWithTask> {
 		const post = await this.prisma.post.findFirst({
 			where: {
 				id: postId,
@@ -866,7 +869,9 @@ export class PostsService extends Service {
 	 * Valida que el post esté en estado QUEUED
 	 * @private
 	 */
-	private async validatePostStatus(post: Post & { task: Task }) {
+	private async validatePostStatus(
+		post: Post & { task: Task },
+	): Promise<void> {
 		if (post.status !== PostStatus.QUEUED) {
 			throw new Error(
 				'Solo se pueden reprogramar posts que estén en estado QUEUED',
