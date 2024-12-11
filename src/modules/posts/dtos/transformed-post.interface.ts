@@ -219,3 +219,8 @@ export interface PostWithRelationsForExport extends Post {
 export interface IExporter {
 	export(posts: PostWithRelationsForExport[]): Promise<ExportResult>;
 }
+
+export interface Task {
+	id: number;
+	unix: number;
+}

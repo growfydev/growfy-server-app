@@ -30,6 +30,7 @@ import {
 	providerPostType,
 	ProviderPostTypeFields,
 	PublishData,
+	Task,
 	TaskFieldsSelect,
 	TransformedPost,
 } from './dtos/transformed-post.interface';
@@ -813,5 +814,95 @@ export class PostsService extends Service {
 	): Promise<ExportResult> {
 		const exporter = ExportFactory.getExporter(format);
 		return exporter.export(posts);
+	}
+
+	/**
+	 * Reprograma un post existente para una nueva fecha de publicación
+	 * @param profileId - ID del perfil propietario del post
+	 * @param postId - ID del post a reprogramar
+	 * @param newUnixTime - Nuevo timestamp para la publicación
+	 * @throws {NotFoundException} Si el post no existe o no pertenece al perfil
+	 * @throws {Error} Si el post no está en estado QUEUED
+	 */
+	async reschedulePost(
+		profileId: number,
+		postId: number,
+		newUnixTime: number,
+	): Promise<void> {
+		const post = await this.findAndValidatePost(profileId, postId);
+		await this.validatePostStatus(post);
+		await this.updateScheduledTask(post, profileId, postId, newUnixTime);
+
+		this.logger.debug(
+			`Post ${postId} reprogramado exitosamente para el timestamp ${newUnixTime}`,
+		);
+	}
+
+	/**
+	 * Busca y valida la existencia del post
+	 * @private
+	 */
+	private async findAndValidatePost(profileId: number, postId: number) {
+		const post = await this.prisma.post.findFirst({
+			where: {
+				id: postId,
+				profileId,
+			},
+			include: {
+				task: true,
+			},
+		});
+
+		if (!post) {
+			throw new NotFoundException(
+				`No se encontró el post ${postId} para el perfil ${profileId}`,
+			);
+		}
+
+		return post;
+	}
+
+	/**
+	 * Valida que el post esté en estado QUEUED
+	 * @private
+	 */
+	private async validatePostStatus(post: Post & { task: Task }) {
+		if (post.status !== PostStatus.QUEUED) {
+			throw new Error(
+				'Solo se pueden reprogramar posts que estén en estado QUEUED',
+			);
+		}
+	}
+
+	/**
+	 * Actualiza la tarea programada con el nuevo timestamp
+	 * @private
+	 */
+	private async updateScheduledTask(
+		post: Post & { task: Task },
+		profileId: number,
+		postId: number,
+		newUnixTime: number,
+	): Promise<void> {
+		try {
+			await Promise.all([
+				// Reprogramar la tarea en la cola
+				this.taskQueueService.rescheduleTask(
+					profileId,
+					postId,
+					newUnixTime,
+				),
+				// Actualizar el unix time en la base de datos
+				this.prisma.task.update({
+					where: { id: post.task.id },
+					data: { unix: newUnixTime },
+				}),
+			]);
+		} catch (error) {
+			this.logger.error(
+				`Error al reprogramar el post ${postId}: ${error.message}`,
+			);
+			throw new Error('Error al reprogramar la publicación');
+		}
 	}
 }

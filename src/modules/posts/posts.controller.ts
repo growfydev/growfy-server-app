@@ -15,6 +15,7 @@ import { Auth } from '../auth/decorators/auth.decorator';
 import { ProfileMemberRoles, Role } from '@prisma/client';
 import { Response } from 'express';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
+import { ReschedulePostDto } from './dtos/resschedule-post.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -55,5 +56,19 @@ export class PostsController {
 
 		res.set(header);
 		res.status(HttpStatus.OK).send(fileBuffer);
+	}
+	@Post(':profileId/posts/:postId/reschedule')
+	@ResponseMessage('Post reprogramado exitosamente')
+	@Auth([Role.USER], [ProfileMemberRoles.MANAGER])
+	async reschedulePost(
+		@Param('profileId') profileId: number,
+		@Param('postId') postId: number,
+		@Body() reschedulePostDto: ReschedulePostDto,
+	) {
+		return this.postsService.reschedulePost(
+			+profileId,
+			+postId,
+			reschedulePostDto.newUnixTime,
+		);
 	}
 }
