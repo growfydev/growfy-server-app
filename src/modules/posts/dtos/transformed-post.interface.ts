@@ -2,7 +2,7 @@ import { $Enums, Post, TaskStatus, Prisma, GlobalStatus } from '@prisma/client';
 import { JsonValue } from '@prisma/client/runtime/library';
 export interface TransformedPost {
 	id: number;
-	content: Record<string, any>;
+	content: JsonValue;
 	postTypeId: number;
 	provider: string | undefined;
 	postType: string | undefined;
