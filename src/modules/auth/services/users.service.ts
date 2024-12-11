@@ -24,6 +24,13 @@ export class UserService {
 			where: {
 				email,
 			},
+			include: {
+				members: {
+					include: {
+						profile: true,
+					},
+				},
+			},
 		});
 	}
 

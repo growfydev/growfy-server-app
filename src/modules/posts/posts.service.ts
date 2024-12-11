@@ -121,7 +121,12 @@ export class PostsService extends Service {
 				fields: content,
 				globalStatus: GlobalStatus.ACTIVE,
 				task: unix
-					? { create: { status: taskStatus, unix } }
+					? {
+							create: {
+								status: taskStatus,
+								unix,
+							},
+						}
 					: {
 							create: {
 								status: taskStatus,
@@ -133,14 +138,23 @@ export class PostsService extends Service {
 				ProviderPostType: {
 					include: {
 						provider: {
-							select: { name: true },
+							select: {
+								name: true,
+							},
 						},
 						posttype: {
-							select: { name: true },
+							select: {
+								name: true,
+							},
 						},
 					},
 				},
-				task: { select: { status: true, unix: true } },
+				task: {
+					select: {
+						status: true,
+						unix: true,
+					},
+				},
 			},
 		});
 

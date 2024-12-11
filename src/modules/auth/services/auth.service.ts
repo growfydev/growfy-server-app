@@ -15,6 +15,11 @@ import { AuthenticationService } from './authentication.service';
 import { MemberService } from './member.service';
 import { ProfileService } from './profile.service';
 import { UserService } from './users.service';
+import * as jwt from 'jsonwebtoken';
+import { configLoader } from 'src/lib/ConfigLoader';
+import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
+
+const REFRESH_SECRET_KEY = configLoader().jwt.refresh_key;
 
 @Injectable()
 export class AuthService {
@@ -36,7 +41,7 @@ export class AuthService {
 			await this.memberService.createMember(
 				newUser.id,
 				profile.id,
-				ProfileMemberRoles.MANAGER,
+				ProfileMemberRoles.OWNER,
 			);
 		}
 
@@ -72,5 +77,40 @@ export class AuthService {
 
 	async authenticate(dto: AuthenticateDto): Promise<TokensDto> {
 		return this.authenticationService.authenticate(dto);
+	}
+
+	async refreshToken(refreshToken: string): Promise<TokensDto> {
+		try {
+			const decoded = jwt.verify(refreshToken, REFRESH_SECRET_KEY) as {
+				userId: number;
+				fingerprint?: string;
+			};
+
+			const user = await this.userService.findUserById(decoded.userId);
+			if (!user) throw new NotFoundException('User not found');
+
+			const jwtPayload =
+				await this.authenticationService.createJwtPayload(user);
+			const accessToken = generateAccessToken(jwtPayload);
+			const newRefreshToken = generateRefreshToken(
+				user.id,
+				decoded.fingerprint,
+			);
+
+			return { accessToken, refreshToken: newRefreshToken, user };
+		} catch (error) {
+			throw new BadRequestException('Invalid refresh token', error);
+		}
+	}
+
+	async getUserProfiles(userId: number) {
+		const profiles =
+			await this.memberService.getUserProfilesAndRoles(userId);
+		if (!profiles || profiles.length === 0) {
+			throw new NotFoundException(
+				`No profiles found for user ID ${userId}`,
+			);
+		}
+		return profiles;
 	}
 }

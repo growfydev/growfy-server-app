@@ -75,6 +75,7 @@ async function main() {
 }
 
 async function createExampleUser() {
+	// Create the user
 	const user = await prisma.user.create({
 		data: {
 			name: 'John Doe',
@@ -84,22 +85,38 @@ async function createExampleUser() {
 		},
 	});
 
-	const profile = await prisma.profile.create({
-		data: {
-			name: 'John Company',
-			userId: user.id,
-		},
+	const profiles = [
+		{ name: 'John Company', role: ProfileMemberRoles.OWNER },
+		{ name: 'Jane Consultancy', role: ProfileMemberRoles.OWNER },
+		{ name: 'Doe Ventures', role: ProfileMemberRoles.MANAGER },
+	];
+
+	const profileCreations = profiles.map(async (profileData) => {
+		const profile = await prisma.profile.create({
+			data: {
+				name: profileData.name,
+				userId: user.id,
+			},
+		});
+
+		const member = await prisma.member.create({
+			data: {
+				userId: user.id,
+				profileId: profile.id,
+				role: profileData.role,
+			},
+		});
+
+		return { profile, member };
 	});
 
-	const member = await prisma.member.create({
-		data: {
-			userId: user.id,
-			profileId: profile.id,
-			role: ProfileMemberRoles.MANAGER,
-		},
-	});
+	const createdProfiles = await Promise.all(profileCreations);
 
-	return { user, profile, member };
+	return {
+		user,
+		profiles: createdProfiles.map(({ profile }) => profile),
+		members: createdProfiles.map(({ member }) => member),
+	};
 }
 
 async function fillProvidersAndSocials() {
@@ -190,7 +207,8 @@ async function seedPostTypesAndRelations() {
 				characterLimit: 63206,
 				characterKey: 'description',
 				fields: {
-					fileUrl: 'string',
+					fileUrl: 'string | null',
+					fileData: 'string | null',
 					description: 'string',
 					fileSize: 'number',
 					title: 'string',

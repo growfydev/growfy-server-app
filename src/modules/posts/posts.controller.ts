@@ -22,7 +22,7 @@ export class PostsController {
 
 	@Post(':profileId/create')
 	@ResponseMessage('Posts creado exitosamente')
-	@Auth([Role.USER], [ProfileMemberRoles.MANAGER])
+	// @Auth([Role.USER], [ProfileMemberRoles.MANAGER])
 	async create(
 		@Body() createPostDto: CreatePostDto,
 		@Param('profileId') profileId: number,
@@ -31,7 +31,7 @@ export class PostsController {
 	}
 
 	@Get(':profileId/posts')
-	@Auth([Role.USER], [ProfileMemberRoles.MANAGER])
+	@Auth([Role.USER])
 	async getPostsByProfile(@Param('profileId') profileId: number) {
 		const posts = await this.postsService.getPostsByProfile(+profileId);
 		if (!posts) {
@@ -42,7 +42,7 @@ export class PostsController {
 		return posts;
 	}
 	@Post(':profileId/export')
-	@Auth([Role.USER], [ProfileMemberRoles.MANAGER])
+	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
 	async exportPosts(
 		@Body() exportPostsDto: ExportPostsDto,
 		@Param('profileId') profileId: number,

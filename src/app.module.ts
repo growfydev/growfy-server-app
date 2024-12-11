@@ -4,7 +4,7 @@ import Modules from './lib';
 import { ResponseInterceptor } from './lib/ResponseInterceptor';
 import { AppController } from './app.controller';
 import { JwtService } from '@nestjs/jwt';
-import { LoggerConfiguredModule } from './lib/logger.config';
+import { LoggerConfiguredModule } from './lib/Logger';
 import { S3GlobalModule } from './common/s3-config/s3-module';
 import { S3Service } from './common/s3-config';
 
