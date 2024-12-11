@@ -81,15 +81,28 @@ export class PostsService extends Service {
 			unix,
 		);
 
-		if (unix) {
-			await this.taskQueueService.scheduleTask(
-				profileId,
-				newPost.id,
-				unix,
-			);
-		}
+		await this.handlePostPublication(profileId, newPost.id, unix);
 
 		return newPost;
+	}
+
+	/**
+	 * Maneja la lógica de publicación del post según si está programado o no
+	 * @param profileId - ID del perfil que realiza la publicación
+	 * @param postId - ID del post a publicar
+	 * @param unix - Timestamp para publicación programada
+	 * @private
+	 */
+	private async handlePostPublication(
+		profileId: number,
+		postId: number,
+		unix?: number,
+	): Promise<void> {
+		if (unix) {
+			await this.taskQueueService.scheduleTask(profileId, postId, unix);
+		} else {
+			await this.publishPost(profileId, postId);
+		}
 	}
 
 	/**
