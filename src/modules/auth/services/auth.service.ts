@@ -30,7 +30,7 @@ export class AuthService {
 		private authenticationService: AuthenticationService,
 	) {}
 
-	async register(data: RegisterDto): Promise<{ user: User }> {
+	async register(data: RegisterDto): Promise<TokensDto> {
 		const newUser = await this.userService.createUser(data);
 
 		if (data.nameProfile) {
@@ -51,13 +51,16 @@ export class AuthService {
 			);
 		}
 
-		return { user: newUser };
+		return this.authenticationService.authenticate({
+			email: data.email,
+			password: data.password,
+		});
 	}
 
 	async completeRegistration(
 		email: string,
 		dto: CompleteRegistrationDto,
-	): Promise<{ user: User }> {
+	): Promise<TokensDto> {
 		const user = await this.userService.findUserByEmail(email);
 		if (!user || user.globalStatus !== GlobalStatus.INACTIVE) {
 			throw new BadRequestException(
@@ -72,7 +75,10 @@ export class AuthService {
 			globalStatus: GlobalStatus.ACTIVE,
 		});
 
-		return { user: updatedUser };
+		return this.authenticationService.authenticate({
+			email: updatedUser.email,
+			password: dto.password,
+		});
 	}
 
 	async getUser(userId: number): Promise<{ user: User }> {
