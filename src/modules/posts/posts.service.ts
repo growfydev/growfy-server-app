@@ -751,7 +751,7 @@ export class PostsService extends Service {
 	 * @param posts - Posts a transformar.
 	 * @private
 	 */
-	private transformPosts(posts: any[]): TransformedPost[] {
+	private transformPosts(posts: PostWithIncludes[]): TransformedPost[] {
 		return posts.map((post) => ({
 			id: post.id,
 			content: post.fields,
