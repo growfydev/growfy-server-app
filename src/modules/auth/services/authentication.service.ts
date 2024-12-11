@@ -10,6 +10,7 @@ import { TwoFactorAuthService } from './two-factor-auth.service';
 import { UserService } from './users.service';
 import { User } from '@prisma/client';
 import { UserJWTCreatePayloadType } from '../types/auth';
+import { omit } from 'lodash';
 
 @Injectable()
 export class AuthenticationService {
@@ -28,7 +29,9 @@ export class AuthenticationService {
 		const accessToken = generateAccessToken(jwtPayload);
 		const refreshToken = generateRefreshToken(user.id);
 
-		return { accessToken, refreshToken };
+		const filteredUser = omit(user, ['password', 'otpSecret']);
+
+		return { accessToken, refreshToken, user: filteredUser as User };
 	}
 
 	private async validateUser(email: string, password: string): Promise<User> {

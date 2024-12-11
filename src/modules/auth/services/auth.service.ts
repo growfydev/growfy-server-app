@@ -3,7 +3,7 @@ import {
 	BadRequestException,
 	NotFoundException,
 } from '@nestjs/common';
-import { User, ProfileMemberRoles, GlobalStatus } from '@prisma/client';
+import { User, GlobalStatus, ProfileMemberRoles } from '@prisma/client';
 import {
 	RegisterDto,
 	CompleteRegistrationDto,
@@ -38,9 +38,15 @@ export class AuthService {
 				data.nameProfile,
 				newUser.id,
 			);
-			await this.memberService.createMember(
+
+			const member = await this.memberService.createMember(
 				newUser.id,
 				profile.id,
+			);
+
+			// Assign the OWNER role to the newly created member
+			await this.memberService.assignRole(
+				member.id,
 				ProfileMemberRoles.OWNER,
 			);
 		}
@@ -104,13 +110,21 @@ export class AuthService {
 	}
 
 	async getUserProfiles(userId: number) {
+		// Retrieve user profiles along with their roles and permissions
 		const profiles =
 			await this.memberService.getUserProfilesAndRoles(userId);
+
 		if (!profiles || profiles.length === 0) {
 			throw new NotFoundException(
 				`No profiles found for user ID ${userId}`,
 			);
 		}
-		return profiles;
+
+		return profiles.map((profile) => ({
+			id: profile.id,
+			name: profile.name,
+			roles: profile.roles, // Array of roles for the profile
+			permissions: profile.permissions, // Array of aggregated permissions for the roles
+		}));
 	}
 }

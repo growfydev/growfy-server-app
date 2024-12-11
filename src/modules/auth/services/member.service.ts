@@ -13,16 +13,11 @@ export class MemberService {
 	 * @param role - Role assigned to the user in the profile.
 	 * @returns The created member record.
 	 */
-	async createMember(
-		userId: number,
-		profileId: number,
-		role: ProfileMemberRoles,
-	): Promise<Member> {
+	async createMember(userId: number, profileId: number): Promise<Member> {
 		return this.prisma.member.create({
 			data: {
 				userId,
 				profileId,
-				role,
 			},
 		});
 	}
@@ -55,23 +50,32 @@ export class MemberService {
 	> {
 		const members = await this.prisma.member.findMany({
 			where: { userId, globalStatus: GlobalStatus.ACTIVE },
-			include: { profile: true },
+			include: { profile: true, roles: true },
 		});
 
 		if (!members.length) return [];
 
-		const roles = members.map((member) => member.role);
+		const rolesByMember = members.flatMap((member) =>
+			member.roles.map((role) => ({
+				memberId: member.id,
+				role: role.role,
+			})),
+		);
 
-		const permissionsByRole =
+		const rolePermissions =
 			await this.prisma.profileRolePermission.findMany({
-				where: { profileRoles: { in: roles } },
+				where: {
+					profileRoles: {
+						in: rolesByMember.map((rm) => rm.role),
+					},
+				},
 				select: {
 					profileRoles: true,
 					permission: { select: { name: true } },
 				},
 			});
 
-		const rolePermissionsMap = permissionsByRole.reduce(
+		const rolePermissionsMap = rolePermissions.reduce(
 			(map, item) => {
 				const role = item.profileRoles;
 				if (!map[role]) {
@@ -83,11 +87,33 @@ export class MemberService {
 			{} as Record<ProfileMemberRoles, string[]>,
 		);
 
-		return members.map((member) => ({
-			id: member.profile.id,
-			name: member.profile.name,
-			roles: [member.role],
-			permissions: rolePermissionsMap[member.role] || [],
-		}));
+		return members.map((member) => {
+			const memberRoles = rolesByMember
+				.filter((rm) => rm.memberId === member.id)
+				.map((rm) => rm.role);
+
+			const permissions = memberRoles.flatMap(
+				(role) => rolePermissionsMap[role] || [],
+			);
+
+			return {
+				id: member.profile.id,
+				name: member.profile.name,
+				roles: memberRoles,
+				permissions: [...new Set(permissions)],
+			};
+		});
+	}
+
+	async assignRole(
+		memberId: number,
+		role: ProfileMemberRoles,
+	): Promise<void> {
+		await this.prisma.memberRole.create({
+			data: {
+				memberId,
+				role,
+			},
+		});
 	}
 }

@@ -96,17 +96,28 @@ model User {
 }
 
 model Member {
-    id           Int                @id @default(autoincrement())
+    id           Int          @id @default(autoincrement())
     userId       Int
     profileId    Int
-    role         ProfileMemberRoles @default(OWNER)
-    user         User               @relation(fields: [userId], references: [id])
-    profile      Profile            @relation(fields: [profileId], references: [id])
+    user         User         @relation(fields: [userId], references: [id])
+    profile      Profile      @relation(fields: [profileId], references: [id])
+    globalStatus GlobalStatus @default(ACTIVE)
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime?    @updatedAt
+    roles        MemberRole[]
+
+    @@unique([userId, profileId])
+}
+
+model MemberRole {
+    id           Int                @id @default(autoincrement())
+    memberId     Int
+    role         ProfileMemberRoles
     globalStatus GlobalStatus       @default(ACTIVE)
     createdAt    DateTime           @default(now())
     updatedAt    DateTime?          @updatedAt
 
-    @@unique([userId, profileId])
+    member Member @relation(fields: [memberId], references: [id])
 }
 
 model Profile {
@@ -126,7 +137,7 @@ model Profile {
 model Customer {
     id           Int          @id @default(autoincrement())
     name         String
-    profileId    Int // Campo obligatorio para la relación
+    profileId    Int
     globalStatus GlobalStatus @default(ACTIVE)
     createdAt    DateTime     @default(now())
     updatedAt    DateTime?    @updatedAt

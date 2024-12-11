@@ -23,6 +23,9 @@ export class ProfilesService extends Service {
 		super(ProfilesService.name);
 	}
 
+	/**
+	 * Create a new profile and assign the creator as a manager.
+	 */
 	async create(
 		userId: number,
 		createProfileDto: CreateProfileDto,
@@ -37,17 +40,36 @@ export class ProfilesService extends Service {
 			data: { name, userId },
 		});
 
-		await this.prisma.member.create({
+		// Create member and assign role
+		const member = await this.prisma.member.create({
 			data: {
 				userId,
 				profileId: profile.id,
-				role: ProfileMemberRoles.MANAGER,
 			},
 		});
+		await this.assignRoleToMember(member.id, ProfileMemberRoles.MANAGER);
 
 		return { profile };
 	}
 
+	/**
+	 * Assign a role to a member.
+	 */
+	private async assignRoleToMember(
+		memberId: number,
+		role: ProfileMemberRoles,
+	) {
+		await this.prisma.memberRole.create({
+			data: {
+				memberId,
+				role,
+			},
+		});
+	}
+
+	/**
+	 * Find all active profiles.
+	 */
 	async findAll(): Promise<{ profiles: Profile[] }> {
 		const profiles = await this.prisma.profile.findMany({
 			where: { globalStatus: GlobalStatus.ACTIVE },
@@ -56,6 +78,9 @@ export class ProfilesService extends Service {
 		return { profiles };
 	}
 
+	/**
+	 * Find a profile by ID.
+	 */
 	async findOne(id: number): Promise<{ profile: Profile }> {
 		const profile = await this.prisma.profile.findUnique({
 			where: { id },
@@ -68,6 +93,9 @@ export class ProfilesService extends Service {
 		return { profile };
 	}
 
+	/**
+	 * Update a profile by ID.
+	 */
 	async update(
 		id: number,
 		updateProfileDto: UpdateProfileDto,
@@ -86,6 +114,9 @@ export class ProfilesService extends Service {
 		return { profile: updatedProfile };
 	}
 
+	/**
+	 * Remove (soft delete) a profile by ID.
+	 */
 	async remove(id: number): Promise<{ profile: Profile }> {
 		const profile = await this.prisma.profile.findUnique({ where: { id } });
 
@@ -101,6 +132,9 @@ export class ProfilesService extends Service {
 		return { profile: deletedProfile };
 	}
 
+	/**
+	 * Deactivate a profile by ID.
+	 */
 	async deactivate(id: number): Promise<{ profile: Profile }> {
 		const profile = await this.prisma.profile.findUnique({ where: { id } });
 
@@ -116,6 +150,9 @@ export class ProfilesService extends Service {
 		return { profile: deactivatedProfile };
 	}
 
+	/**
+	 * Activate a profile by ID.
+	 */
 	async activate(id: number): Promise<{ profile: Profile }> {
 		const profile = await this.prisma.profile.findUnique({ where: { id } });
 
@@ -131,6 +168,9 @@ export class ProfilesService extends Service {
 		return { profile: activatedProfile };
 	}
 
+	/**
+	 * Invite a user to a profile and assign a role.
+	 */
 	async inviteUser(
 		inviteUserDto: InviteUserDto,
 	): Promise<{ member: Member }> {
@@ -155,7 +195,7 @@ export class ProfilesService extends Service {
 				},
 			});
 
-			// Opcional: Enviar correo de invitación
+			// Optional: Send invitation email
 			this.logger.log(`Invitation email sent to ${email}`);
 			this.logger.log(
 				`Invitation link: ${configLoader().client_url}/complete-registration/?email=${email}`,
@@ -175,15 +215,15 @@ export class ProfilesService extends Service {
 			);
 		}
 
-		const newMember = await this.prisma.member.create({
+		const member = await this.prisma.member.create({
 			data: {
 				userId: invitedUser.id,
 				profileId,
-				role: role,
 				globalStatus: GlobalStatus.ACTIVE,
 			},
 		});
+		await this.assignRoleToMember(member.id, role);
 
-		return { member: newMember };
+		return { member };
 	}
 }

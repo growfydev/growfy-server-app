@@ -86,9 +86,15 @@ async function createExampleUser() {
 	});
 
 	const profiles = [
-		{ name: 'John Company', role: ProfileMemberRoles.OWNER },
-		{ name: 'Jane Consultancy', role: ProfileMemberRoles.OWNER },
-		{ name: 'Doe Ventures', role: ProfileMemberRoles.MANAGER },
+		{
+			name: 'John Company',
+			roles: [ProfileMemberRoles.OWNER, ProfileMemberRoles.MANAGER],
+		},
+		{ name: 'Jane Consultancy', roles: [ProfileMemberRoles.OWNER] },
+		{
+			name: 'Doe Ventures',
+			roles: [ProfileMemberRoles.MANAGER, ProfileMemberRoles.EDITOR],
+		},
 	];
 
 	const profileCreations = profiles.map(async (profileData) => {
@@ -103,9 +109,18 @@ async function createExampleUser() {
 			data: {
 				userId: user.id,
 				profileId: profile.id,
-				role: profileData.role,
 			},
 		});
+
+		const roleAssignments = profileData.roles.map(async (role) => {
+			await prisma.memberRole.create({
+				data: {
+					memberId: member.id,
+					role,
+				},
+			});
+		});
+		await Promise.all(roleAssignments);
 
 		return { profile, member };
 	});

@@ -58,11 +58,11 @@ export class RolesGuardService extends Service {
 	}
 
 	/**
-	 * Fetch global role and profile roles dynamically using userId.
+	 * Fetch global role and profile roles dynamically using the userId.
 	 */
 	async fetchRolesAndPermissions(userId: number): Promise<{
 		globalRole: Role;
-		profileRoles: { profileId: number; role: ProfileMemberRoles }[];
+		profileRoles: { profileId: number; roles: ProfileMemberRoles[] }[];
 	}> {
 		this.logger.log(
 			`Fetching roles and permissions for User ID: ${userId}`,
@@ -72,9 +72,8 @@ export class RolesGuardService extends Service {
 			where: { id: userId },
 			include: {
 				members: {
-					select: {
-						profileId: true,
-						role: true,
+					include: {
+						roles: true, // Fetch roles from MemberRole table
 					},
 				},
 			},
@@ -88,13 +87,11 @@ export class RolesGuardService extends Service {
 		const globalRole = user.role;
 		const profileRoles = user.members.map((member) => ({
 			profileId: member.profileId,
-			role: member.role,
+			roles: member.roles.map((role) => role.role),
 		}));
 
 		this.logger.log(
-			`Fetched Global Role: ${globalRole}, Profile Roles: ${JSON.stringify(
-				profileRoles,
-			)}`,
+			`Fetched Global Role: ${globalRole}, Profile Roles: ${JSON.stringify(profileRoles)}`,
 		);
 
 		return { globalRole, profileRoles };
@@ -119,9 +116,7 @@ export class RolesGuardService extends Service {
 		if (requiredRoles.length) {
 			const roleMatch = requiredRoles.includes(globalRole);
 			this.logger.log(
-				`Global Role Validation: Required=${requiredRoles.join(
-					', ',
-				)}, UserRole=${globalRole}, Match=${roleMatch}`,
+				`Global Role Validation: Required=${requiredRoles.join(', ')}, UserRole=${globalRole}, Match=${roleMatch}`,
 			);
 			if (!roleMatch) {
 				this.logger.warn(
@@ -136,13 +131,16 @@ export class RolesGuardService extends Service {
 				(role) => role.profileId === profileId,
 			);
 			const profileRolesMatch =
-				profileRole && requiredProfileRoles.includes(profileRole.role);
+				profileRole &&
+				profileRole.roles.some((role) =>
+					requiredProfileRoles.includes(role),
+				);
 
 			this.logger.log(
 				`Profile Role Validation: Required=${requiredProfileRoles.join(
 					', ',
-				)}, ProfileID=${profileId}, UserRole=${
-					profileRole?.role || 'NONE'
+				)}, ProfileID=${profileId}, UserRoles=${
+					profileRole?.roles.join(', ') || 'NONE'
 				}, Match=${profileRolesMatch}`,
 			);
 
