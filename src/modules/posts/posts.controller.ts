@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dtos/create-post.dto';
-import { ExportPostsDto } from './dtos/export-posts.dto'; // Importa el nuevo DTO
+import { ExportPostsDto } from './dtos/export-posts.dto';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { ProfileMemberRoles, Role } from '@prisma/client';
 import { Response } from 'express';
