@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+	BadRequestException,
+	Injectable,
+	InternalServerErrorException,
+	NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../core/prisma.service';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { TaskQueueService } from '../tasks/tasks-queue.service';
@@ -220,7 +225,7 @@ export class PostsService extends Service {
 		provider: number,
 	): Promise<void> {
 		if (!profileId) {
-			throw new Error(
+			throw new BadRequestException(
 				`No hay perfil asociado con el proveedor "${provider}".`,
 			);
 		}
@@ -236,7 +241,9 @@ export class PostsService extends Service {
 			where: { id: typePost },
 		});
 		if (!postType) {
-			throw new Error(`Tipo de publicación "${typePost}" no encontrado.`);
+			throw new NotFoundException(
+				`Tipo de publicación "${typePost}" no encontrado.`,
+			);
 		}
 		return postType;
 	}
@@ -253,7 +260,9 @@ export class PostsService extends Service {
 			where: { id: provider },
 		});
 		if (!providerData) {
-			throw new Error(`Proveedor "${provider}" no encontrado.`);
+			throw new NotFoundException(
+				`Proveedor "${provider}" no encontrado.`,
+			);
 		}
 		return providerData;
 	}
@@ -279,7 +288,7 @@ export class PostsService extends Service {
 			},
 		});
 		if (!providerPostType) {
-			throw new Error(
+			throw new BadRequestException(
 				`El tipo de publicación "${typePost}" no está soportado por el proveedor "${provider}".`,
 			);
 		}
@@ -294,8 +303,8 @@ export class PostsService extends Service {
 	 * @param typePost - ID del tipo de publicación.
 	 */
 	private async validateContent(
-		content: any,
-		providerPostType: any,
+		content: Prisma.JsonValue,
+		providerPostType: providerPostType,
 		provider: number,
 		typePost: number,
 	): Promise<void> {
@@ -312,7 +321,11 @@ export class PostsService extends Service {
 			provider,
 			typePost,
 		);
-		await this.validateRequiredFields(content, requiredFields, typePost);
+		await this.validateRequiredFields(
+			content as Record<string, unknown>,
+			requiredFields as Record<string, string>,
+			typePost,
+		);
 	}
 
 	/**
@@ -326,12 +339,12 @@ export class PostsService extends Service {
 	private validateCharacterLimits(
 		characterLimit: number,
 		characterKey: string,
-		content: any,
+		content: Prisma.JsonValue,
 		provider: number,
 		typePost: number,
 	): void {
 		if (!characterLimit || !characterKey) {
-			throw new Error(
+			throw new BadRequestException(
 				`Límite de caracteres o clave de caracteres no establecido para el proveedor "${provider}" y tipo de publicación "${typePost}".`,
 			);
 		}
@@ -341,13 +354,13 @@ export class PostsService extends Service {
 			.reduce((obj, key) => obj && obj[key], content);
 
 		if (typeof contentValue !== 'string') {
-			throw new Error(
+			throw new BadRequestException(
 				`El contenido especificado por "${characterKey}" debe ser una cadena de texto.`,
 			);
 		}
 
 		if (contentValue.length > characterLimit) {
-			throw new Error(
+			throw new BadRequestException(
 				`El contenido excede el límite de caracteres para el proveedor "${provider}". Máximo permitido: ${characterLimit}, longitud actual: ${contentValue.length}.`,
 			);
 		}
@@ -366,13 +379,13 @@ export class PostsService extends Service {
 	): void {
 		for (const [field, fieldType] of Object.entries(requiredFields)) {
 			if (!(field in content)) {
-				throw new Error(
+				throw new BadRequestException(
 					`El campo "${field}" es requerido para el tipo de publicación "${typePost}".`,
 				);
 			}
 
 			if (typeof content[field] !== fieldType) {
-				throw new Error(
+				throw new BadRequestException(
 					`El campo "${field}" debe ser de tipo "${fieldType}", pero se recibió "${typeof content[field]}".`,
 				);
 			}
@@ -389,10 +402,10 @@ export class PostsService extends Service {
 	 * @returns La nueva publicación creada.
 	 */
 	private async createPostRecord(
-		postType: any,
-		providerPostType: any,
+		postType: postType,
+		providerPostType: providerPostType,
 		profileId: number,
-		content: any,
+		content: Prisma.JsonValue,
 		unix: number,
 	): Promise<Post> {
 		const postStatus = unix ? PostStatus.QUEUED : PostStatus.PUBLISHED;
@@ -539,7 +552,7 @@ export class PostsService extends Service {
 		);
 
 		if (!social) {
-			throw new Error('Credenciales sociales no encontradas');
+			throw new NotFoundException('Credenciales sociales no encontradas');
 		}
 
 		return {
@@ -599,6 +612,9 @@ export class PostsService extends Service {
 			error: errorMessage,
 			stack: errorStack,
 		});
+		throw new InternalServerErrorException(
+			`Error al publicar el post ${postId}: ${errorMessage}`,
+		);
 	}
 
 	/**
