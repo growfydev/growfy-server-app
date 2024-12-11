@@ -40,4 +40,7 @@ export type Config = {
 		authToken: string;
 		from: string;
 	};
+	dropbox: {
+        api_key: string;
+    };
 };

@@ -43,5 +43,8 @@ export const configLoader: () => Config = (): Config => {
 			authToken: process.env.SMS_AUTH_TOKEN,
 			from: process.env.SMS_FROM,
 		},
+		dropbox:{
+			api_key: process.env.DROPBOX_API_KEY,
+		}
 	};
 };
