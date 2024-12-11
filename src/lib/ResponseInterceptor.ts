@@ -31,7 +31,7 @@ export class ResponseInterceptor implements NestInterceptor {
 			this.reflector.get<string>(
 				'responseMessage',
 				context.getHandler(),
-			) || 'Request successful';
+			) || 'OK';
 
 		return next.handle().pipe(
 			map((data: T) => ({

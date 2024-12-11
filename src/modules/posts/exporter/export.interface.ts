@@ -1,8 +1,10 @@
-import { Post } from '../dtos/export-format.dto';
+import { PostWithRelationsForExport } from '../dtos/transformed-post.interface';
+
+export interface ExportResult {
+	fileBuffer: Buffer;
+	header: { 'Content-Type': string };
+}
 
 export interface Exporter {
-	export(posts: Post[]): Promise<{
-		fileBuffer: Buffer;
-		header: { 'Content-Type': string };
-	}>;
+	export(posts: PostWithRelationsForExport[]): Promise<ExportResult>;
 }

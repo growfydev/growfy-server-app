@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { configLoader } from '../../lib/config.loader';
-import { envSchema } from '../../lib/validation.schema';
+import configLoader from '../../lib/ConfigLoader';
+import { envSchema } from '../../lib/SchemaValidator';
 
 @Module({
 	imports: [

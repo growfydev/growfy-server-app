@@ -1,17 +1,18 @@
 import { Buffer } from 'buffer';
 import * as ExcelJS from 'exceljs';
 import { Exporter } from './export.interface';
-import { Post } from '../dtos/export-format.dto';
 import { Service } from 'src/service';
+import {
+	ExportResult,
+	PostWithRelationsForExport,
+} from '../dtos/transformed-post.interface';
 
 export class ExcelExporter extends Service implements Exporter {
 	constructor() {
 		super(ExcelExporter.name);
 	}
-	async export(posts: Post[]): Promise<{
-		fileBuffer: Buffer;
-		header: { 'Content-Type': string };
-	}> {
+
+	async export(posts: PostWithRelationsForExport[]): Promise<ExportResult> {
 		const workbook = new ExcelJS.Workbook();
 		const sheet = workbook.addWorksheet('Publicaciones');
 		const header = {
@@ -36,8 +37,8 @@ export class ExcelExporter extends Service implements Exporter {
 				postType: post.ProviderPostType.posttype.name,
 				createdAt: post.createdAt.toISOString(),
 				profile: post.profile.name,
-				task: post.task ? post.task.status : 'N/A',
-				content: JSON.stringify(post.fields), // Contenido del post serializado
+				task: post.task?.status ?? 'N/A',
+				content: JSON.stringify(post.fields),
 			});
 		});
 

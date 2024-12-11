@@ -75,6 +75,7 @@ async function main() {
 }
 
 async function createExampleUser() {
+	// Create the user
 	const user = await prisma.user.create({
 		data: {
 			name: 'John Doe',
@@ -84,22 +85,53 @@ async function createExampleUser() {
 		},
 	});
 
-	const profile = await prisma.profile.create({
-		data: {
+	const profiles = [
+		{
 			name: 'John Company',
-			userId: user.id,
+			roles: [ProfileMemberRoles.OWNER, ProfileMemberRoles.MANAGER],
 		},
+		{ name: 'Jane Consultancy', roles: [ProfileMemberRoles.OWNER] },
+		{
+			name: 'Doe Ventures',
+			roles: [ProfileMemberRoles.MANAGER, ProfileMemberRoles.EDITOR],
+		},
+	];
+
+	const profileCreations = profiles.map(async (profileData) => {
+		const profile = await prisma.profile.create({
+			data: {
+				name: profileData.name,
+				userId: user.id,
+			},
+		});
+
+		const member = await prisma.member.create({
+			data: {
+				userId: user.id,
+				profileId: profile.id,
+			},
+		});
+
+		const roleAssignments = profileData.roles.map(async (role) => {
+			await prisma.memberRole.create({
+				data: {
+					memberId: member.id,
+					role,
+				},
+			});
+		});
+		await Promise.all(roleAssignments);
+
+		return { profile, member };
 	});
 
-	const member = await prisma.member.create({
-		data: {
-			userId: user.id,
-			profileId: profile.id,
-			role: ProfileMemberRoles.MANAGER,
-		},
-	});
+	const createdProfiles = await Promise.all(profileCreations);
 
-	return { user, profile, member };
+	return {
+		user,
+		profiles: createdProfiles.map(({ profile }) => profile),
+		members: createdProfiles.map(({ member }) => member),
+	};
 }
 
 async function fillProvidersAndSocials() {
@@ -184,6 +216,17 @@ async function seedPostTypesAndRelations() {
 				},
 				postTypeName: 'image',
 				providerPostTypeName: 'Facebook image',
+			},
+			{
+				characterLimit: 63206,
+				characterKey: 'description',
+				fields: {
+					fileUrl: 'string',
+					description: 'string',
+					title: 'string',
+				},
+				postTypeName: 'short_video',
+				providerPostTypeName: 'Facebook reel',
 			},
 		],
 		YOUTUBE: [

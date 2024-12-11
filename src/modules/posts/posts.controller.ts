@@ -10,11 +10,12 @@ import {
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dtos/create-post.dto';
-import { ExportPostsDto } from './dtos/export-posts.dto'; // Importa el nuevo DTO
+import { ExportPostsDto } from './dtos/export-posts.dto';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { ProfileMemberRoles, Role } from '@prisma/client';
 import { Response } from 'express';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
+import { ReschedulePostDto } from './dtos/resschedule-post.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -22,7 +23,7 @@ export class PostsController {
 
 	@Post(':profileId/create')
 	@ResponseMessage('Posts creado exitosamente')
-	@Auth([Role.USER], [ProfileMemberRoles.MANAGER])
+	// @Auth([Role.USER], [ProfileMemberRoles.MANAGER])
 	async create(
 		@Body() createPostDto: CreatePostDto,
 		@Param('profileId') profileId: number,
@@ -31,7 +32,7 @@ export class PostsController {
 	}
 
 	@Get(':profileId/posts')
-	@Auth([Role.USER], [ProfileMemberRoles.MANAGER])
+	@Auth([Role.USER])
 	async getPostsByProfile(@Param('profileId') profileId: number) {
 		const posts = await this.postsService.getPostsByProfile(+profileId);
 		if (!posts) {
@@ -42,7 +43,7 @@ export class PostsController {
 		return posts;
 	}
 	@Post(':profileId/export')
-	@Auth([Role.USER], [ProfileMemberRoles.MANAGER])
+	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
 	async exportPosts(
 		@Body() exportPostsDto: ExportPostsDto,
 		@Param('profileId') profileId: number,
@@ -55,5 +56,19 @@ export class PostsController {
 
 		res.set(header);
 		res.status(HttpStatus.OK).send(fileBuffer);
+	}
+	@Post(':profileId/posts/:postId/reschedule')
+	@ResponseMessage('Post reprogramado exitosamente')
+	@Auth([Role.USER], [ProfileMemberRoles.MANAGER])
+	async reschedulePost(
+		@Param('profileId') profileId: number,
+		@Param('postId') postId: number,
+		@Body() reschedulePostDto: ReschedulePostDto,
+	) {
+		return this.postsService.reschedulePost(
+			+profileId,
+			+postId,
+			reschedulePostDto.newUnixTime,
+		);
 	}
 }

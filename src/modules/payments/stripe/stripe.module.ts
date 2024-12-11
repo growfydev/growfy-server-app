@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { StripeCoreModule } from './core.module';
-import { configLoader } from 'src/lib/config.loader';
+import configLoader from 'src/lib/ConfigLoader';
 
 @Module({
 	imports: [

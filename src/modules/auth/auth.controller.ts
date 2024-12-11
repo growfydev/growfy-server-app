@@ -62,6 +62,17 @@ export class AuthController {
 		};
 	}
 
+	@Get('profiles')
+	@Auth([Role.USER]) // Ensure access is restricted to authenticated users
+	async getProfiles(@ActiveUser() user) {
+		return {
+			userId: user.id,
+			name: user.name,
+			email: user.email,
+			profiles: user.profiles, // Profiles dynamically fetched and attached
+		};
+	}
+
 	@Post('otp/verify')
 	@Auth([Role.USER, Role.ADMIN])
 	@ResponseMessage('OTP verification process completed')
@@ -72,5 +83,13 @@ export class AuthController {
 		);
 
 		return { isVerified };
+	}
+
+	@Post('refresh')
+	@ResponseMessage('Token refreshed successfully')
+	async refreshToken(
+		@Body('token') refreshToken: string,
+	): Promise<TokensDto> {
+		return this.authService.refreshToken(refreshToken);
 	}
 }

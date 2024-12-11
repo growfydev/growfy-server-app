@@ -3,7 +3,7 @@ import {
 	BadRequestException,
 	NotFoundException,
 } from '@nestjs/common';
-import { User, ProfileMemberRoles, GlobalStatus } from '@prisma/client';
+import { User, GlobalStatus, ProfileMemberRoles } from '@prisma/client';
 import {
 	RegisterDto,
 	CompleteRegistrationDto,
@@ -15,6 +15,11 @@ import { AuthenticationService } from './authentication.service';
 import { MemberService } from './member.service';
 import { ProfileService } from './profile.service';
 import { UserService } from './users.service';
+import * as jwt from 'jsonwebtoken';
+import configLoader from 'src/lib/ConfigLoader';
+import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
+
+const REFRESH_SECRET_KEY = configLoader().jwt.refresh_key;
 
 @Injectable()
 export class AuthService {
@@ -25,7 +30,7 @@ export class AuthService {
 		private authenticationService: AuthenticationService,
 	) {}
 
-	async register(data: RegisterDto): Promise<{ user: User }> {
+	async register(data: RegisterDto): Promise<TokensDto> {
 		const newUser = await this.userService.createUser(data);
 
 		if (data.nameProfile) {
@@ -33,20 +38,29 @@ export class AuthService {
 				data.nameProfile,
 				newUser.id,
 			);
-			await this.memberService.createMember(
+
+			const member = await this.memberService.createMember(
 				newUser.id,
 				profile.id,
-				ProfileMemberRoles.MANAGER,
+			);
+
+			// Assign the OWNER role to the newly created member
+			await this.memberService.assignRole(
+				member.id,
+				ProfileMemberRoles.OWNER,
 			);
 		}
 
-		return { user: newUser };
+		return this.authenticationService.authenticate({
+			email: data.email,
+			password: data.password,
+		});
 	}
 
 	async completeRegistration(
 		email: string,
 		dto: CompleteRegistrationDto,
-	): Promise<{ user: User }> {
+	): Promise<TokensDto> {
 		const user = await this.userService.findUserByEmail(email);
 		if (!user || user.globalStatus !== GlobalStatus.INACTIVE) {
 			throw new BadRequestException(
@@ -61,7 +75,10 @@ export class AuthService {
 			globalStatus: GlobalStatus.ACTIVE,
 		});
 
-		return { user: updatedUser };
+		return this.authenticationService.authenticate({
+			email: updatedUser.email,
+			password: dto.password,
+		});
 	}
 
 	async getUser(userId: number): Promise<{ user: User }> {
@@ -72,5 +89,48 @@ export class AuthService {
 
 	async authenticate(dto: AuthenticateDto): Promise<TokensDto> {
 		return this.authenticationService.authenticate(dto);
+	}
+
+	async refreshToken(refreshToken: string): Promise<TokensDto> {
+		try {
+			const decoded = jwt.verify(refreshToken, REFRESH_SECRET_KEY) as {
+				userId: number;
+				fingerprint?: string;
+			};
+
+			const user = await this.userService.findUserById(decoded.userId);
+			if (!user) throw new NotFoundException('User not found');
+
+			const jwtPayload =
+				await this.authenticationService.createJwtPayload(user);
+			const accessToken = generateAccessToken(jwtPayload);
+			const newRefreshToken = generateRefreshToken(
+				user.id,
+				decoded.fingerprint,
+			);
+
+			return { accessToken, refreshToken: newRefreshToken, user };
+		} catch (error) {
+			throw new BadRequestException('Invalid refresh token', error);
+		}
+	}
+
+	async getUserProfiles(userId: number) {
+		// Retrieve user profiles along with their roles and permissions
+		const profiles =
+			await this.memberService.getUserProfilesAndRoles(userId);
+
+		if (!profiles || profiles.length === 0) {
+			throw new NotFoundException(
+				`No profiles found for user ID ${userId}`,
+			);
+		}
+
+		return profiles.map((profile) => ({
+			id: profile.id,
+			name: profile.name,
+			roles: profile.roles, // Array of roles for the profile
+			permissions: profile.permissions, // Array of aggregated permissions for the roles
+		}));
 	}
 }

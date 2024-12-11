@@ -1,16 +1,16 @@
 import * as PdfKit from 'pdfkit';
 import { Exporter } from './export.interface';
-import { Post } from '../dtos/export-format.dto';
 import { Service } from 'src/service';
+import {
+	ExportResult,
+	PostWithRelationsForExport,
+} from '../dtos/transformed-post.interface';
 
 export class PDFExporter extends Service implements Exporter {
 	constructor() {
 		super(PDFExporter.name);
 	}
-	async export(posts: Post[]): Promise<{
-		fileBuffer: Buffer;
-		header: { 'Content-Type': string };
-	}> {
+	async export(posts: PostWithRelationsForExport[]): Promise<ExportResult> {
 		const doc = new PdfKit();
 		const buffers: Buffer[] = [];
 		const header = { 'Content-Type': 'application/pdf' };

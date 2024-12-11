@@ -7,17 +7,15 @@ import { ProfileMemberRoles, Role } from '@prisma/client';
 /**
  * Auth Decorator
  * Combines role and permission metadata with guards for route-level authorization.
- * @param roles - List of required core roles for the route (defaults to [Role.USER])
- * @param profileMemberRoles - List of required team roles to have access to a specific feature.
+ * @param roles - List of required core roles for the route (defaults to [Role.USER]).
+ * @param profileMemberRoles - List of required profile-specific roles (defaults to [ProfileMemberRoles.OWNER]).
  */
-
 export function Auth(
-	roles?: Role[],
-	profileMemberRoles: ProfileMemberRoles[] = [],
+	roles: Role[] = [Role.USER],
+	profileMemberRoles: ProfileMemberRoles[] = [ProfileMemberRoles.OWNER],
 ) {
-	const effectiveRoles = roles?.length ? roles : [Role.USER];
 	return applyDecorators(
-		SetMetadata(ROLES_KEY, effectiveRoles),
+		SetMetadata(ROLES_KEY, roles),
 		SetMetadata(PROFILE_ROLES_KEY, profileMemberRoles),
 		UseGuards(AuthGuard, RolesGuard),
 	);

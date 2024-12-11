@@ -3,42 +3,66 @@ import { RolesGuardService } from '../services/roles-guard.service';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-	constructor(private readonly rolesGuard: RolesGuardService) {}
+	constructor(private readonly rolesGuardService: RolesGuardService) {}
 
 	async canActivate(context: ExecutionContext): Promise<boolean> {
-		const requiredRoles = this.rolesGuard.getRequiredRoles(context);
-		const requiredProfileRoles =
-			this.rolesGuard.getRequiredProfileRoles(context);
-		const { user, params, body } = this.rolesGuard.getRequestData(context);
-
-		if (!user || !user.id || !user.role) {
-			return this.rolesGuard.denyAccess(
-				'Invalid or missing user information in JWT.',
+		const { user, requiredRoles, requiredProfileRoles, profileId } =
+			await this.extractContextData(context);
+		if (await this.rolesGuardService.isAdmin(user.id)) {
+			this.rolesGuardService.logger.log(
+				`Access granted for User ID: ${user.id} as ADMIN.`,
 			);
+			return true;
 		}
-
-		if (this.rolesGuard.isAdminAccess(requiredRoles, user)) return true;
-
-		if (!requiredProfileRoles.length) return true;
-
-		const profileId = this.rolesGuard.getProfileId(params, body);
-		if (!profileId) {
-			return this.rolesGuard.denyAccess('Invalid or missing profile ID.');
-		}
-
-		const accessGranted = await this.rolesGuard.validateAccess(
+		const hasAccess = await this.rolesGuardService.validateAccess(
+			user.id,
 			requiredRoles,
 			requiredProfileRoles,
-			user,
 			profileId,
 		);
 
-		if (!accessGranted) {
-			return this.rolesGuard.denyAccess(
-				`Access denied for user ID: ${user.id} on profile ID: ${profileId}`,
-			);
+		this.logAccessDecision(hasAccess, user.id, profileId);
+		return hasAccess;
+	}
+
+	/**
+	 * Extract relevant data from the context.
+	 */
+	private async extractContextData(context: ExecutionContext) {
+		const { user, params, body } =
+			this.rolesGuardService.getRequestData(context);
+		const requiredRoles = this.rolesGuardService.getRequiredRoles(context);
+		const requiredProfileRoles =
+			this.rolesGuardService.getRequiredProfileRoles(context);
+		const profileId = this.rolesGuardService.getProfileId(params, body);
+
+		if (!user?.id) {
+			throw new Error('Invalid or missing user information in request.');
 		}
 
-		return true;
+		return { user, requiredRoles, requiredProfileRoles, profileId };
+	}
+
+	/**
+	 * Log the access decision.
+	 */
+	private logAccessDecision(
+		hasAccess: boolean,
+		userId: number,
+		profileId: number | null,
+	) {
+		if (hasAccess) {
+			this.rolesGuardService.logger.log(
+				`Access granted for User ID: ${userId}${
+					profileId ? `, Profile ID: ${profileId}` : ''
+				}.`,
+			);
+		} else {
+			this.rolesGuardService.logger.warn(
+				`Access denied for User ID: ${userId}${
+					profileId ? `, Profile ID: ${profileId}` : ''
+				}.`,
+			);
+		}
 	}
 }

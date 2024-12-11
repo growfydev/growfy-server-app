@@ -1,7 +1,13 @@
 export type Config = {
 	port: string;
-	database: string;
 	client_url: string;
+	database: {
+		user: string;
+		password: string;
+		host: string;
+		port: number;
+		name: string;
+	};
 	jwt: {
 		secret_key: string;
 		refresh_key: string;
@@ -34,5 +40,10 @@ export type Config = {
 		access_key: string;
 		bucket_name: string;
 		region: string;
+	};
+	sms: {
+		accountSid: string;
+		authToken: string;
+		from: string;
 	};
 };
