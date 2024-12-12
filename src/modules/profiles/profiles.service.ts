@@ -16,10 +16,14 @@ import {
 import { InviteUserDto } from './dto/invite-user.dto';
 import configLoader from 'src/lib/ConfigLoader';
 import { Service } from 'src/service';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class ProfilesService extends Service {
-	constructor(private readonly prisma: PrismaService) {
+	constructor(
+		private readonly prisma: PrismaService,
+		private readonly emailService: EmailService,
+	) {
 		super(ProfilesService.name);
 	}
 
@@ -29,7 +33,7 @@ export class ProfilesService extends Service {
 	async create(
 		userId: number,
 		createProfileDto: CreateProfileDto,
-	): Promise<{ profile: Profile }> {
+	): Promise<{ member: Member }> {
 		const { name } = createProfileDto;
 
 		if (!name) {
@@ -46,10 +50,14 @@ export class ProfilesService extends Service {
 				userId,
 				profileId: profile.id,
 			},
+			include: {
+				profile: true,
+				roles: true,
+			},
 		});
 		await this.assignRoleToMember(member.id, ProfileMemberRoles.MANAGER);
 
-		return { profile };
+		return { member };
 	}
 
 	/**
@@ -174,10 +182,16 @@ export class ProfilesService extends Service {
 	async inviteUser(
 		inviteUserDto: InviteUserDto,
 	): Promise<{ member: Member }> {
-		const { email, profileId, role } = inviteUserDto;
+		const { email, profileId, roles } = inviteUserDto;
 
-		if (!Object.values(ProfileMemberRoles).includes(role)) {
-			throw new BadRequestException('Invalid role');
+		if (!Array.isArray(roles) || roles.length === 0) {
+			throw new BadRequestException('Roles must be a non-empty array');
+		}
+
+		for (const role of roles) {
+			if (!Object.values(ProfileMemberRoles).includes(role)) {
+				throw new BadRequestException(`Invalid role: ${role}`);
+			}
 		}
 
 		let invitedUser = await this.prisma.user.findUnique({
@@ -195,10 +209,17 @@ export class ProfilesService extends Service {
 				},
 			});
 
+			await this.emailService
+				.to(email)
+				.subject('Invitation to Growfy')
+				.html(
+					`
+					<p>You have been invited to join Growfy.</p>
+					<p>Click <a href="${configLoader().client_url}/complete-registration/?email=${email}">here</a> to complete your registration.</p>
+				`,
+				)
+				.send();
 			this.logger.log(`Invitation email sent to ${email}`);
-			this.logger.log(
-				`Invitation link: ${configLoader().client_url}/complete-registration/?email=${email}`,
-			);
 		}
 
 		const isAlreadyMember = await this.prisma.member.findFirst({
@@ -221,7 +242,10 @@ export class ProfilesService extends Service {
 				globalStatus: GlobalStatus.ACTIVE,
 			},
 		});
-		await this.assignRoleToMember(member.id, role);
+
+		for (const role of roles) {
+			await this.assignRoleToMember(member.id, role);
+		}
 
 		return { member };
 	}

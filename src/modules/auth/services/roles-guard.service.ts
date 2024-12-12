@@ -73,7 +73,7 @@ export class RolesGuardService extends Service {
 			include: {
 				members: {
 					include: {
-						roles: true, // Fetch roles from MemberRole table
+						roles: true,
 					},
 				},
 			},
@@ -126,29 +126,32 @@ export class RolesGuardService extends Service {
 			}
 		}
 
-		if (requiredProfileRoles.length && profileId !== null) {
-			const profileRole = profileRoles.find(
-				(role) => role.profileId === profileId,
-			);
-			const profileRolesMatch =
-				profileRole &&
-				profileRole.roles.some((role) =>
+		if (requiredProfileRoles.length) {
+			if (profileId === null) {
+				this.logger.log(
+					`Skipping profile-specific role validation since Profile ID is not provided.`,
+				);
+			} else {
+				const profileRole = profileRoles.find(
+					(role) => role.profileId === profileId,
+				);
+
+				const profileRolesMatch = profileRole?.roles.some((role) =>
 					requiredProfileRoles.includes(role),
 				);
 
-			this.logger.log(
-				`Profile Role Validation: Required=${requiredProfileRoles.join(
-					', ',
-				)}, ProfileID=${profileId}, UserRoles=${
-					profileRole?.roles.join(', ') || 'NONE'
-				}, Match=${profileRolesMatch}`,
-			);
-
-			if (!profileRolesMatch) {
-				this.logger.warn(
-					`Access denied. User ID ${userId} does not have the required roles for Profile ID ${profileId}.`,
+				this.logger.log(
+					`Profile Role Validation: Required=${requiredProfileRoles.join(', ')}, ProfileID=${profileId}, UserRoles=${
+						profileRole?.roles.join(', ') || 'NONE'
+					}, Match=${profileRolesMatch}`,
 				);
-				return false;
+
+				if (!profileRolesMatch) {
+					this.logger.warn(
+						`Access denied. User ID ${userId} does not have the required roles for Profile ID ${profileId}.`,
+					);
+					return false;
+				}
 			}
 		}
 

@@ -9,7 +9,7 @@ import {
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
 import { ActiveUser } from './decorators/session.decorator';
 import { Auth } from './decorators/auth.decorator';
-import { Role, User } from '@prisma/client';
+import { ProfileMemberRoles, Role, User } from '@prisma/client';
 import { TwoFactorAuthService } from './services/two-factor-auth.service';
 import { AuthService } from './services/auth.service';
 
@@ -42,14 +42,14 @@ export class AuthController {
 	}
 
 	@Get('me')
-	@Auth([Role.USER, Role.ADMIN])
+	@Auth([Role.USER], [ProfileMemberRoles.CLIENT])
 	@ResponseMessage('User details retrieved successfully')
 	async me(@ActiveUser() user: User) {
 		return this.authService.getUser(user.id);
 	}
 
 	@Post('otp/enable')
-	@Auth([Role.USER, Role.ADMIN])
+	@Auth([Role.USER], [ProfileMemberRoles.CLIENT])
 	@ResponseMessage('2FA enabled successfully')
 	async enable2FA(@ActiveUser() user: User) {
 		const { qrCodeUrl, base32 } = await this.twoFactorAuthService.enable2FA(
@@ -63,7 +63,7 @@ export class AuthController {
 	}
 
 	@Get('profiles')
-	@Auth([Role.USER]) // Ensure access is restricted to authenticated users
+	@Auth([Role.USER], [ProfileMemberRoles.CLIENT]) // Ensure access is restricted to authenticated users
 	async getProfiles(@ActiveUser() user) {
 		return {
 			userId: user.id,
@@ -74,7 +74,7 @@ export class AuthController {
 	}
 
 	@Post('otp/verify')
-	@Auth([Role.USER, Role.ADMIN])
+	@Auth([Role.USER], [ProfileMemberRoles.CLIENT])
 	@ResponseMessage('OTP verification process completed')
 	async verify2FA(@ActiveUser() user: User, @Body() dto: Verify2FADto) {
 		const isVerified = await this.twoFactorAuthService.verify2FAToken(

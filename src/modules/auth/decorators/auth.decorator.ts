@@ -12,7 +12,7 @@ import { ProfileMemberRoles, Role } from '@prisma/client';
  */
 export function Auth(
 	roles: Role[] = [Role.USER],
-	profileMemberRoles: ProfileMemberRoles[] = [ProfileMemberRoles.OWNER],
+	profileMemberRoles: ProfileMemberRoles[] = [],
 ) {
 	return applyDecorators(
 		SetMetadata(ROLES_KEY, roles),
