@@ -53,5 +53,5 @@ export type Config = {
 			redirectUri: string;
 			scope: string[];
 		};
-	}
+	};
 };

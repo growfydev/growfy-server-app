@@ -49,14 +49,14 @@ function configLoader(): Config {
 			authToken: process.env.SMS_AUTH_TOKEN,
 			from: process.env.SMS_FROM,
 		},
-		google:{
-			drive:{
+		google: {
+			drive: {
 				clientId: process.env.GOOGLE_CLIENT_ID,
-                clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-                redirectUri: process.env.GOOGLE_REDIRECT_URI,
-                scope:['https://www.googleapis.com/auth/drive']
-			}
-		}
+				clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+				redirectUri: process.env.GOOGLE_REDIRECT_URI,
+				scope: ['https://www.googleapis.com/auth/drive'],
+			},
+		},
 	};
 }
 

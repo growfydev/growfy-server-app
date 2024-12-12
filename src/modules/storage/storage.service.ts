@@ -1,6 +1,5 @@
 import {
 	Injectable,
-	Inject,
 	NotFoundException,
 	InternalServerErrorException,
 } from '@nestjs/common';
@@ -9,6 +8,7 @@ import { PrismaClient } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
 import configLoader from '../../lib/ConfigLoader';
+import { GoogleDriveFile, UpdatedFileResponse } from './types/interface';
 
 @Injectable()
 export class StorageService {
@@ -31,10 +31,11 @@ export class StorageService {
 		const baseUrl = this.oauth2Client.generateAuthUrl({
 			access_type: 'offline',
 			scope: ['https://www.googleapis.com/auth/drive'],
+			state: JSON.stringify({ profileId }),
 		});
 
-		const authUrl = `${baseUrl}&profileId=${profileId}`;
-		return authUrl;
+		// const authUrl = `${baseUrl}&profileId=${profileId}`;
+		return baseUrl;
 	}
 
 	async setCredentials(
@@ -48,7 +49,6 @@ export class StorageService {
 
 			await this.saveToken(
 				profileId,
-				service,
 				tokens.access_token!,
 				tokens.refresh_token,
 				tokens.expiry_date ? new Date(tokens.expiry_date) : undefined,
@@ -62,21 +62,33 @@ export class StorageService {
 
 	async listFiles(
 		profileId: number,
-		service: string,
-	): Promise<drive_v3.Schema$File[]> {
-		try {
-			await this.loadToken(profileId, service);
+		pageToken?: string,
+		pageSize: number = 50,
+	): Promise<{
+		files: GoogleDriveFile[];
+		nextPageToken?: string;
+	}> {
+		// Load the token for the specific profile and service
 
+		console.log(profileId);
+		await this.loadToken(profileId);
+
+		try {
 			const res = await this.drive.files.list({
-				pageSize: 50,
-				fields: 'files(id, name, mimeType, webViewLink, thumbnailLink)',
+				pageSize: pageSize,
+				pageToken: pageToken || undefined,
+				fields: 'nextPageToken, files(id, name, mimeType, webViewLink, thumbnailLink)',
 			});
 
-			return res.data.files || [];
+			return {
+				files: res.data.files
+					? (res.data.files as GoogleDriveFile[])
+					: [],
+				nextPageToken: res.data.nextPageToken,
+			};
 		} catch (error) {
-			throw new InternalServerErrorException(
-				'Error listing files: ' + error.message,
-			);
+			console.error('Error listing files:', error);
+			throw error;
 		}
 	}
 
@@ -87,7 +99,7 @@ export class StorageService {
 		mimeType: string,
 	): Promise<drive_v3.Schema$File | null> {
 		try {
-			await this.loadToken(profileId, service);
+			await this.loadToken(profileId);
 
 			const fileName = path.basename(filePath);
 
@@ -111,7 +123,6 @@ export class StorageService {
 
 	private async saveToken(
 		profileId: number,
-		service: string,
 		accessToken: string,
 		refreshToken?: string,
 		expiryDate?: Date,
@@ -150,13 +161,65 @@ export class StorageService {
 			);
 		}
 	}
+	async updateFile(
+		profileId: number,
+		fileId: string,
+		updateFields: {
+			name?: string;
+			parents?: string[];
+			description?: string;
+		},
+	): Promise<UpdatedFileResponse> {
+		await this.loadToken(profileId);
 
-	private async loadToken(profileId: number, service: string): Promise<void> {
+		try {
+			const response = await this.drive.files.update({
+				fileId: fileId,
+				requestBody: {
+					...updateFields,
+				},
+				fields: 'id, name, mimeType, webViewLink',
+			});
+
+			return {
+				id: response.data.id!,
+				name: response.data.name!,
+				mimeType: response.data.mimeType!,
+				webViewLink: response.data.webViewLink!,
+			};
+		} catch (error) {
+			console.error('Error updating file:', error);
+			throw new Error(`Failed to update file: ${error.message}`);
+		}
+	}
+
+	async deleteFile(
+		profileId: number,
+		service: string,
+		fileId: string,
+	): Promise<void> {
+		await this.loadToken(profileId);
+
+		try {
+			await this.drive.files.delete({
+				fileId: fileId,
+			});
+		} catch (error) {
+			console.error('Error deleting file:', error);
+
+			if (error.response && error.response.status === 404) {
+				throw new Error('File not found');
+			}
+
+			throw new Error(`Failed to delete file: ${error.message}`);
+		}
+	}
+	private async loadToken(profileId: number): Promise<void> {
 		try {
 			const tokenRecord = await this.prisma.storageProfile.findUnique({
 				where: {
 					profileId_service: {
-						profileId: 1,
+						profileId,
 						service: 'GOOGLE_DRIVE',
 					},
 				},
@@ -174,6 +237,7 @@ export class StorageService {
 				expiry_date: tokenRecord.expiryDate?.getTime(),
 			});
 		} catch (error) {
+			console.error('Error loading token:', error);
 			throw new InternalServerErrorException(
 				'Error loading token: ' + error.message,
 			);

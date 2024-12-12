@@ -2,20 +2,26 @@ import {
 	Controller,
 	Get,
 	Post,
-	Req,
 	Res,
 	Body,
 	Query,
 	HttpStatus,
+	HttpException,
+	Delete,
+	HttpCode,
+	Param,
+	Patch,
 } from '@nestjs/common';
 import { StorageService } from './storage.service';
-import { Response, Request } from 'express';
+import { Response } from 'express';
+import { UpdateFileDto } from './types/dto';
 
 @Controller('storage')
 export class StorageController {
 	constructor(private readonly storageService: StorageService) {}
 
 	@Get('auth-url')
+	// @Auth([Role.USER], [ProfileMemberRoles.OWNER])
 	getAuthUrl(
 		@Res() res: Response,
 		@Query('profileId') profileId: number,
@@ -34,7 +40,7 @@ export class StorageController {
 	@Get('oauth2callback')
 	async oauth2Callback(
 		@Query('code') code: string,
-		@Query('profileId') profileId: number,
+		@Query('state') state: string,
 		@Res() res: Response,
 	): Promise<void> {
 		try {
@@ -44,23 +50,27 @@ export class StorageController {
 				});
 				return;
 			}
-      console.log(profileId)
-			const profileIdNumber = Number(profileId);
 
-			if (isNaN(profileIdNumber)) {
+			let profileId: number;
+			try {
+				const parsedState = JSON.parse(state || '{}');
+				console.log(parsedState);
+				profileId = parseInt(parsedState.profileId);
+			} catch (error) {
 				res.status(HttpStatus.BAD_REQUEST).json({
-					message: 'Invalid profileId parameter',
+					message: 'Invalid state parameter' + error.message,
 				});
 				return;
 			}
-		
 
-			console.log(profileId);
-
-			// Assuming profileId and service are predefined or fetched dynamically
+			if (!profileId || isNaN(profileId)) {
+				res.status(HttpStatus.BAD_REQUEST).json({
+					message: 'Invalid or missing profileId',
+				});
+				return;
+			}
 
 			const service = 'GOOGLE_DRIVE';
-
 			await this.storageService.setCredentials(profileId, service, code);
 			res.status(HttpStatus.OK).json({
 				message:
@@ -76,33 +86,31 @@ export class StorageController {
 	}
 
 	@Get('files')
-	async listFiles(
-		@Query('profileId') profileId: number,
-		@Query('service') service: string,
-		@Res() res: Response,
-	): Promise<void> {
+	// @Auth([Role.USER], [ProfileMemberRoles.OWNER])
+	async getFiles(
+		@Query('profileId') profileId: string,
+		@Query('pageToken') pageToken?: string,
+	) {
 		try {
-			if (!profileId || !service) {
-				res.status(HttpStatus.BAD_REQUEST).json({
-					message: 'Missing profileId or service parameter',
-				});
-				return;
-			}
-
-			const files = await this.storageService.listFiles(
-				profileId,
-				service,
+			const result = await this.storageService.listFiles(
+				parseInt(profileId),
+				pageToken,
 			);
-			res.status(HttpStatus.OK).json(files);
+
+			return {
+				files: result.files,
+				nextPageToken: result.nextPageToken,
+			};
 		} catch (error) {
-			res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-				message: 'Failed to retrieve files',
-				error: error.message,
-			});
+			throw new HttpException(
+				'Failed to retrieve files' + error.message,
+				HttpStatus.INTERNAL_SERVER_ERROR,
+			);
 		}
 	}
 
 	@Post('upload')
+	// @Auth([Role.USER], [ProfileMemberRoles.OWNER])
 	async uploadFile(
 		@Body('profileId') profileId: number,
 		@Body('service') service: string,
@@ -131,6 +139,46 @@ export class StorageController {
 				message: 'Failed to upload file',
 				error: error.message,
 			});
+		}
+	}
+
+	@Patch('files/:fileId')
+	async updateFile(
+		@Param('fileId') fileId: string,
+		@Body() updateDto: UpdateFileDto,
+		@Query('profileId') profileId: number,
+	) {
+		try {
+			const updatedFile = await this.storageService.updateFile(
+				profileId,
+				fileId,
+				{
+					name: updateDto.name,
+					description: updateDto.description,
+				},
+			);
+
+			return {
+				message: 'File updated successfully',
+				file: updatedFile,
+			};
+		} catch (error) {
+			throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@Delete('files/:fileId')
+	@HttpCode(HttpStatus.NO_CONTENT)
+	async deleteFile(
+		@Param('fileId') fileId: string,
+		@Query('profileId') profileId: number,
+	) {
+		const service = 'GOOGLE_DRIVE';
+
+		try {
+			await this.storageService.deleteFile(profileId, service, fileId);
+		} catch (error) {
+			throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
 		}
 	}
 }
