@@ -22,7 +22,7 @@ export class ProfilesController {
 	constructor(private readonly profilesService: ProfilesService) {}
 
 	@Post()
-	@Auth([Role.USER])
+	@Auth([Role.USER], [ProfileMemberRoles.CLIENT])
 	@ResponseMessage('Profile created successfully')
 	create(
 		@ActiveUser() user: User,

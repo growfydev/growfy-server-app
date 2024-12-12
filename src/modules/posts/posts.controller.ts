@@ -32,7 +32,7 @@ export class PostsController {
 	}
 
 	@Get(':profileId/posts')
-	@Auth([Role.USER])
+	@Auth([Role.USER], [ProfileMemberRoles.CLIENT])
 	async getPostsByProfile(@Param('profileId') profileId: number) {
 		const posts = await this.postsService.getPostsByProfile(+profileId);
 		if (!posts) {
