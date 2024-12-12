@@ -14,5 +14,5 @@ export class InviteUserDto {
 
 	@ApiProperty()
 	@IsEnum(ProfileMemberRoles)
-	role: ProfileMemberRoles;
+	roles: ProfileMemberRoles[];
 }

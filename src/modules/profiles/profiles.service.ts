@@ -178,10 +178,16 @@ export class ProfilesService extends Service {
 	async inviteUser(
 		inviteUserDto: InviteUserDto,
 	): Promise<{ member: Member }> {
-		const { email, profileId, role } = inviteUserDto;
+		const { email, profileId, roles } = inviteUserDto;
 
-		if (!Object.values(ProfileMemberRoles).includes(role)) {
-			throw new BadRequestException('Invalid role');
+		if (!Array.isArray(roles) || roles.length === 0) {
+			throw new BadRequestException('Roles must be a non-empty array');
+		}
+
+		for (const role of roles) {
+			if (!Object.values(ProfileMemberRoles).includes(role)) {
+				throw new BadRequestException(`Invalid role: ${role}`);
+			}
 		}
 
 		let invitedUser = await this.prisma.user.findUnique({
@@ -204,9 +210,9 @@ export class ProfilesService extends Service {
 				.subject('Invitation to Growfy')
 				.html(
 					`
-				<p>You have been invited to join Growfy.</p>
-				<p>Click <a href="${configLoader().client_url}/complete-registration/?email=${email}">here</a> to complete your registration.</p>
-			`,
+					<p>You have been invited to join Growfy.</p>
+					<p>Click <a href="${configLoader().client_url}/complete-registration/?email=${email}">here</a> to complete your registration.</p>
+				`,
 				)
 				.send();
 			this.logger.log(`Invitation email sent to ${email}`);
@@ -232,7 +238,10 @@ export class ProfilesService extends Service {
 				globalStatus: GlobalStatus.ACTIVE,
 			},
 		});
-		await this.assignRoleToMember(member.id, role);
+
+		for (const role of roles) {
+			await this.assignRoleToMember(member.id, role);
+		}
 
 		return { member };
 	}
