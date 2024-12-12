@@ -46,6 +46,7 @@ export class UserService {
 				members: {
 					include: {
 						profile: true,
+						roles: true,
 					},
 				},
 			},
