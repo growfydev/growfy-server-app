@@ -46,4 +46,12 @@ export type Config = {
 		authToken: string;
 		from: string;
 	};
+	google: {
+		drive: {
+			clientId: string;
+			clientSecret: string;
+			redirectUri: string;
+			scope: string[];
+		};
+	}
 };
