@@ -132,8 +132,6 @@ model Profile {
     updatedAt    DateTime?    @updatedAt
     User         User         @relation(fields: [userId], references: [id])
     customers    Customer[]
-
-    StorageProfile StorageProfile[]
 }
 
 model Customer {
@@ -256,23 +254,4 @@ model Export {
     format    String
     createdAt DateTime  @default(now())
     updatedAt DateTime? @updatedAt
-}
-
-model StorageProfile {
-     id           Int          @id @default(autoincrement())
-    profileId    Int
-    profile      Profile      @relation(fields: [profileId], references: [id])
-    service      StorageServices
-    accessToken  String
-    refreshToken String?
-    expiryDate   DateTime?
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime?    @updatedAt
-
-    @@unique([profileId, service])
-}
-
-enum StorageServices {
-    GOOGLE_DRIVE
-    DROPBOX
 }
