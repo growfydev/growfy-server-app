@@ -33,7 +33,7 @@ export class ProfilesService extends Service {
 	async create(
 		userId: number,
 		createProfileDto: CreateProfileDto,
-	): Promise<{ profile: Profile }> {
+	): Promise<{ member: Member }> {
 		const { name } = createProfileDto;
 
 		if (!name) {
@@ -50,10 +50,14 @@ export class ProfilesService extends Service {
 				userId,
 				profileId: profile.id,
 			},
+			include: {
+				profile: true,
+				roles: true,
+			},
 		});
 		await this.assignRoleToMember(member.id, ProfileMemberRoles.MANAGER);
 
-		return { profile };
+		return { member };
 	}
 
 	/**
