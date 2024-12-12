@@ -16,10 +16,14 @@ import {
 import { InviteUserDto } from './dto/invite-user.dto';
 import configLoader from 'src/lib/ConfigLoader';
 import { Service } from 'src/service';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class ProfilesService extends Service {
-	constructor(private readonly prisma: PrismaService) {
+	constructor(
+		private readonly prisma: PrismaService,
+		private readonly emailService: EmailService,
+	) {
 		super(ProfilesService.name);
 	}
 
@@ -195,10 +199,17 @@ export class ProfilesService extends Service {
 				},
 			});
 
+			await this.emailService
+				.to(email)
+				.subject('Invitation to Growfy')
+				.html(
+					`
+				<p>You have been invited to join Growfy.</p>
+				<p>Click <a href="${configLoader().client_url}/complete-registration/?email=${email}">here</a> to complete your registration.</p>
+			`,
+				)
+				.send();
 			this.logger.log(`Invitation email sent to ${email}`);
-			this.logger.log(
-				`Invitation link: ${configLoader().client_url}/complete-registration/?email=${email}`,
-			);
 		}
 
 		const isAlreadyMember = await this.prisma.member.findFirst({

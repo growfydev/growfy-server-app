@@ -71,7 +71,7 @@ export class ProfilesController {
 	}
 
 	@Post(':profileId/invite')
-	@Auth([Role.USER], [ProfileMemberRoles.MANAGER])
+	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
 	@ResponseMessage('User invited successfully')
 	async inviteUser(
 		@Param('profileId', ParseIntPipe) profileId: number,
