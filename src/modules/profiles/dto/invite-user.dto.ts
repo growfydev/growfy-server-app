@@ -1,6 +1,6 @@
-import { IsArray, IsEmail, IsEnum, IsInt, IsOptional } from 'class-validator';
-import { ProfileMemberRoles } from '@prisma/client';
+import { IsEmail, IsArray, IsEnum, IsOptional, IsInt } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { ProfileMemberRoles } from '@prisma/client';
 
 export class InviteUserDto {
 	@ApiProperty()
@@ -12,8 +12,8 @@ export class InviteUserDto {
 	@IsOptional()
 	profileId?: number;
 
+	@ApiProperty({ isArray: true, enum: ProfileMemberRoles })
 	@IsArray()
-	@ApiProperty()
-	@IsEnum(ProfileMemberRoles)
+	@IsEnum(ProfileMemberRoles, { each: true })
 	roles: ProfileMemberRoles[];
 }
