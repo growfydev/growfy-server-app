@@ -251,6 +251,16 @@ async function seedPostTypesAndRelations() {
 				providerPostTypeName: 'YouTube short',
 			},
 		],
+		INSTAGRAM: [
+			{
+				characterLimit: 2200,
+				characterKey: 'caption',
+				fields: {
+					caption: 'string',
+					image_url: 'string',
+				},
+			},
+		],
 	};
 
 	// Crear las relaciones correctas

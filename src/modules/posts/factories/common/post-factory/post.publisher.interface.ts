@@ -17,3 +17,8 @@ export interface VideoMetadata {
 	audioCodec: string;
 	videoCodec: string;
 }
+
+export interface PhotoFields {
+	image_url: string;
+	caption: string;
+}

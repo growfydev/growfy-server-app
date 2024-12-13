@@ -373,7 +373,7 @@ export class PostsService extends Service {
 	 * @param typePost - ID del tipo de publicación.
 	 */
 	private validateRequiredFields(
-		content: object,
+		content: any,
 		requiredFields: Record<string, string>,
 		typePost: number,
 	): void {
@@ -548,7 +548,7 @@ export class PostsService extends Service {
 	private extractPublishData(post: PostWithRelations): PublishData {
 		const provider = post.ProviderPostType.provider;
 		const social = post.profile.socials.find(
-			(social) => social.providerId === provider.id,
+			(s: any) => s.providerId === provider.id,
 		);
 
 		if (!social) {
