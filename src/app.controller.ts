@@ -12,6 +12,7 @@ import { Auth } from 'src/modules/auth/decorators/auth.decorator';
 import { ProfileMemberRoles, Role } from '@prisma/client';
 import { FileInterceptor } from '@nestjs/platform-express';
 
+
 @Controller()
 export class AppController {
 	constructor(private readonly s3Service: S3Service) {}
