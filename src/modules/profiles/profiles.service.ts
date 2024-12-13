@@ -50,14 +50,18 @@ export class ProfilesService extends Service {
 				userId,
 				profileId: profile.id,
 			},
+		});
+		await this.assignRoleToMember(member.id, ProfileMemberRoles.MANAGER);
+
+		const updatedMember = await this.prisma.member.findUnique({
+			where: { id: member.id },
 			include: {
 				profile: true,
 				roles: true,
 			},
 		});
-		await this.assignRoleToMember(member.id, ProfileMemberRoles.MANAGER);
 
-		return { member };
+		return { member: updatedMember };
 	}
 
 	/**
