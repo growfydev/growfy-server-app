@@ -12,7 +12,7 @@ import { PostsService } from './posts.service';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { ExportPostsDto } from './dtos/export-posts.dto';
 import { Auth } from '../auth/decorators/auth.decorator';
-import { ProfileMemberRoles, Role } from '@prisma/client';
+import { Role } from '@prisma/client';
 import { Response } from 'express';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
 import { ReschedulePostDto } from './dtos/resschedule-post.dto';
@@ -21,9 +21,9 @@ import { ReschedulePostDto } from './dtos/resschedule-post.dto';
 export class PostsController {
 	constructor(private readonly postsService: PostsService) {}
 
-	@Post(':profileId/create')
+	@Post(':profileId')
 	@ResponseMessage('Posts creado exitosamente')
-	// @Auth([Role.USER], [ProfileMemberRoles.MANAGER])
+	@Auth([Role.USER])
 	async create(
 		@Body() createPostDto: CreatePostDto,
 		@Param('profileId') profileId: number,
@@ -31,8 +31,8 @@ export class PostsController {
 		return this.postsService.createPost(createPostDto, +profileId);
 	}
 
-	@Get(':profileId/posts')
-	@Auth([Role.USER], [ProfileMemberRoles.CLIENT])
+	@Get(':profileId')
+	@Auth([Role.USER])
 	async getPostsByProfile(@Param('profileId') profileId: number) {
 		const posts = await this.postsService.getPostsByProfile(+profileId);
 		if (!posts) {
@@ -42,8 +42,9 @@ export class PostsController {
 		}
 		return posts;
 	}
+
 	@Post(':profileId/export')
-	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
+	@Auth([Role.USER])
 	async exportPosts(
 		@Body() exportPostsDto: ExportPostsDto,
 		@Param('profileId') profileId: number,
@@ -57,9 +58,10 @@ export class PostsController {
 		res.set(header);
 		res.status(HttpStatus.OK).send(fileBuffer);
 	}
-	@Post(':profileId/posts/:postId/reschedule')
+
+	@Post(':profileId/:postId/reschedule')
 	@ResponseMessage('Post reprogramado exitosamente')
-	@Auth([Role.USER], [ProfileMemberRoles.MANAGER])
+	@Auth([Role.USER])
 	async reschedulePost(
 		@Param('profileId') profileId: number,
 		@Param('postId') postId: number,

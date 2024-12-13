@@ -59,7 +59,7 @@ export class PostsService extends Service {
 	async createPost(
 		postData: CreatePostDto,
 		profileId: number,
-	): Promise<Post> {
+	): Promise<{ post: Post }> {
 		const { typePost, provider, content, unix } = postData;
 
 		await this.validateProfile(profileId, provider);
@@ -89,7 +89,7 @@ export class PostsService extends Service {
 
 		await this.handlePostPublication(profileId, newPost.id, unix);
 
-		return newPost;
+		return { post: newPost };
 	}
 
 	/**
@@ -181,7 +181,7 @@ export class PostsService extends Service {
 	 * @returns Perfil con sus publicaciones y relaciones asociadas.
 	 * @throws {NotFoundException} Si el perfil no existe.
 	 */
-	async getPostsByProfile(profileId: number): Promise<Profile> {
+	async getPostsByProfile(profileId: number): Promise<{ profile: Profile }> {
 		const profileWithPosts = await this.prisma.profile.findUnique({
 			where: { id: profileId },
 			include: this.getPostsIncludeQuery(),
@@ -193,7 +193,7 @@ export class PostsService extends Service {
 			);
 		}
 
-		return profileWithPosts;
+		return { profile: profileWithPosts };
 	}
 
 	/**

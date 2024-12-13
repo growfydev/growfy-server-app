@@ -23,7 +23,7 @@ export class AppController {
 	}
 
 	@Get('s3/presigned-url/:key')
-	@Auth([Role.ADMIN], [ProfileMemberRoles.CLIENT])
+	@Auth([Role.USER])
 	async getPresidedUrl(@Param('key') key: string) {
 		try {
 			const presignedUrl = await this.s3Service.getFile(key);
@@ -36,7 +36,7 @@ export class AppController {
 	}
 
 	@Post('s3/upload')
-	@Auth([Role.ADMIN], [ProfileMemberRoles.CLIENT])
+	@Auth([Role.USER])
 	@UseInterceptors(FileInterceptor('file'))
 	async uploadFile(
 		@UploadedFile() file: Express.Multer.File,
