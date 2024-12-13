@@ -259,6 +259,8 @@ async function seedPostTypesAndRelations() {
 					caption: 'string',
 					image_url: 'string',
 				},
+				postTypeName: 'image',
+				providerPostTypeName: 'Instagram image',
 			},
 		],
 	};
