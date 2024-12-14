@@ -373,7 +373,7 @@ export class PostsService extends Service {
 	 * @param typePost - ID del tipo de publicación.
 	 */
 	private validateRequiredFields(
-		content: any,
+		content: Record<string, unknown>,
 		requiredFields: Record<string, string>,
 		typePost: number,
 	): void {

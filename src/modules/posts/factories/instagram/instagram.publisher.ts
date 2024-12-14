@@ -21,7 +21,7 @@ export class InstagramPublisher implements PostPublisher {
 		}
 
 		switch (typePostName) {
-			case 'photo':
+			case 'image':
 				await this.createPhotoPost(data.accountId, data.token, fields);
 				break;
 			default:

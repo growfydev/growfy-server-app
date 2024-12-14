@@ -167,6 +167,12 @@ async function fillProvidersAndSocials() {
 			providerId: 2,
 			profileId: profile.id,
 		},
+		{
+			access_token: 'instagram-token-example',
+			accountId: 'instagram-account-789',
+			providerId: 3,
+			profileId: profile.id,
+		},
 	];
 
 	await prisma.social.createMany({

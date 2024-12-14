@@ -69,7 +69,7 @@ enum PostStatus {
 enum ProviderNames {
     FACEBOOK
     YOUTUBE
-    //INSTAGRAM
+    INSTAGRAM
     //TWITTER
     //PINTEREST
     //TWITCH
@@ -259,15 +259,15 @@ model Export {
 }
 
 model StorageProfile {
-     id           Int          @id @default(autoincrement())
+    id           Int             @id @default(autoincrement())
     profileId    Int
-    profile      Profile      @relation(fields: [profileId], references: [id])
+    profile      Profile         @relation(fields: [profileId], references: [id])
     service      StorageServices
     accessToken  String
     refreshToken String?
     expiryDate   DateTime?
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime?    @updatedAt
+    createdAt    DateTime        @default(now())
+    updatedAt    DateTime?       @updatedAt
 
     @@unique([profileId, service])
 }

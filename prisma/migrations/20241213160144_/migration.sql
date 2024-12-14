@@ -17,7 +17,10 @@ CREATE TYPE "TaskStatus" AS ENUM ('SCHEDULED', 'PENDING', 'PROCESSING', 'COMPLET
 CREATE TYPE "PostStatus" AS ENUM ('QUEUED', 'COMPLETED', 'CANCELED', 'FAILED', 'PUBLISHED');
 
 -- CreateEnum
-CREATE TYPE "ProviderNames" AS ENUM ('FACEBOOK', 'YOUTUBE');
+CREATE TYPE "ProviderNames" AS ENUM ('FACEBOOK', 'YOUTUBE', 'INSTAGRAM');
+
+-- CreateEnum
+CREATE TYPE "StorageServices" AS ENUM ('GOOGLE_DRIVE', 'DROPBOX');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -43,12 +46,23 @@ CREATE TABLE "Member" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
     "profileId" INTEGER NOT NULL,
-    "role" "ProfileMemberRoles" NOT NULL DEFAULT 'OWNER',
     "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
 
     CONSTRAINT "Member_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "MemberRole" (
+    "id" SERIAL NOT NULL,
+    "memberId" INTEGER NOT NULL,
+    "role" "ProfileMemberRoles" NOT NULL,
+    "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+
+    CONSTRAINT "MemberRole_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -198,6 +212,20 @@ CREATE TABLE "Export" (
     CONSTRAINT "Export_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "StorageProfile" (
+    "id" SERIAL NOT NULL,
+    "profileId" INTEGER NOT NULL,
+    "service" "StorageServices" NOT NULL,
+    "accessToken" TEXT NOT NULL,
+    "refreshToken" TEXT,
+    "expiryDate" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+
+    CONSTRAINT "StorageProfile_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -213,11 +241,17 @@ CREATE UNIQUE INDEX "Permission_name_key" ON "Permission"("name");
 -- CreateIndex
 CREATE UNIQUE INDEX "ProfileRolePermission_profileRoles_permissionId_key" ON "ProfileRolePermission"("profileRoles", "permissionId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "StorageProfile_profileId_service_key" ON "StorageProfile"("profileId", "service");
+
 -- AddForeignKey
 ALTER TABLE "Member" ADD CONSTRAINT "Member_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Member" ADD CONSTRAINT "Member_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MemberRole" ADD CONSTRAINT "MemberRole_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Profile" ADD CONSTRAINT "Profile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -251,3 +285,6 @@ ALTER TABLE "ProviderPostType" ADD CONSTRAINT "ProviderPostType_posttypeId_fkey"
 
 -- AddForeignKey
 ALTER TABLE "ProfileRolePermission" ADD CONSTRAINT "ProfileRolePermission_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "Permission"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "StorageProfile" ADD CONSTRAINT "StorageProfile_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
