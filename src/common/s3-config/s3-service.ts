@@ -87,7 +87,7 @@ export class S3Service {
 	private async getPresignedUrl(
 		key: string,
 		customBucket?: string,
-		expiresIn: number = 3600,
+		expiresIn: number = 432000,
 	): Promise<string> {
 		const command = new GetObjectCommand({
 			Bucket: customBucket || this.bucketName,
