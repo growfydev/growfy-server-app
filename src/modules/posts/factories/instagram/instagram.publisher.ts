@@ -22,7 +22,11 @@ export class InstagramPublisher implements PostPublisher {
 
 		switch (typePostName) {
 			case 'image':
-				await this.createPhotoPost(data.accountId, data.token, fields);
+				await this.createInstagramPost(
+					data.accountId,
+					data.token,
+					fields,
+				);
 				break;
 			default:
 				throw new NotFoundException('No se encontró el tipo de post');
@@ -30,55 +34,102 @@ export class InstagramPublisher implements PostPublisher {
 	}
 
 	/**
-	 * Publica una foto en Instagram mediante la API de Graph.
+	 * Publica una foto o un carrusel en Instagram mediante la API de Graph.
 	 *
 	 * @param accountId - ID de la cuenta de Instagram.
 	 * @param token - Token de acceso para la API.
-	 * @param fields - Datos de la publicación (image_url y caption).
+	 * @param fields - Datos de la publicación ({ image_url, caption } como JsonValue).
 	 *
-	 * @throws {Error} Si faltan campos requeridos.
+	 * @throws {Error} Si faltan campos requeridos o el contenido no es válido.
 	 * @throws {BadRequestException} Si ocurre un error en los pasos de publicación.
-	 *
-	 * @private
 	 */
-	private async createPhotoPost(
+	private async createInstagramPost(
 		accountId: string,
 		token: string,
 		fields: JsonValue,
 	): Promise<void> {
+		// Validar y extraer los campos necesarios del parámetro `fields`
 		const { image_url, caption } = this.validateFields(fields);
 
-		const creationId = await this.createMediaContainer(accountId, token, {
-			image_url,
-			caption,
-		});
-		await this.publishMediaContainer(accountId, token, creationId);
+		// Separar URLs de imágenes en una lista
+		const imageUrls = image_url.split(',').map((url) => url.trim());
+
+		if (imageUrls.length === 0) {
+			throw new Error('Debe proporcionar al menos una imagen.');
+		}
+
+		// Publicación de foto única
+		if (imageUrls.length === 1) {
+			const creationId = await this.createMediaContainer(
+				accountId,
+				token,
+				{
+					image_url: imageUrls[0],
+					caption, // Caption único para la foto
+				},
+			);
+			await this.publishMediaContainer(accountId, token, creationId);
+			return;
+		}
+
+		// Publicación de carrusel
+		if (imageUrls.length > 1) {
+			const mediaContainerIds: string[] = [];
+
+			// Crear contenedores individuales para las imágenes del carrusel
+			for (const imageUrl of imageUrls) {
+				const creationId = await this.createMediaContainer(
+					accountId,
+					token,
+					{ image_url: imageUrl, caption: '' }, // Sin caption aquí
+				);
+				mediaContainerIds.push(creationId);
+			}
+
+			// Crear contenedor del carrusel con el caption único
+			const carouselContainerId = await this.createCarouselContainer(
+				accountId,
+				token,
+				mediaContainerIds,
+				caption, // Caption único para el carrusel
+			);
+
+			// Publicar el contenedor del carrusel
+			await this.publishMediaContainer(
+				accountId,
+				token,
+				carouselContainerId,
+			);
+		}
 	}
 
 	/**
-	 * Valida los campos necesarios para crear una publicación de foto y extrae los valores requeridos.
+	 * Valida los campos proporcionados en el parámetro `fields`.
 	 *
-	 * @param fields - Datos de la publicación.
-	 * @returns Los valores de image_url y caption extraídos.
-	 * @throws {Error} Si faltan campos requeridos.
-	 * @private
+	 * @param fields - Datos de la publicación a validar (JsonValue).
+	 * @returns { image_url: string, caption: string }
+	 * @throws {Error} Si faltan campos requeridos o el formato es inválido.
 	 */
 	private validateFields(fields: JsonValue): PhotoFields {
-		if (
-			typeof fields !== 'object' ||
-			!fields ||
-			!('image_url' in fields) ||
-			!('caption' in fields)
-		) {
+		if (typeof fields !== 'object' || fields === null) {
+			throw new Error('El parámetro "fields" debe ser un objeto.');
+		}
+
+		const image_url = (fields as Record<string, JsonValue>)
+			.image_url as string;
+		const caption = (fields as Record<string, JsonValue>).caption as string;
+
+		if (!image_url) {
+			throw new Error('El campo "image_url" es obligatorio.');
+		}
+
+		if (typeof image_url !== 'string' || typeof caption !== 'string') {
 			throw new Error(
-				'El campo "image_url" es requerido en los datos de entrada.',
+				'Los campos "image_url" y "caption" deben ser cadenas de texto.',
 			);
 		}
 
-		return {
-			image_url: fields.image_url as string,
-			caption: fields.caption as string,
-		};
+		return { image_url, caption };
 	}
 
 	/**
@@ -109,6 +160,40 @@ export class InstagramPublisher implements PostPublisher {
 		} catch (error) {
 			throw new BadRequestException(
 				`Error al crear el contenedor: ${error.response?.data?.error?.message || error.message}`,
+			);
+		}
+	}
+
+	/**
+	 * Crea un contenedor de carrusel en Instagram.
+	 *
+	 * @param accountId - ID de la cuenta de Instagram.
+	 * @param token - Token de acceso para la API.
+	 * @param mediaContainerIds - IDs de los contenedores de medios individuales.
+	 * @returns El ID del contenedor de carrusel creado.
+	 * @throws {BadRequestException} Si ocurre un error al crear el contenedor.
+	 * @private
+	 */
+	private async createCarouselContainer(
+		accountId: string,
+		token: string,
+		mediaContainerIds: string[],
+		caption: string,
+	): Promise<string> {
+		const createUrl = `${this.graphUrl}${accountId}/media`;
+		const payload = {
+			media_type: 'CAROUSEL',
+			children: mediaContainerIds,
+			caption, // Caption único para el carrusel
+			access_token: token,
+		};
+
+		try {
+			const response = await axios.post(createUrl, payload);
+			return response.data.id; // ID del contenedor de carrusel creado
+		} catch (error) {
+			throw new BadRequestException(
+				`Error al crear el contenedor de carrusel: ${error.response?.data?.error?.message || error.message}`,
 			);
 		}
 	}
