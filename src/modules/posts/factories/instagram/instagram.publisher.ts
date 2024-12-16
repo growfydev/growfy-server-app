@@ -1,10 +1,7 @@
 import { JsonValue } from '@prisma/client/runtime/library';
 import { PostData } from 'src/types/types';
 import axios from 'axios';
-import {
-	PhotoFields,
-	PostPublisher,
-} from '../common/post-factory/post.publisher.interface';
+import { PostPublisher } from '../common/post-factory/post.publisher.interface';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 export class InstagramPublisher implements PostPublisher {
@@ -49,22 +46,20 @@ export class InstagramPublisher implements PostPublisher {
 		fields: JsonValue,
 	): Promise<void> {
 		// Validar y extraer los campos necesarios del parámetro `fields`
-		const { image_url, caption } = this.validateFields(fields);
+		const { image_urls, caption } = this.validateFields(fields);
 
-		// Separar URLs de imágenes en una lista
-		const imageUrls = image_url.split(',').map((url) => url.trim());
-
-		if (imageUrls.length === 0) {
+		// Asegurarse de que image_urls es un arreglo
+		if (!Array.isArray(image_urls) || image_urls.length === 0) {
 			throw new Error('Debe proporcionar al menos una imagen.');
 		}
 
 		// Publicación de foto única
-		if (imageUrls.length === 1) {
+		if (image_urls.length === 1) {
 			const creationId = await this.createMediaContainer(
 				accountId,
 				token,
 				{
-					image_url: imageUrls[0],
+					image_url: [image_urls[0]],
 					caption, // Caption único para la foto
 				},
 			);
@@ -73,15 +68,15 @@ export class InstagramPublisher implements PostPublisher {
 		}
 
 		// Publicación de carrusel
-		if (imageUrls.length > 1) {
+		if (image_urls.length > 1) {
 			const mediaContainerIds: string[] = [];
 
 			// Crear contenedores individuales para las imágenes del carrusel
-			for (const imageUrl of imageUrls) {
+			for (const imageUrl of image_urls) {
 				const creationId = await this.createMediaContainer(
 					accountId,
 					token,
-					{ image_url: imageUrl, caption: '' }, // Sin caption aquí
+					{ image_url: [imageUrl], caption: '' }, // Sin caption aquí
 				);
 				mediaContainerIds.push(creationId);
 			}
@@ -110,26 +105,29 @@ export class InstagramPublisher implements PostPublisher {
 	 * @returns { image_url: string, caption: string }
 	 * @throws {Error} Si faltan campos requeridos o el formato es inválido.
 	 */
-	private validateFields(fields: JsonValue): PhotoFields {
+	private validateFields(fields: JsonValue): {
+		image_urls: string[];
+		caption: string;
+	} {
 		if (typeof fields !== 'object' || fields === null) {
 			throw new Error('El parámetro "fields" debe ser un objeto.');
 		}
 
-		const image_url = (fields as Record<string, JsonValue>)
-			.image_url as string;
+		const image_urls = (fields as Record<string, JsonValue>)
+			.image_url as string[];
 		const caption = (fields as Record<string, JsonValue>).caption as string;
 
-		if (!image_url) {
-			throw new Error('El campo "image_url" es obligatorio.');
-		}
-
-		if (typeof image_url !== 'string' || typeof caption !== 'string') {
+		if (!Array.isArray(image_urls) || image_urls.length === 0) {
 			throw new Error(
-				'Los campos "image_url" y "caption" deben ser cadenas de texto.',
+				'El campo "image_url" es obligatorio y debe ser un arreglo.',
 			);
 		}
 
-		return { image_url, caption };
+		if (typeof caption !== 'string') {
+			throw new Error('El campo "caption" debe ser una cadena de texto.');
+		}
+
+		return { image_urls, caption };
 	}
 
 	/**
@@ -146,11 +144,13 @@ export class InstagramPublisher implements PostPublisher {
 	private async createMediaContainer(
 		accountId: string,
 		token: string,
-		fields: PhotoFields,
+		fields: { image_url: string[]; caption: string },
 	): Promise<string> {
 		const createUrl = `${this.graphUrl}${accountId}/media`;
 		const payload = {
-			...fields,
+			image_url: fields.image_url[0],
+			caption: fields.caption,
+			media_type: 'IMAGE',
 			access_token: token,
 		};
 

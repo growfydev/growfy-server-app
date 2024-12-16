@@ -8,17 +8,3 @@ export interface PostPublisher {
 		data: PostData,
 	): Promise<void>;
 }
-
-export interface VideoMetadata {
-	width: string;
-	height: string;
-	duration: string;
-	frameRate: string;
-	audioCodec: string;
-	videoCodec: string;
-}
-
-export interface PhotoFields {
-	image_url: string;
-	caption: string;
-}

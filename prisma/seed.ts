@@ -263,7 +263,7 @@ async function seedPostTypesAndRelations() {
 				characterKey: 'caption',
 				fields: {
 					caption: 'string',
-					image_url: 'string',
+					image_url: 'string[]',
 				},
 				postTypeName: 'image',
 				providerPostTypeName: 'Instagram image',
