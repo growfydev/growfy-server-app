@@ -187,6 +187,7 @@ export class PostsService extends Service {
 				`No se pudo extraer los datos de publicación para el post con ID: ${postId}`,
 			);
 		}
+		//Validamos las propiedades del post
 		const publishSuccess = await this.executePublish(publishData);
 		if (!publishSuccess) {
 			throw new BadRequestException(
