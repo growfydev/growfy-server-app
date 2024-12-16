@@ -3,6 +3,7 @@ import { PostFactory } from '../common/post-factory/post.factory';
 import { PostPublisher } from '../common/post-factory/post.publisher.interface';
 import { InstagramEditor } from './instagram.editor';
 import { InstagramPublisher } from './instagram.publisher';
+import { InstagramValidationProperties } from './instagram.validationProperties';
 
 export class InstagramPostFactory implements PostFactory {
 	createPublisher(): PostPublisher {
@@ -11,5 +12,9 @@ export class InstagramPostFactory implements PostFactory {
 
 	createEditor(): PostEditor {
 		return new InstagramEditor();
+	}
+
+	validationProperties() {
+		return new InstagramValidationProperties();
 	}
 }
