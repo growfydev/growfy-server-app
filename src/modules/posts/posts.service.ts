@@ -548,7 +548,7 @@ export class PostsService extends Service {
 	private extractPublishData(post: PostWithRelations): PublishData {
 		const provider = post.ProviderPostType.provider;
 		const social = post.profile.socials.find(
-			(s: any) => s.providerId === provider.id,
+			(s) => s.providerId === provider.id,
 		);
 
 		if (!social) {
