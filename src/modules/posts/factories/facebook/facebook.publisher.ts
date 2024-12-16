@@ -1,13 +1,7 @@
 import { JsonValue } from '@prisma/client/runtime/library';
 import axios from 'axios';
 import { PostData } from 'src/types/types';
-import {
-	PostPublisher,
-	VideoMetadata,
-} from '../common/post-factory/post.publisher.interface';
-import * as ffmpeg from 'fluent-ffmpeg';
-import { Readable, PassThrough } from 'stream';
-import { FfprobeData } from 'fluent-ffmpeg';
+import { PostPublisher } from '../common/post-factory/post.publisher.interface';
 
 export class FacebookPublisher implements PostPublisher {
 	private readonly graphUrl = 'https://graph.facebook.com/v21.0/';
@@ -120,27 +114,6 @@ export class FacebookPublisher implements PostPublisher {
 				responseType: 'arraybuffer',
 			});
 			videoBuffer = Buffer.from(videoResponse.data);
-
-			// Verificar si es un archivo MP4 válido
-			// const signature = videoBuffer.toString('hex', 0, 8);
-			// if (!this.isValidMP4(signature)) {
-			// 	throw new Error('El archivo debe estar en formato MP4');
-			// }
-
-			// 2. Validar y ajustar el video si es necesario
-			// const initialMetadata = await this.getVideoMetadata(videoBuffer);
-			// if (
-			// 	parseInt(initialMetadata.height) < 960 ||
-			// 	parseInt(initialMetadata.width) !==
-			// 		Math.floor(parseInt(initialMetadata.height) / 1.777778)
-			// ) {
-			// 	videoBuffer = await this.resizeVideo(videoBuffer);
-			// }
-
-			// 3. Validar metadata final
-			// const videoMetadata = await this.getVideoMetadata(videoBuffer);
-			// this.validateVideoSpecs(videoMetadata);
-
 			const fileSize = videoBuffer.length;
 			const startUrl = `${this.graphUrl}${accountId}/video_reels`;
 
@@ -182,111 +155,6 @@ export class FacebookPublisher implements PostPublisher {
 			}
 			throw new Error(
 				`Error en la publicación del reel: ${errorMessage}`,
-			);
-		}
-	}
-
-	private async resizeVideo(buffer: Buffer): Promise<Buffer> {
-		return new Promise((resolve, reject) => {
-			const inputStream = new Readable();
-			inputStream.push(buffer);
-			inputStream.push(null);
-
-			const outputStream = new PassThrough();
-			const outputBuffers: Buffer[] = [];
-
-			outputStream.on('data', (chunk: Buffer) => {
-				outputBuffers.push(chunk);
-			});
-
-			outputStream.on('end', () => {
-				resolve(Buffer.concat(outputBuffers));
-			});
-
-			ffmpeg(inputStream)
-				.size('1080x1920')
-				.outputOptions([
-					'-c:v libx264',
-					'-preset medium',
-					'-crf 23',
-					'-movflags +faststart',
-				])
-				.toFormat('mp4')
-				.on('error', reject)
-				.pipe(outputStream);
-		});
-	}
-
-	private isValidMP4(signature: string): boolean {
-		const validSignatures = ['66747970', '667479703'];
-		return validSignatures.some((sig) => signature.includes(sig));
-	}
-
-	private async getVideoMetadata(buffer: Buffer): Promise<VideoMetadata> {
-		return new Promise((resolve, reject) => {
-			const streamBuffer = new Readable();
-			streamBuffer.push(buffer);
-			streamBuffer.push(null);
-
-			ffmpeg(streamBuffer).ffprobe(
-				(err: Error, metadata: FfprobeData) => {
-					if (err) {
-						reject(
-							new Error(
-								`Error al obtener metadatos: ${err.message}`,
-							),
-						);
-						return;
-					}
-
-					const videoStream = metadata.streams.find(
-						(stream) => stream.codec_type === 'video',
-					);
-					const audioStream = metadata.streams.find(
-						(stream) => stream.codec_type === 'audio',
-					);
-
-					if (!videoStream) {
-						reject(new Error('No se encontró stream de video'));
-						return;
-					}
-
-					const frameRate = eval(videoStream.r_frame_rate);
-
-					resolve({
-						width: (videoStream.width || 0).toString(),
-						height: (videoStream.height || 0).toString(),
-						duration: metadata.format.duration.toString(),
-						frameRate: frameRate.toString(),
-						audioCodec: audioStream?.codec_name || '',
-						videoCodec: videoStream.codec_name,
-					});
-				},
-			);
-		});
-	}
-
-	private validateVideoSpecs(metadata: VideoMetadata) {
-		const { width, height, duration, frameRate } = metadata;
-
-		if (parseInt(width) < 540 || parseInt(height) < 960) {
-			throw new Error('La resolución mínima debe ser 540x960 píxeles.');
-		}
-
-		const aspectRatio = parseInt(height) / parseInt(width);
-		if (Math.abs(aspectRatio - 1.777778) > 0.1) {
-			throw new Error('La relación de aspecto debe ser 9:16.');
-		}
-
-		if (parseFloat(duration) < 3 || parseFloat(duration) > 90) {
-			throw new Error(
-				'La duración del video debe estar entre 3 y 90 segundos.',
-			);
-		}
-
-		if (parseFloat(frameRate) < 24 || parseFloat(frameRate) > 60) {
-			throw new Error(
-				'La velocidad de fotogramas debe estar entre 24 y 60 fps.',
 			);
 		}
 	}

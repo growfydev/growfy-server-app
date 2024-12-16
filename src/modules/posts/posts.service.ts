@@ -38,6 +38,7 @@ import {
 	TaskFieldsSelect,
 	TransformedPost,
 } from './dtos/transformed-post.interface';
+import { JsonValue } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class PostsService extends Service {
@@ -468,7 +469,7 @@ export class PostsService extends Service {
 	): Promise<boolean> {
 		const { fields: requiredFields } = providerPostType;
 		return await this.validateRequiredFields(
-			content as Record<string, unknown>,
+			content as Record<string, JsonValue>,
 			requiredFields as Record<string, string>,
 			typePost,
 		);
@@ -519,7 +520,7 @@ export class PostsService extends Service {
 	 * @param typePost - ID del tipo de publicación.
 	 */
 	private validateRequiredFields(
-		content: Record<string, unknown>,
+		content: Record<string, JsonValue>,
 		requiredFields: Record<string, string>,
 		typePost: number,
 	): boolean {
@@ -530,9 +531,23 @@ export class PostsService extends Service {
 				);
 			}
 
-			if (typeof content[field] !== fieldType) {
+			const actualType = Array.isArray(content[field])
+				? 'array'
+				: typeof content[field];
+
+			// Verificar si es un arreglo de strings
+			if (fieldType === 'string[]' && Array.isArray(content[field])) {
+				if (!content[field].every((item) => typeof item === 'string')) {
+					throw new BadRequestException(
+						`Todos los elementos de "${field}" deben ser de tipo "string".`,
+					);
+				}
+				continue;
+			}
+
+			if (actualType !== fieldType) {
 				throw new BadRequestException(
-					`El campo "${field}" debe ser de tipo "${fieldType}", pero se recibió "${typeof content[field]}".`,
+					`El campo "${field}" debe ser de tipo "${fieldType}", pero se recibió "${actualType}".`,
 				);
 			}
 		}
