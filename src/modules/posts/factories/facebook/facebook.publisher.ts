@@ -34,7 +34,7 @@ export class FacebookPublisher implements PostPublisher {
 			case 'image':
 				await this.createPhotoPost(data.accountId, data.token, fields);
 				break;
-			case 'reel':
+			case 'short_video':
 				await this.createReelPost(data.accountId, data.token, fields);
 				break;
 			default:
