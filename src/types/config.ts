@@ -54,4 +54,9 @@ export type Config = {
 			scope: string[];
 		};
 	};
+	dropbox: {
+		clientId: string;
+		clientSecret: string;
+		redirect: string;
+	};
 };
