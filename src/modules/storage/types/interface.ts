@@ -24,3 +24,23 @@ export interface UpdatedFileResponse {
 	mimeType: string;
 	webViewLink?: string;
 }
+
+export interface DropboxFile {
+	id: string;
+	name: string;
+	mimeType: string;
+	webViewLink?: string | null;
+}
+
+export interface StorageFile {
+	id: string;
+	name: string;
+	mimeType: string;
+	webViewLink?: string | null;
+}
+
+export interface StorageListResponse {
+	files: StorageFile[];
+	nextPageToken?: string;
+	hasMore?: boolean;
+}

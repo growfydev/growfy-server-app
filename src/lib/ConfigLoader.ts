@@ -57,6 +57,11 @@ function configLoader(): Config {
 				scope: ['https://www.googleapis.com/auth/drive'],
 			},
 		},
+		dropbox: {
+			clientId: process.env.DROPBOX_ID,
+			clientSecret: process.env.DROPBOX_SECRET,
+			redirect: process.env.DROPBOX_REDIRECT,
+		},
 	};
 }
 
