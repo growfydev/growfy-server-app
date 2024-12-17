@@ -25,8 +25,137 @@ export class InstagramPublisher implements PostPublisher {
 					fields,
 				);
 				break;
+			case 'short_video':
+				await this.createAndPublishReel(
+					data.accountId,
+					data.token,
+					fields,
+				);
+				break;
 			default:
 				throw new NotFoundException('No se encontró el tipo de post');
+		}
+	}
+
+	/**
+	 * Crea y publica un reel en Instagram.
+	 *
+	 * @param accountId - ID de la cuenta de Instagram.
+	 * @param token - Token de acceso para la API.
+	 * @param fields - Datos del reel a publicar (JsonValue).
+	 * @returns {Promise<boolean>} Indica si la creación y publicación fue exitosa.
+	 * @throws {BadRequestException} Si ocurre un error al crear o publicar el reel.
+	 */
+	private async createAndPublishReel(
+		accountId: string,
+		token: string,
+		fields: JsonValue,
+	): Promise<boolean> {
+		try {
+			if (
+				typeof fields !== 'object' ||
+				!fields ||
+				!('video_url' in fields)
+			) {
+				throw new Error(
+					'El campo "video_url" es requerido en los datos de entrada.',
+				);
+			}
+
+			const createUrl = `${this.graphUrl}${accountId}/media`;
+			const payload = {
+				media_type: 'REELS',
+				video_url: (fields as Record<string, JsonValue>).video_url,
+				caption: (fields as Record<string, JsonValue>).caption || '',
+				share_to_feed: false,
+				access_token: token,
+			};
+
+			const createResponse = await axios.post(createUrl, payload);
+			const creationId = createResponse.data.id;
+			const published = await this.publishReelWithRetries(
+				accountId,
+				token,
+				creationId,
+			);
+			return published;
+		} catch (error) {
+			throw new BadRequestException(
+				`Error al crear el reel: ${error.message}`,
+			);
+		}
+	}
+
+	/**
+	 * Publica un reel en Instagram.
+	 *
+	 * @param accountId - ID de la cuenta de Instagram.
+	 * @param token - Token de acceso para la API.
+	 * @param creationId - ID del reel a publicar.
+	 * @returns {Promise<boolean>} Indica si la publicación fue exitosa.
+	 * @throws {BadRequestException} Si ocurre un error al publicar el reel.
+	 */
+	private async publishReelWithRetries(
+		accountId: string,
+		token: string,
+		creationId: string,
+	): Promise<boolean> {
+		const maxRetries = 5;
+		let attempt = 0;
+		let published = false;
+
+		while (attempt < maxRetries && !published) {
+			try {
+				await delay(5000); // Espera 5 segundos
+				published = await this.publishReel(
+					accountId,
+					token,
+					creationId,
+				);
+			} catch (error) {
+				attempt++;
+				if (attempt >= maxRetries) {
+					throw new Error(
+						'Error en la publicación del reel después de varios intentos.',
+					);
+				}
+				console.error('Intento fallido de publicación:', error);
+			}
+		}
+		return published;
+	}
+
+	/**
+	 * Publica un reel en Instagram.
+	 *
+	 * @param accountId - ID de la cuenta de Instagram.
+	 * @param token - Token de acceso para la API.
+	 * @param creationId - ID del reel a publicar.
+	 * @returns {Promise<boolean>} Indica si la publicación fue exitosa.
+	 * @throws {BadRequestException} Si ocurre un error al publicar el reel.
+	 */
+	private async publishReel(
+		accountId: string,
+		token: string,
+		creationId: string,
+	): Promise<boolean> {
+		const publishUrl = `${this.graphUrl}${accountId}/media_publish`;
+		const publishPayload = {
+			creation_id: creationId,
+			access_token: token,
+		};
+
+		try {
+			const publishResponse = await axios.post(
+				publishUrl,
+				publishPayload,
+			);
+			console.log('Publicación exitosa:', publishResponse.data);
+			return true;
+		} catch (error) {
+			throw new BadRequestException(
+				`Error al publicar el reel: ${error.message}`,
+			);
 		}
 	}
 
@@ -226,4 +355,8 @@ export class InstagramPublisher implements PostPublisher {
 			);
 		}
 	}
+}
+
+function delay(ms: number) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }

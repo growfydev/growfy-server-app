@@ -268,6 +268,16 @@ async function seedPostTypesAndRelations() {
 				postTypeName: 'image',
 				providerPostTypeName: 'Instagram image',
 			},
+			{
+				characterLimit: 2200,
+				characterKey: 'caption',
+				fields: {
+					caption: 'string',
+					video_url: 'string',
+				},
+				postTypeName: 'short_video',
+				providerPostTypeName: 'Instagram reel',
+			},
 		],
 	};
 
