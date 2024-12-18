@@ -30,6 +30,7 @@ import {
 	PostWithRelations,
 	PostWithRelationsForExport,
 	PostWithTask,
+	PostWithTaskAndProviderPostType,
 	providerData,
 	providerPostType,
 	ProviderPostTypeFields,
@@ -85,14 +86,20 @@ export class PostsService extends Service {
 		profileId: number,
 		postId: number,
 		newUnixTime: number,
-	): Promise<void> {
+	): Promise<{ post: Post }> {
 		const post = await this.findAndValidatePost(profileId, postId);
 		await this.validatePostStatus(post);
 		await this.updateScheduledTask(post, profileId, postId, newUnixTime);
+		const updatedPost = {
+			...post,
+			task: { status: TaskStatus.PENDING, unix: newUnixTime },
+		};
 
 		this.logger.debug(
 			`Post ${postId} reprogramado exitosamente para el timestamp ${newUnixTime}`,
 		);
+
+		return { post: updatedPost };
 	}
 
 	/**
@@ -628,6 +635,7 @@ export class PostsService extends Service {
 	 */
 	private getTaskFields(): TaskFieldsSelect {
 		return {
+			id: true,
 			status: true,
 			unix: true,
 		};
@@ -995,14 +1003,19 @@ export class PostsService extends Service {
 	private async findAndValidatePost(
 		profileId: number,
 		postId: number,
-	): Promise<PostWithTask> {
+	): Promise<PostWithTaskAndProviderPostType> {
 		const post = await this.prisma.post.findFirst({
 			where: {
 				id: postId,
 				profileId,
 			},
 			include: {
-				task: true,
+				task: {
+					select: this.getTaskFields(),
+				},
+				ProviderPostType: {
+					include: this.getProviderPostTypeFields(),
+				},
 			},
 		});
 
