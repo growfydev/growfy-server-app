@@ -1,10 +1,14 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/core/prisma.service';
 import { GlobalStatus } from '@prisma/client';
+import { SocketGateway } from '../websocket/websocket.gateway';
 
 @Injectable()
 export class CustomerService {
-	constructor(private readonly prisma: PrismaService) {}
+	constructor(
+		private readonly prisma: PrismaService,
+		private socketGateway: SocketGateway,
+	) {}
 
 	async listCustomers({
 		profileId,
