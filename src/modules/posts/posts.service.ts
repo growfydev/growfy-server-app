@@ -195,7 +195,14 @@ export class PostsService extends Service {
 				`No se pudo extraer los datos de publicación para el post con ID: ${postId}`,
 			);
 		}
-		//Validamos las propiedades del post
+
+		// Obtener las propiedades del post
+		const properties = await this.getPostProperties(postId);
+		console.log(properties);
+
+		// Validamos las propiedades del
+		await this.validatePostProperties(publishData, properties);
+
 		const publishSuccess = await this.executePublish(publishData);
 		if (!publishSuccess) {
 			throw new BadRequestException(
@@ -1072,5 +1079,46 @@ export class PostsService extends Service {
 			);
 			throw new Error('Error al reprogramar la publicación');
 		}
+	}
+
+	/**
+	 * Valida que el post tenga las propiedades necesarias
+	 * @private
+	 */
+	private async validatePostProperties(
+		publishData: PublishData,
+		properties: JsonValue,
+	): Promise<void> {
+		const factory = PostFactorySelector.getFactory(
+			publishData.provider.name,
+		);
+		const validator = factory.validationProperties();
+
+		await validator.validation(
+			publishData.typePostName,
+			publishData.fields,
+			properties,
+		);
+	}
+
+	private async getPostProperties(postId: number): Promise<JsonValue> {
+		const post = await this.prisma.post.findUnique({
+			where: { id: postId },
+			include: {
+				ProviderPostType: {
+					select: {
+						properties: true, // Asegúrate de que esto esté correcto en tu modelo
+					},
+				},
+			},
+		});
+
+		if (!post || !post.ProviderPostType) {
+			throw new NotFoundException(
+				`No se encontraron propiedades para el post con ID: ${postId}`,
+			);
+		}
+
+		return post.ProviderPostType.properties;
 	}
 }
