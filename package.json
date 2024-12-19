@@ -48,7 +48,9 @@
 		"@nestjs/mapped-types": "^2.0.6",
 		"@nestjs/passport": "^10.0.3",
 		"@nestjs/platform-express": "^10.4.15",
+		"@nestjs/platform-socket.io": "^10.4.15",
 		"@nestjs/swagger": "^8.1.0",
+		"@nestjs/websockets": "^10.4.15",
 		"@prisma/client": "^5.22.0",
 		"@types/nodemailer": "^6.4.17",
 		"axios": "^1.7.9",
@@ -86,6 +88,7 @@
 		"qs": "^6.13.1",
 		"reflect-metadata": "^0.2.2",
 		"rxjs": "^7.8.1",
+		"socket.io": "^4.8.1",
 		"stripe": "^17.4.0",
 		"swagger-ui-express": "^5.0.1",
 		"twilio": "^5.4.0"

@@ -283,6 +283,7 @@ export class PostsService extends Service {
 			);
 		}
 
+		// Validar propiedades del post
 		const newPost = await this.createPostRecord(
 			postType,
 			providerPostType,
