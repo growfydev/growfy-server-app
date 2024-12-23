@@ -27,7 +27,18 @@ export class UserService {
 			include: {
 				members: {
 					include: {
-						profile: true,
+						profile: {
+							include: {
+								StorageProfile: {
+									select: {
+										id: true,
+										profileId: true,
+										service: true,
+										createdAt: true,
+									},
+								},
+							},
+						},
 						roles: true,
 					},
 				},
@@ -38,19 +49,32 @@ export class UserService {
 	}
 
 	async findUserById(id: number): Promise<User | null> {
-		return await this.prisma.user.findUnique({
+		const user = await this.prisma.user.findUnique({
 			where: {
 				id,
 			},
 			include: {
 				members: {
 					include: {
-						profile: true,
+						profile: {
+							include: {
+								StorageProfile: {
+									select: {
+										id: true,
+										profileId: true,
+										service: true,
+										createdAt: true,
+									},
+								},
+							},
+						},
 						roles: true,
 					},
 				},
 			},
 		});
+
+		return user;
 	}
 
 	async updateUser(email: string, data: Partial<User>): Promise<User> {
