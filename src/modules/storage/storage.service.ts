@@ -175,7 +175,7 @@ export class StorageService {
 			const res = await drive.files.list({
 				pageSize: pageSize,
 				pageToken: pageToken || undefined,
-				fields: 'nextPageToken, files(id, name, mimeType, webViewLink, thumbnailLink)',
+				fields: 'nextPageToken, files(id, name, mimeType, webViewLink, thumbnailLink, size)',
 			});
 
 			return {
@@ -185,6 +185,8 @@ export class StorageService {
 							name: file.name!,
 							mimeType: file.mimeType!,
 							webViewLink: file.webViewLink,
+							thumbnailLink: file.thumbnailLink,
+							size: file.size,
 						}))
 					: [],
 				nextPageToken: res.data.nextPageToken,
