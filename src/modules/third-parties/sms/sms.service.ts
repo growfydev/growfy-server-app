@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import configLoader from 'src/lib/ConfigLoader';
-import * as twilio from 'twilio';
+import twilio from 'twilio';
 import { MassMessageRequest, MessageSendResult } from './types';
 
 // Type Definitions
