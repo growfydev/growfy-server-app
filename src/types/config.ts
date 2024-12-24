@@ -59,4 +59,10 @@ export type Config = {
 		clientSecret: string;
 		redirect: string;
 	};
+	shopify: {
+		clientId: string;
+		clientSecret: string;
+		redirectUri: string;
+		scopes: string;
+	};
 };

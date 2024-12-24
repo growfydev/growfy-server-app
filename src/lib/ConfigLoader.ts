@@ -36,6 +36,10 @@ const {
 	DROPBOX_ID,
 	DROPBOX_SECRET,
 	DROPBOX_REDIRECT,
+	SHOPIFY_CLIENT_ID,
+	SHOPIFY_CLIENT_SECRET,
+	SHOPIFY_REDIRECT_URI,
+	SHOPIFY_SCOPES,
 } = process.env;
 
 function configLoader(): Config {
@@ -99,6 +103,12 @@ function configLoader(): Config {
 			clientId: DROPBOX_ID,
 			clientSecret: DROPBOX_SECRET,
 			redirect: DROPBOX_REDIRECT,
+		},
+		shopify: {
+			clientId: SHOPIFY_CLIENT_ID,
+			clientSecret: SHOPIFY_CLIENT_SECRET,
+			redirectUri: SHOPIFY_REDIRECT_URI,
+			scopes: SHOPIFY_SCOPES,
 		},
 	};
 }
