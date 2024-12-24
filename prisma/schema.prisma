@@ -284,13 +284,21 @@ enum StorageServices {
 model ShopifyIntegration {
     id           Int          @id @default(autoincrement())
     profileId    Int          @unique
-    shopName     String
-    shopLink     String
-    accessToken  String
-    code         String
+    shopName     String?
+    accessToken  String?
+    code         String?
     isAuth       Boolean      @default(false)
     globalStatus GlobalStatus @default(ACTIVE)
     createdAt    DateTime     @default(now())
     updatedAt    DateTime?    @updatedAt
+    shopId       BigInt?
+    shopEmail    String?
+    shopDomain   String?
+    shopCountry  String?
+    shopCurrency String?
+    shopOwner    String?
+    shopPlan     String?
+    hasDiscounts Boolean?
+    hasGiftCards Boolean?
     Profile      Profile      @relation(references: [id], fields: [profileId])
 }
