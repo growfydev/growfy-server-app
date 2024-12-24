@@ -1,4 +1,14 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import {
+	BadRequestException,
+	Body,
+	Controller,
+	Get,
+	Headers,
+	Param,
+	ParseIntPipe,
+	Post,
+	Query,
+} from '@nestjs/common';
 import { ShopifyService } from './shopify.service';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { ProfileMemberRoles, Role } from '@prisma/client';
@@ -27,5 +37,29 @@ export class ShopifyController {
 			code,
 		);
 		return { accessToken };
+	}
+
+	/**
+	 * Endpoint para recibir webhooks.
+	 * Shopify enviará las notificaciones POST a este endpoint.
+	 */
+	@Post('webhook')
+	async handleWebhook(
+		@Headers('X-Shopify-Hmac-SHA256') hmac: string,
+		@Headers('X-Shopify-Topic') topic: string,
+		@Headers('X-Shopify-Shop-Domain') shop: string,
+		@Body() body: any,
+	) {
+		// **Validar la firma HMAC**
+		const isValid = this.shopifyService.verifyWebhookHmac(hmac, body);
+		if (!isValid) {
+			throw new BadRequestException('HMAC de Shopify inválido.');
+		}
+
+		if (topic === 'products/create') {
+			console.log(`Producto creado en la tienda ${shop}:`, body);
+		}
+
+		return { success: true };
 	}
 }

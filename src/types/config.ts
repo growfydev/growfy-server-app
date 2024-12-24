@@ -64,5 +64,6 @@ export type Config = {
 		clientSecret: string;
 		redirectUri: string;
 		scopes: string;
+		webhooksUri: string;
 	};
 };

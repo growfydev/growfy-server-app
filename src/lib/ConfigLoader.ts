@@ -40,6 +40,7 @@ const {
 	SHOPIFY_CLIENT_SECRET,
 	SHOPIFY_REDIRECT_URI,
 	SHOPIFY_SCOPES,
+	SHOPIFY_WEBHOOKS_URI,
 } = process.env;
 
 function configLoader(): Config {
@@ -109,6 +110,7 @@ function configLoader(): Config {
 			clientSecret: SHOPIFY_CLIENT_SECRET,
 			redirectUri: SHOPIFY_REDIRECT_URI,
 			scopes: SHOPIFY_SCOPES,
+			webhooksUri: SHOPIFY_WEBHOOKS_URI,
 		},
 	};
 }

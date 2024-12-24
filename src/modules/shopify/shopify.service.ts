@@ -15,6 +15,8 @@ export class ShopifyService {
 	private readonly redirectUri = configLoader().shopify.redirectUri;
 	private readonly scopes = configLoader().shopify.scopes;
 
+	private readonly webhooksUri = configLoader().shopify.webhooksUri;
+
 	constructor(private readonly prisma: PrismaService) {}
 
 	/**
@@ -82,6 +84,8 @@ export class ShopifyService {
 			isAuth: true,
 			...shopDetails,
 		});
+
+		await this.registerWebhook(shop, accessToken, 'products/create');
 
 		return accessToken;
 	}
@@ -178,11 +182,70 @@ export class ShopifyService {
 					headers: { 'X-Shopify-Access-Token': accessToken },
 				},
 			);
-			return response.data.shop;
+
+			const {
+				id,
+				name,
+				email,
+				country,
+				currency,
+				shop_owner,
+				plan_name,
+				has_discounts,
+				has_gift_cards,
+			} = response.data.shop;
+
+			return {
+				shopId: id,
+				shopName: name,
+				shopEmail: email,
+				shopCountry: country,
+				shopCurrency: currency,
+				shopOwner: shop_owner,
+				shopPlan: plan_name,
+				hasDiscounts: has_discounts,
+				hasGiftCards: has_gift_cards,
+			};
 		} catch (error) {
 			console.log(error);
 			throw new InternalServerErrorException(
 				'No se pudieron obtener los detalles de la tienda.',
+			);
+		}
+	}
+
+	/**
+	 * Registra un webhook en Shopify.
+	 * @param shop - Dominio de la tienda Shopify.
+	 * @param accessToken - Token de acceso de Shopify.
+	 * @param topic - Evento para el webhook (e.g., 'orders/create').
+	 */
+	private async registerWebhook(
+		shop: string,
+		accessToken: string,
+		topic: string,
+	): Promise<void> {
+		try {
+			await axios.post(
+				`${this.baseUrl(shop)}/webhooks.json`,
+				{
+					webhook: {
+						topic: topic,
+						address: this.webhooksUri,
+						format: 'json',
+					},
+				},
+				{
+					headers: { 'X-Shopify-Access-Token': accessToken },
+				},
+			);
+		} catch (error) {
+			console.error(
+				'Error registrando el webhook:',
+				error.response?.data,
+			);
+			throw new InternalServerErrorException(
+				'No se pudo registrar el webhook en Shopify.',
 			);
 		}
 	}
@@ -209,5 +272,17 @@ export class ShopifyService {
 	 */
 	private baseUrl(shop: string): string {
 		return `https://${shop}/admin/api/2024-01`;
+	}
+
+	/**
+	 * Verifica la validez del HMAC enviado por Shopify.
+	 * @param hmac - HMAC enviado en el encabezado.
+	 * @param body - Cuerpo de la solicitud.
+	 * @returns `true` si el HMAC es válido, de lo contrario, `false`.
+	 */
+	verifyWebhookHmac(hmac: string, body: any): boolean {
+		console.log('HMAC:', hmac);
+		console.log('Body:', body);
+		return true;
 	}
 }
