@@ -1,14 +1,19 @@
-import { Controller, Get, Query, Redirect } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { ShopifyService } from './shopify.service';
+import { Auth } from '../auth/decorators/auth.decorator';
+import { ProfileMemberRoles, Role } from '@prisma/client';
 
 @Controller('shopify')
 export class ShopifyController {
 	constructor(private readonly shopifyService: ShopifyService) {}
 
-	@Get('login')
-	@Redirect()
-	login(@Query('shop') shop: string) {
-		const url = this.shopifyService.getAuthUrl(shop);
+	@Get(':profileId/auth/:shop')
+	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
+	auth(
+		@Param('profileId', ParseIntPipe) profileId: number,
+		@Param('shop') shop: string,
+	) {
+		const url = this.shopifyService.getAuthUrl(profileId, shop);
 		return { url };
 	}
 

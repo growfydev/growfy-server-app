@@ -134,6 +134,9 @@ model Profile {
     customers    Customer[]
 
     StorageProfile StorageProfile[]
+
+    ShopifyIntegration   ShopifyIntegration?
+    shopifyIntegrationId Int?
 }
 
 model Customer {
@@ -276,4 +279,18 @@ model StorageProfile {
 enum StorageServices {
     GOOGLE_DRIVE
     DROPBOX
+}
+
+model ShopifyIntegration {
+    id           Int          @id @default(autoincrement())
+    profileId    Int          @unique
+    shopName     String
+    shopLink     String
+    accessToken  String
+    code         String
+    isAuth       Boolean      @default(false)
+    globalStatus GlobalStatus @default(ACTIVE)
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime?    @updatedAt
+    Profile      Profile      @relation(references: [id], fields: [profileId])
 }
