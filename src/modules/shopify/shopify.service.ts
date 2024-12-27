@@ -6,7 +6,8 @@ import {
 import configLoader from '../../lib/ConfigLoader';
 import axios from 'axios';
 import { PrismaService } from 'src/core/prisma.service';
-import { ShopifyIntegration } from '@prisma/client';
+import { GlobalStatus, ShopifyIntegration } from '@prisma/client';
+import { omit } from 'lodash';
 
 @Injectable()
 export class ShopifyService {
@@ -174,7 +175,7 @@ export class ShopifyService {
 	private async fetchShopDetails(
 		shop: string,
 		accessToken: string,
-	): Promise<any> {
+	): Promise<Partial<ShopifyIntegration>> {
 		try {
 			const response = await axios.get(
 				`${this.baseUrl(shop)}/shop.json`,
@@ -184,7 +185,6 @@ export class ShopifyService {
 			);
 
 			const {
-				id,
 				name,
 				email,
 				country,
@@ -196,7 +196,6 @@ export class ShopifyService {
 			} = response.data.shop;
 
 			return {
-				shopId: id,
 				shopName: name,
 				shopEmail: email,
 				shopCountry: country,
@@ -257,7 +256,7 @@ export class ShopifyService {
 	 */
 	private async updateIntegration(
 		integrationId: number,
-		data: any,
+		data: Partial<ShopifyIntegration>,
 	): Promise<void> {
 		await this.prisma.shopifyIntegration.update({
 			where: { id: integrationId },
@@ -284,5 +283,25 @@ export class ShopifyService {
 		console.log('HMAC:', hmac);
 		console.log('Body:', body);
 		return true;
+	}
+
+	async getShopInfo(profileId: number): Promise<ShopifyIntegration> {
+		const integration = await this.prisma.shopifyIntegration.findFirst({
+			where: {
+				Profile: { id: profileId },
+				isAuth: true,
+				globalStatus: GlobalStatus.ACTIVE,
+			},
+		});
+
+		if (!integration) {
+			throw new BadRequestException(
+				'No se encontró una integración para este perfil.',
+			);
+		}
+
+		const filteredIntegration = omit(integration, ['accessToken', 'code']);
+
+		return filteredIntegration as ShopifyIntegration;
 	}
 }

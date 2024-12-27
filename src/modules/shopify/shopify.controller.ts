@@ -39,6 +39,14 @@ export class ShopifyController {
 		return { accessToken };
 	}
 
+	@Get(':profileId/shop')
+	@ResponseMessage('Shop info')
+	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
+	async getShopInfo(@Param('profileId', ParseIntPipe) profileId: number) {
+		const shop = await this.shopifyService.getShopInfo(profileId);
+		return { shop };
+	}
+
 	/**
 	 * Endpoint para recibir webhooks.
 	 * Shopify enviará las notificaciones POST a este endpoint.
