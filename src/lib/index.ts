@@ -8,6 +8,7 @@ import { PostsModule } from '../modules/posts/posts.module';
 import { ProviderModule } from '../modules/provider/provider.module';
 import { CustomerModule } from '../modules/customer/customer.module';
 import { StorageModule } from 'src/modules/storage/storage.module';
+import { ShopifyModule } from 'src/modules/shopify/shopify.module';
 
 const CoreModules = [
 	SetupModule,
@@ -15,6 +16,7 @@ const CoreModules = [
 	ProviderModule,
 	CustomerModule,
 	StorageModule,
+	ShopifyModule,
 ];
 
 const AuthModules = [AuthModule];

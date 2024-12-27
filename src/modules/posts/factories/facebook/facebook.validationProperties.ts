@@ -17,7 +17,6 @@ export class FacebookValidationProperties implements PostValidationProperties {
 		fields: JsonValue,
 		properties: JsonValue,
 	): Promise<void> {
-
 		if (!fields) {
 			throw new Error(
 				'El campo "fields" es requerido en los datos de entrada.',
@@ -340,6 +339,5 @@ export class FacebookValidationProperties implements PostValidationProperties {
 				resolve();
 			});
 		});
-
 	}
 }
