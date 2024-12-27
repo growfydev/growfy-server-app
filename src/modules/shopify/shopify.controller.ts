@@ -64,8 +64,12 @@ export class ShopifyController {
 			throw new BadRequestException('HMAC de Shopify inválido.');
 		}
 
-		if (topic === 'products/create') {
-			console.log(`Producto creado en la tienda ${shop}:`, body);
+		if (topic === 'orders/create') {
+			console.log(`Orden creada en la tienda ${shop}:`, body);
+		}
+
+		if (topic === 'orders/updated') {
+			console.log(`Orden actualizada en la tienda ${shop}:`, body);
 		}
 
 		return { success: true };

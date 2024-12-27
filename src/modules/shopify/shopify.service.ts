@@ -86,7 +86,8 @@ export class ShopifyService {
 			...shopDetails,
 		});
 
-		await this.registerWebhook(shop, accessToken, 'products/create');
+		await this.registerWebhook(shop, accessToken, 'orders/create');
+		await this.registerWebhook(shop, accessToken, 'orders/updated');
 
 		return accessToken;
 	}
@@ -214,42 +215,6 @@ export class ShopifyService {
 	}
 
 	/**
-	 * Registra un webhook en Shopify.
-	 * @param shop - Dominio de la tienda Shopify.
-	 * @param accessToken - Token de acceso de Shopify.
-	 * @param topic - Evento para el webhook (e.g., 'orders/create').
-	 */
-	private async registerWebhook(
-		shop: string,
-		accessToken: string,
-		topic: string,
-	): Promise<void> {
-		try {
-			await axios.post(
-				`${this.baseUrl(shop)}/webhooks.json`,
-				{
-					webhook: {
-						topic: topic,
-						address: this.webhooksUri,
-						format: 'json',
-					},
-				},
-				{
-					headers: { 'X-Shopify-Access-Token': accessToken },
-				},
-			);
-		} catch (error) {
-			console.error(
-				'Error registrando el webhook:',
-				error.response?.data,
-			);
-			throw new InternalServerErrorException(
-				'No se pudo registrar el webhook en Shopify.',
-			);
-		}
-	}
-
-	/**
 	 * Actualiza la integración con los detalles finales.
 	 * @param integrationId - ID de la integración.
 	 * @param data - Datos a actualizar.
@@ -303,5 +268,111 @@ export class ShopifyService {
 		const filteredIntegration = omit(integration, ['accessToken', 'code']);
 
 		return filteredIntegration as ShopifyIntegration;
+	}
+
+	/**
+	 * Lista los webhooks registrados en Shopify.
+	 * @param shop - Dominio de la tienda Shopify.
+	 * @param accessToken - Token de acceso de Shopify.
+	 * @returns Lista de webhooks registrados.
+	 */
+	private async listWebhooks(
+		shop: string,
+		accessToken: string,
+	): Promise<any[]> {
+		try {
+			const response = await axios.get(
+				`${this.baseUrl(shop)}/webhooks.json`,
+				{
+					headers: { 'X-Shopify-Access-Token': accessToken },
+				},
+			);
+			return response.data.webhooks;
+		} catch (error) {
+			console.error(
+				'Error al listar los webhooks:',
+				error.response?.data,
+			);
+			throw new InternalServerErrorException(
+				'No se pudieron listar los webhooks en Shopify.',
+			);
+		}
+	}
+
+	/**
+	 * Elimina un webhook en Shopify.
+	 * @param shop - Dominio de la tienda Shopify.
+	 * @param accessToken - Token de acceso de Shopify.
+	 * @param webhookId - ID del webhook a eliminar.
+	 */
+	private async deleteWebhook(
+		shop: string,
+		accessToken: string,
+		webhookId: number,
+	): Promise<void> {
+		try {
+			await axios.delete(
+				`${this.baseUrl(shop)}/webhooks/${webhookId}.json`,
+				{
+					headers: { 'X-Shopify-Access-Token': accessToken },
+				},
+			);
+		} catch (error) {
+			console.error(
+				'Error al eliminar el webhook:',
+				error.response?.data,
+			);
+			throw new InternalServerErrorException(
+				`No se pudo eliminar el webhook con ID ${webhookId}.`,
+			);
+		}
+	}
+
+	/**
+	 * Registra un webhook en Shopify, asegurándose de eliminar previamente los existentes.
+	 * @param shop - Dominio de la tienda Shopify.
+	 * @param accessToken - Token de acceso de Shopify.
+	 * @param topic - Evento para el webhook (e.g., 'orders/create').
+	 */
+	private async registerWebhook(
+		shop: string,
+		accessToken: string,
+		topic: string,
+	): Promise<void> {
+		try {
+			// Listar todos los webhooks existentes
+			const existingWebhooks = await this.listWebhooks(shop, accessToken);
+
+			// Filtrar los webhooks que coincidan con el mismo topic y dirección
+			for (const webhook of existingWebhooks) {
+				if (webhook.topic === topic) {
+					// Eliminar el webhook existente
+					await this.deleteWebhook(shop, accessToken, webhook.id);
+				}
+			}
+
+			// Registrar el nuevo webhook
+			await axios.post(
+				`${this.baseUrl(shop)}/webhooks.json`,
+				{
+					webhook: {
+						topic: topic,
+						address: this.webhooksUri,
+						format: 'json',
+					},
+				},
+				{
+					headers: { 'X-Shopify-Access-Token': accessToken },
+				},
+			);
+		} catch (error) {
+			console.error(
+				'Error registrando el webhook:',
+				error.response?.data,
+			);
+			throw new InternalServerErrorException(
+				'No se pudo registrar el webhook en Shopify.',
+			);
+		}
 	}
 }
