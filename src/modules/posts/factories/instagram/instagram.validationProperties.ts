@@ -16,7 +16,7 @@ export class InstagramValidationProperties implements PostValidationProperties {
 	): Promise<void> {
 		if (!fields) {
 			throw new Error(
-				'El campo "fields" es requerido en los datos de entrada.',
+				'El campo "fields" es requerido en los datos de entrada para Instagram.',
 			);
 		}
 		switch (typePostName) {
@@ -27,7 +27,9 @@ export class InstagramValidationProperties implements PostValidationProperties {
 				await this.validateReelProperties(fields, properties);
 				break;
 			default:
-				throw new Error('Tipo de publicación no soportado.');
+				throw new Error(
+					'Tipo de publicación no soportado en Instagram.',
+				);
 		}
 	}
 
@@ -37,7 +39,7 @@ export class InstagramValidationProperties implements PostValidationProperties {
 	): Promise<void> {
 		if (typeof fields !== 'object' || fields === null) {
 			throw new Error(
-				'El parámetro "fields y properties" deben ser un objeto.',
+				'El parámetro "fields y properties" deben ser un objeto para Instagram.',
 			);
 		}
 
@@ -50,12 +52,14 @@ export class InstagramValidationProperties implements PostValidationProperties {
 		};
 
 		if (!Array.isArray(images) || images.length === 0) {
-			throw new Error('Debe proporcionarse al menos una URL de imagen.');
+			throw new Error(
+				'Debe proporcionarse al menos una URL de imagen para Instagram.',
+			);
 		}
 
 		if (!validationProperties) {
 			throw new Error(
-				'No se encontraron propiedades de validación para el tipo de publicación.',
+				'No se encontraron propiedades de validación para el tipo de publicación en Instagram.',
 			);
 		}
 
@@ -70,7 +74,7 @@ export class InstagramValidationProperties implements PostValidationProperties {
 			// Validar tamaño del archivo
 			if (buffer.length > maxSize) {
 				throw new Error(
-					`El tamaño del archivo ${buffer.length} es mayor al máximo permitido. El tamaño máximo permitido es de ` +
+					`El tamaño del archivo ${buffer.length} es mayor al máximo permitido en Instagram. El tamaño máximo permitido es de ` +
 						maxSize +
 						' bytes.',
 				);
@@ -81,7 +85,7 @@ export class InstagramValidationProperties implements PostValidationProperties {
 
 			if (!type || !validFormats.includes(type.mime)) {
 				throw new Error(
-					`El formato del archivo "${type.mime}" no es válido o no soportado. Los formatos permitidos son: ` +
+					`El formato del archivo "${type.mime}" no es válido o no soportado en Instagram. Los formatos permitidos son: ` +
 						validFormats.join(', '),
 				);
 			}
@@ -93,7 +97,7 @@ export class InstagramValidationProperties implements PostValidationProperties {
 				dimensions.height < minDimensions.height
 			) {
 				throw new Error(
-					`Las dimensiones  ancho: "${dimensions.width}" y alto: "${dimensions.height}" de la imagen no cumplen con los mínimos requeridos. Las dimensiones mínimas permitidas son ` +
+					`Las dimensiones ancho: "${dimensions.width}" y alto: "${dimensions.height}" de la imagen no cumplen con los mínimos requeridos en Instagram. Las dimensiones mínimas permitidas son ` +
 						minDimensions.width +
 						'x' +
 						minDimensions.height +
@@ -108,14 +112,18 @@ export class InstagramValidationProperties implements PostValidationProperties {
 		properties: JsonValue,
 	): Promise<void> {
 		if (typeof fields !== 'object' || fields === null) {
-			throw new Error('El parámetro "fields" debe ser un objeto.');
+			throw new Error(
+				'El parámetro "fields" debe ser un objeto para Instagram.',
+			);
 		}
 
 		const videoUrl = (fields as Record<string, JsonValue>)
 			.video_url as string;
 
 		if (typeof videoUrl !== 'string' || videoUrl.trim() === '') {
-			throw new Error('Debe proporcionarse una URL válida del video.');
+			throw new Error(
+				'Debe proporcionarse una URL válida del video para Instagram.',
+			);
 		}
 
 		const validationProperties = properties as {
@@ -127,7 +135,7 @@ export class InstagramValidationProperties implements PostValidationProperties {
 
 		if (!validationProperties) {
 			throw new Error(
-				'No se encontraron propiedades de validación para el tipo de publicación.',
+				'No se encontraron propiedades de validación para el tipo de publicación en Instagram.',
 			);
 		}
 
@@ -142,7 +150,7 @@ export class InstagramValidationProperties implements PostValidationProperties {
 		const size = buffer.length;
 		if (size > maxSize) {
 			throw new Error(
-				`El tamaño del archivo ${size} es mayor al máximo permitido. El tamaño máximo permitido es de ` +
+				`El tamaño del archivo ${size} es mayor al máximo permitido en Instagram. El tamaño máximo permitido es de ` +
 					maxSize +
 					' bytes.',
 			);
@@ -155,7 +163,7 @@ export class InstagramValidationProperties implements PostValidationProperties {
 		const duration = await getVideoDurationInSeconds(bufferStream);
 		if (duration < minDuration || duration > maxDuration) {
 			throw new Error(
-				`La duración del video ${duration} segundos no cumple con los límites permitidos. La duración mínima permitida es de ${minDuration} segundos y la duración máxima permitida es de ${maxDuration} segundos.`,
+				`La duración del video ${duration} segundos no cumple con los límites permitidos en Instagram. La duración mínima permitida es de ${minDuration} segundos y la duración máxima permitida es de ${maxDuration} segundos.`,
 			);
 		}
 
@@ -164,7 +172,7 @@ export class InstagramValidationProperties implements PostValidationProperties {
 
 		if (!type || !validFormats.includes(type.mime)) {
 			throw new Error(
-				`El formato del archivo "${type.mime}" no es válido o no soportado. Los formatos permitidos son: ` +
+				`El formato del archivo "${type.mime}" no es válido o no soportado en Instagram. Los formatos permitidos son: ` +
 					validFormats.join(', '),
 			);
 		}

@@ -105,7 +105,7 @@ export class FacebookValidationProperties implements PostValidationProperties {
 			throw new Error(
 				`La relación de aspecto de la imagen (${actualAspectRatio.toFixed(
 					2,
-				)}) no es la recomendada de ${aspectRatio}:1.`,
+				)}) no es la recomendada de ${aspectRatio}`,
 			);
 		}
 	}
