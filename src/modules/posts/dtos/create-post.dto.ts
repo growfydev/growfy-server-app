@@ -1,15 +1,31 @@
 import { JsonValue } from '@prisma/client/runtime/library';
-import { IsObject, IsNumber, IsOptional } from 'class-validator';
+import {
+	IsObject,
+	IsNumber,
+	IsOptional,
+	IsArray,
+	ArrayNotEmpty,
+	ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
+class ProviderContent {
+	@IsNumber()
+	provider: number;
+
+	@IsNumber()
+	typePost: number;
+
+	@IsObject()
+	content: Record<string, JsonValue>;
+}
 
 export class CreatePostDto {
-	@IsObject()
-	readonly content: Record<string, JsonValue>;
-
-	@IsNumber()
-	readonly provider: number;
-
-	@IsNumber()
-	readonly typePost: number;
+	@IsArray()
+	@ArrayNotEmpty()
+	@ValidateNested({ each: true })
+	@Type(() => ProviderContent)
+	readonly providerContents: ProviderContent[];
 
 	@IsNumber()
 	@IsOptional()
