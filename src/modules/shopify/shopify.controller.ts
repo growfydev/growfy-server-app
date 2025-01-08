@@ -47,6 +47,22 @@ export class ShopifyController {
 		return { shop };
 	}
 
+	@Get(':profileId/sales')
+	@ResponseMessage('Sales data')
+	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
+	async getSalesData(
+		@Param('profileId', ParseIntPipe) profileId: number,
+		@Query('startDate') startDate: string,
+		@Query('endDate') endDate: string,
+	) {
+		const salesData = await this.shopifyService.getShopSalesData(
+			profileId,
+			startDate,
+			endDate,
+		);
+		return { salesData };
+	}
+
 	/**
 	 * Endpoint para recibir webhooks.
 	 * Shopify enviará las notificaciones POST a este endpoint.

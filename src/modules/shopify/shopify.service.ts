@@ -8,6 +8,7 @@ import axios from 'axios';
 import { PrismaService } from 'src/core/prisma.service';
 import { GlobalStatus, ShopifyIntegration } from '@prisma/client';
 import { omit } from 'lodash';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class ShopifyService {
@@ -270,6 +271,93 @@ export class ShopifyService {
 		return filteredIntegration as ShopifyIntegration;
 	}
 
+	async getShopSalesData(
+		profileId: number,
+		startDate: string,
+		endDate: string,
+	) {
+		const integration = await this.prisma.shopifyIntegration.findFirst({
+			where: {
+				Profile: { id: profileId },
+				isAuth: true,
+				globalStatus: GlobalStatus.ACTIVE,
+			},
+		});
+
+		if (!integration) {
+			throw new BadRequestException(
+				'No se encontró una integración para este perfil.',
+			);
+		}
+
+		// Verificar que las fechas sean válidas con dayjs
+		if (
+			!dayjs(startDate, 'YYYY-MM-DD', true).isValid() ||
+			!dayjs(endDate, 'YYYY-MM-DD', true).isValid()
+		) {
+			throw new BadRequestException(
+				'Las fechas proporcionadas son inválidas.',
+			);
+		}
+
+		if (dayjs(startDate).isAfter(dayjs(endDate))) {
+			throw new BadRequestException(
+				'La fecha de inicio debe ser anterior o igual a la fecha de fin.',
+			);
+		}
+
+		const salesData = await this.getSalesData(
+			integration.shopDomain,
+			integration.accessToken,
+			startDate,
+			endDate,
+		);
+
+		// Procesar los datos
+		const orders = salesData?.data?.orders?.edges || [];
+		const aggregatedData = {};
+
+		for (const orderEdge of orders) {
+			const order = orderEdge.node;
+			const date = dayjs(order.processedAt).format('YYYY-MM-DD');
+			const hour = dayjs(order.processedAt).format('HH');
+			const revenue = parseFloat(order.totalPriceSet.shopMoney.amount);
+
+			if (!aggregatedData[date]) {
+				aggregatedData[date] = {
+					date,
+					orders: 0,
+					revenue: 0,
+					hourlyOrders: {},
+				};
+			}
+
+			aggregatedData[date].orders += 1;
+			aggregatedData[date].revenue += revenue;
+			aggregatedData[date].hourlyOrders[hour] =
+				(aggregatedData[date].hourlyOrders[hour] || 0) + 1;
+		}
+
+		// Transformar los datos agregados
+		const result = Object.values(aggregatedData).map((dayData: any) => {
+			const peakHourEntry = Object.entries(dayData.hourlyOrders).reduce(
+				(max, entry) => (entry[1] > max[1] ? entry : max),
+				['', 0],
+			);
+
+			return {
+				date: dayData.date,
+				orders: dayData.orders,
+				revenue: dayData.revenue,
+				avgOrderValue: dayData.revenue / dayData.orders,
+				peakHour: peakHourEntry[0] || null,
+				peakHourOrders: peakHourEntry[1] || 0,
+			};
+		});
+
+		return result;
+	}
+
 	/**
 	 * Lista los webhooks registrados en Shopify.
 	 * @param shop - Dominio de la tienda Shopify.
@@ -372,6 +460,70 @@ export class ShopifyService {
 			);
 			throw new InternalServerErrorException(
 				'No se pudo registrar el webhook en Shopify.',
+			);
+		}
+	}
+
+	/**
+	 * Obtiene los datos de ventas diarias desde Shopify.
+	 * @param shop - Dominio de la tienda Shopify.
+	 * @param accessToken - Token de acceso de Shopify.
+	 * @param startDate - Fecha de inicio (YYYY-MM-DD).
+	 * @param endDate - Fecha de fin (YYYY-MM-DD).
+	 * @returns Datos de ventas diarias.
+	 */
+	async getSalesData(
+		shop: string,
+		accessToken: string,
+		startDate: string,
+		endDate: string,
+	): Promise<any> {
+		const query = `
+			query GetDailySalesData {
+				orders(first: 50, query: "processed_at:>=${startDate} AND processed_at:<${endDate}T23:59:00") {
+					edges {
+						node {
+							id
+							processedAt
+							totalPriceSet {
+								shopMoney {
+									amount
+								}
+							}
+							lineItems(first: 10) {
+								edges {
+									node {
+										id
+										name
+										quantity
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		`;
+
+		try {
+			const response = await axios.post(
+				`${this.baseUrl(shop)}/graphql.json`,
+				{ query },
+				{
+					headers: {
+						'Content-Type': 'application/json',
+						'X-Shopify-Access-Token': accessToken,
+					},
+				},
+			);
+			return response.data;
+		} catch (error) {
+			console.error(
+				'Error al obtener los datos de ventas:',
+				error.response?.data,
+			);
+			throw new InternalServerErrorException(
+				'No se pudieron obtener los datos de ventas.',
 			);
 		}
 	}
