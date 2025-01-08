@@ -9,14 +9,18 @@ import {
 	Post,
 	Query,
 } from '@nestjs/common';
-import { ShopifyService } from './shopify.service';
+import { ShopifyAuthService } from './shopify.auth.service';
+import { ShopifyDataService } from './shopify.data.service';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { ProfileMemberRoles, Role } from '@prisma/client';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
 
 @Controller('shopify')
 export class ShopifyController {
-	constructor(private readonly shopifyService: ShopifyService) {}
+	constructor(
+		private readonly shopifyAuthService: ShopifyAuthService,
+		private readonly shopifyDataService: ShopifyDataService,
+	) {}
 
 	@Get(':profileId/auth/:shop')
 	@ResponseMessage('Redirect to Shopify')
@@ -25,14 +29,14 @@ export class ShopifyController {
 		@Param('profileId', ParseIntPipe) profileId: number,
 		@Param('shop') shop: string,
 	) {
-		const url = await this.shopifyService.getAuthUrl(profileId, shop);
+		const url = await this.shopifyAuthService.getAuthUrl(profileId, shop);
 		return { url };
 	}
 
 	@Get('oauth2callback')
 	@ResponseMessage('Access token received')
 	async callback(@Query('shop') shop: string, @Query('code') code: string) {
-		const accessToken = await this.shopifyService.handleCallback(
+		const accessToken = await this.shopifyAuthService.handleCallback(
 			shop,
 			code,
 		);
@@ -43,7 +47,7 @@ export class ShopifyController {
 	@ResponseMessage('Shop info')
 	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
 	async getShopInfo(@Param('profileId', ParseIntPipe) profileId: number) {
-		const shop = await this.shopifyService.getShopInfo(profileId);
+		const shop = await this.shopifyDataService.getShopInfo(profileId);
 		return { shop };
 	}
 
@@ -55,7 +59,7 @@ export class ShopifyController {
 		@Query('startDate') startDate: string,
 		@Query('endDate') endDate: string,
 	) {
-		const salesData = await this.shopifyService.getShopSalesData(
+		const salesData = await this.shopifyDataService.getShopSalesData(
 			profileId,
 			startDate,
 			endDate,
@@ -75,7 +79,7 @@ export class ShopifyController {
 		@Body() body: any,
 	) {
 		// **Validar la firma HMAC**
-		const isValid = this.shopifyService.verifyWebhookHmac(hmac, body);
+		const isValid = this.shopifyAuthService.verifyWebhookHmac(hmac, body);
 		if (!isValid) {
 			throw new BadRequestException('HMAC de Shopify inválido.');
 		}
