@@ -65,6 +65,7 @@ export interface PostsIncludeQuery {
 }
 
 export interface TaskFieldsSelect {
+	id: boolean;
 	status: boolean;
 	unix: boolean;
 }
@@ -223,4 +224,20 @@ export interface IExporter {
 export interface Task {
 	id: number;
 	unix: number;
+}
+
+export interface PostWithTaskAndProviderPostType extends Post {
+	task: {
+		id: number;
+		status: TaskStatus;
+		unix: number;
+	} | null;
+	ProviderPostType: {
+		provider: {
+			name: string;
+		};
+		posttype: {
+			name: string;
+		};
+	} | null;
 }

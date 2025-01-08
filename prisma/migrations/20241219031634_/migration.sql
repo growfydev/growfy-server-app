@@ -163,6 +163,7 @@ CREATE TABLE "ProviderPostType" (
     "characterLimit" INTEGER NOT NULL,
     "characterKey" TEXT NOT NULL,
     "fields" JSONB NOT NULL,
+    "properties" JSONB NOT NULL,
 
     CONSTRAINT "ProviderPostType_pkey" PRIMARY KEY ("id")
 );
