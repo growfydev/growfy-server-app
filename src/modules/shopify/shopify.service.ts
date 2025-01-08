@@ -244,7 +244,7 @@ export class ShopifyService {
 	 * @param body - Cuerpo de la solicitud.
 	 * @returns `true` si el HMAC es válido, de lo contrario, `false`.
 	 */
-	verifyWebhookHmac(hmac: string, body: any): boolean {
+	verifyWebhookHmac(hmac: string, body: object): boolean {
 		console.log('HMAC:', hmac);
 		console.log('Body:', body);
 		return true;
@@ -279,7 +279,7 @@ export class ShopifyService {
 	private async listWebhooks(
 		shop: string,
 		accessToken: string,
-	): Promise<any[]> {
+	): Promise<object[]> {
 		try {
 			const response = await axios.get(
 				`${this.baseUrl(shop)}/webhooks.json`,
