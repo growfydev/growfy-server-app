@@ -51,20 +51,20 @@ export class ShopifyController {
 		return { shop };
 	}
 
-	@Get(':profileId/sales')
-	@ResponseMessage('Sales data')
+	@Get(':profileId/orders')
+	@ResponseMessage('Orders data')
 	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
-	async getSalesData(
+	async getOrdersData(
 		@Param('profileId', ParseIntPipe) profileId: number,
 		@Query('startDate') startDate: string,
 		@Query('endDate') endDate: string,
 	) {
-		const salesData = await this.shopifyDataService.getShopSalesData(
+		const ordersData = await this.shopifyDataService.getShopOrdersData(
 			profileId,
 			startDate,
 			endDate,
 		);
-		return { salesData };
+		return ordersData;
 	}
 
 	/**

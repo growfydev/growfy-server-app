@@ -140,13 +140,17 @@ model Profile {
 }
 
 model Customer {
-    id           Int          @id @default(autoincrement())
-    name         String
-    profileId    Int
-    globalStatus GlobalStatus @default(ACTIVE)
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime?    @updatedAt
-    Profile      Profile      @relation(fields: [profileId], references: [id]) // Relación con Profile
+    id                Int            @id @default(autoincrement())
+    shopifyCustomerId String?        @unique
+    name              String
+    email             String?
+    phone             String?
+    profileId         Int
+    globalStatus      GlobalStatus   @default(ACTIVE)
+    createdAt         DateTime       @default(now())
+    updatedAt         DateTime?      @updatedAt
+    Profile           Profile        @relation(fields: [profileId], references: [id]) // Relación con Profile
+    ShopifyOrder      ShopifyOrder[]
 }
 
 model Social {
@@ -282,23 +286,87 @@ enum StorageServices {
 }
 
 model ShopifyIntegration {
-    id           Int          @id @default(autoincrement())
-    profileId    Int          @unique
-    shopName     String?
-    accessToken  String?
-    code         String?
-    isAuth       Boolean      @default(false)
-    globalStatus GlobalStatus @default(ACTIVE)
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime?    @updatedAt
-    // shopId       String?
-    shopEmail    String?
-    shopDomain   String?
-    shopCountry  String?
-    shopCurrency String?
-    shopOwner    String?
-    shopPlan     String?
-    hasDiscounts Boolean?
-    hasGiftCards Boolean?
-    Profile      Profile      @relation(references: [id], fields: [profileId])
+    id             Int              @id @default(autoincrement())
+    profileId      Int              @unique
+    shopName       String?
+    accessToken    String?
+    code           String?
+    isAuth         Boolean          @default(false)
+    globalStatus   GlobalStatus     @default(ACTIVE)
+    createdAt      DateTime         @default(now())
+    updatedAt      DateTime?        @updatedAt
+    shopEmail      String?
+    shopDomain     String?
+    shopCountry    String?
+    shopCurrency   String?
+    shopOwner      String?
+    shopPlan       String?
+    hasDiscounts   Boolean?         @default(false)
+    hasGiftCards   Boolean?         @default(false)
+    Profile        Profile          @relation(references: [id], fields: [profileId])
+    ShopifyOrder   ShopifyOrder[]
+    ShopifyProduct ShopifyProduct[]
+}
+
+model ShopifyOrder {
+    id                   Int                @id @default(autoincrement())
+    orderId              String             @unique
+    ShopifyLineItem      ShopifyLineItem[]
+    orderNumber          String?
+    financialStatus      String?
+    currency             String?
+    subTotal             Decimal?
+    totalPrice           Decimal?
+    shopifyCreatedAt     DateTime?
+    paymentMethods       String[]
+    shippingAddress      String?
+    shippingLat          Decimal?
+    shippingLong         Decimal?
+    trackingLink         String?
+    shopifyCustomerId    String?
+    shopifyIntegrationId Int
+    hasDiscounts         Boolean?           @default(false)
+    hasGiftCards         Boolean?           @default(false)
+    globalStatus         GlobalStatus       @default(ACTIVE)
+    createdAt            DateTime           @default(now())
+    updatedAt            DateTime?          @updatedAt
+    Customer             Customer?          @relation(fields: [shopifyCustomerId], references: [shopifyCustomerId])
+    shopifyIntegration   ShopifyIntegration @relation(fields: [shopifyIntegrationId], references: [id])
+}
+
+model ShopifyLineItem {
+    id                  Int             @id @default(autoincrement())
+    shopifyOrderId      String
+    lineItemId          String          @unique
+    shopifyProductId    String?
+    quantity            Int?
+    price               Decimal?
+    originalUnitPrice   Decimal?
+    discountedUnitPrice Decimal?
+    originalTotal       Decimal?
+    discountedTotal     Decimal?
+    shopifyOrder        ShopifyOrder    @relation(fields: [shopifyOrderId], references: [orderId])
+    shopifyProduct      ShopifyProduct? @relation(fields: [shopifyProductId], references: [productId])
+    globalStatus        GlobalStatus    @default(ACTIVE)
+    createdAt           DateTime        @default(now())
+    updatedAt           DateTime?       @updatedAt
+}
+
+model ShopifyProduct {
+    id                   Int                @id @default(autoincrement())
+    productId            String             @unique
+    shopifyIntegrationId Int
+    title                String?
+    vendor               String?
+    featuredImage        String?
+    featuredImageAltText String?
+    minPrice             Decimal?
+    maxPrice             Decimal?
+    currency             String?
+    collections          String[]
+    globalStatus         GlobalStatus       @default(ACTIVE)
+    createdAt            DateTime           @default(now())
+    updatedAt            DateTime?          @updatedAt
+    ShopifyLineItem      ShopifyLineItem[]
+    shopifyIntegration   ShopifyIntegration @relation(fields: [shopifyIntegrationId], references: [id])
 }

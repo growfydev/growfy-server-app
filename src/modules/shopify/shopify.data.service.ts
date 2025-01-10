@@ -8,6 +8,8 @@ import {
 	createAdminRestApiClient,
 } from '@shopify/admin-api-client';
 import { Service } from 'src/service';
+import { GetOrdersData } from './graphqlQueries/orders';
+import { ShopifyOrdersResponse } from './graphqlQueries/types';
 
 @Injectable()
 export class ShopifyDataService extends Service {
@@ -49,7 +51,7 @@ export class ShopifyDataService extends Service {
 		return omit(integration, ['accessToken', 'code']) as ShopifyIntegration;
 	}
 
-	async getShopSalesData(
+	async getShopOrdersData(
 		profileId: number,
 		startDate: string,
 		endDate: string,
@@ -61,14 +63,14 @@ export class ShopifyDataService extends Service {
 		}
 
 		const integration = await this.getActiveIntegration(profileId);
-		const salesData = await this.fetchSalesData(
+		const ordersData = await this.fetchOrdersData(
 			integration.shopDomain,
 			integration.accessToken,
 			startDate,
 			endDate,
 		);
 
-		return this.processSalesData(salesData);
+		return ordersData;
 	}
 
 	private areValidDates(startDate: string, endDate: string): boolean {
@@ -101,51 +103,29 @@ export class ShopifyDataService extends Service {
 		return integration;
 	}
 
-	private async fetchSalesData(
+	private async fetchOrdersData(
 		shop: string,
 		accessToken: string,
 		startDate: string,
 		endDate: string,
-	): Promise<any> {
-		const query = `
-            query GetDailySalesData {
-                orders(first: 50, query: "processed_at:>=${startDate} AND processed_at:<${endDate}T23:59:00") {
-                    edges {
-                        node {
-                            id
-                            processedAt
-                            totalPriceSet {
-                                shopMoney {
-                                    amount
-                                }
-                            }
-                            lineItems(first: 10) {
-                                edges {
-                                    node {
-                                        id
-                                        name
-                                        quantity
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        `;
+	): Promise<ShopifyOrdersResponse> {
+		const query = GetOrdersData(startDate, endDate);
 
 		const { graphqlClient } = this.createShopifyClient(shop, accessToken);
-		const { data, errors } = await graphqlClient.request(query);
+		const { data, errors } =
+			await graphqlClient.request<ShopifyOrdersResponse>(query);
 
 		if (errors?.graphQLErrors?.length) {
-			throw new BadRequestException('Error al obtener datos de ventas.');
+			console.error(JSON.stringify(errors.graphQLErrors, null, 2));
+			throw new BadRequestException('Error al obtener datos de órdenes.');
 		}
 
 		return data;
 	}
 
-	private processSalesData(salesData: any) {
-		const orders = salesData?.orders?.edges || [];
+	/**
+	 private processOrdersData(ordersData: any) {
+		const orders = ordersData?.orders?.edges || [];
 		const aggregatedData = {};
 
 		for (const orderEdge of orders) {
@@ -185,4 +165,5 @@ export class ShopifyDataService extends Service {
 			};
 		});
 	}
+	 */
 }
