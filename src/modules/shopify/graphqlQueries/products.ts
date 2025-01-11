@@ -15,6 +15,7 @@ const GetAllProducts = (first: number = 50, after?: string): string => `
           node {
             id
             title
+            totalInventory
             vendor
             featuredImage {
               url
@@ -47,6 +48,7 @@ const parseProducts = (productNodes: ShopifyProductNode[]) => {
 	return productNodes.map((product) => ({
 		productId: product.id,
 		title: product.title || null,
+		totalInventory: product.totalInventory || null,
 		vendor: product.vendor || null,
 		featuredImage: product.featuredImage?.url || null,
 		featuredImageAltText: product.featuredImage?.altText || null,

@@ -322,7 +322,7 @@ model ShopifyOrder {
     shippingAddress      String?
     shippingLat          Decimal?
     shippingLong         Decimal?
-    trackingLink         String?
+    statusPageUrl        String?
     shopifyCustomerId    String?
     shopifyIntegrationId Int
     hasDiscounts         Boolean?           @default(false)
@@ -357,6 +357,7 @@ model ShopifyProduct {
     productId            String             @unique
     shopifyIntegrationId Int
     title                String?
+    totalInventory       Int?
     vendor               String?
     featuredImage        String?
     featuredImageAltText String?

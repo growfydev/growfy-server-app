@@ -21,7 +21,6 @@ interface Address {
 	address1: string | null;
 	latitude: number | null;
 	longitude: number | null;
-	trackingLink?: string | null;
 }
 
 // ==========================================
@@ -49,6 +48,7 @@ interface ShopifyLineItemEdge {
 interface ShopifyOrderNode {
 	id: string;
 	name: string;
+	statusPageUrl: string;
 	processedAt: string;
 	displayFinancialStatus: string;
 	totalPriceSet: MoneySet;
@@ -63,6 +63,7 @@ interface ShopifyOrderNode {
 	};
 	currentTotalDiscountsSet: MoneySet;
 	currentTotalTaxSet: MoneySet;
+
 	paymentGatewayNames: string[];
 }
 
@@ -136,6 +137,7 @@ interface CollectionEdge {
 interface ShopifyProductNode {
 	id: string;
 	title: string;
+	totalInventory: number | null;
 	vendor: string;
 	featuredImage: FeaturedImage | null;
 	priceRangeV2: PriceRange;

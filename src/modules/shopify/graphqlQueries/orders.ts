@@ -21,6 +21,7 @@ const GetOrdersData = (
                 node {
                     id
                     name
+                    statusPageUrl
                     processedAt
                     displayFinancialStatus
                     totalPriceSet {
@@ -121,7 +122,7 @@ const parseOrders = (
 		shippingLong: order.shippingAddress?.longitude
 			? new Prisma.Decimal(order.shippingAddress.longitude)
 			: null, // Longitud de envío
-		trackingLink: order.shippingAddress?.trackingLink || null, // Enlace de seguimiento
+		statusPageUrl: order.statusPageUrl || null, // Enlace de seguimiento
 		shopifyCustomerId: order.customer?.id || null, // ID del cliente de Shopify
 		shopifyIntegrationId, // ID de integración
 		hasDiscounts:
