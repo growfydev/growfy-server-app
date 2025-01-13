@@ -3,13 +3,7 @@ import { PrismaService } from 'src/core/prisma.service';
 import { GlobalStatus, ShopifyIntegration } from '@prisma/client';
 import { omit } from 'lodash';
 import dayjs from 'dayjs';
-import {
-	createAdminApiClient,
-	createAdminRestApiClient,
-} from '@shopify/admin-api-client';
 import { Service } from 'src/service';
-import { GetOrdersData } from './graphqlQueries/orders';
-import { ShopifyOrdersResponse } from './graphqlQueries/types';
 
 @Injectable()
 export class ShopifyDataService extends Service {
@@ -17,30 +11,8 @@ export class ShopifyDataService extends Service {
 		super(ShopifyDataService.name);
 	}
 
-	private createShopifyClient(shop: string, accessToken: string) {
-		const storeDomain = shop;
-		return {
-			restClient: createAdminRestApiClient({
-				storeDomain,
-				apiVersion: '2025-01',
-				accessToken,
-			}),
-			graphqlClient: createAdminApiClient({
-				storeDomain,
-				apiVersion: '2025-01',
-				accessToken,
-			}),
-		};
-	}
-
-	async getShopInfo(profileId: number): Promise<ShopifyIntegration> {
-		const integration = await this.prisma.shopifyIntegration.findFirst({
-			where: {
-				Profile: { id: profileId },
-				isAuth: true,
-				globalStatus: GlobalStatus.ACTIVE,
-			},
-		});
+	async getShop(profileId: number): Promise<ShopifyIntegration> {
+		const integration = await this.getActiveIntegration(profileId);
 
 		if (!integration) {
 			throw new BadRequestException(
@@ -51,7 +23,38 @@ export class ShopifyDataService extends Service {
 		return omit(integration, ['accessToken', 'code']) as ShopifyIntegration;
 	}
 
-	async getShopOrdersData(
+	async getCustomers(profileId: number) {
+		const integration = await this.getActiveIntegration(profileId);
+
+		if (!integration) {
+			throw new BadRequestException(
+				'No se encontró una integración activa para este perfil.',
+			);
+		}
+
+		const customersData = await this.prisma.customer.findMany({
+			where: {
+				profileId: integration.profileId,
+				globalStatus: GlobalStatus.ACTIVE,
+				AND: [
+					{
+						shopifyCustomerId: {
+							not: null,
+						},
+					},
+					{
+						shopifyCustomerId: {
+							not: '',
+						},
+					},
+				],
+			},
+		});
+
+		return customersData;
+	}
+
+	async getNewVsReturningCustomer(
 		profileId: number,
 		startDate: string,
 		endDate: string,
@@ -62,13 +65,130 @@ export class ShopifyDataService extends Service {
 			);
 		}
 
-		const integration = await this.getActiveIntegration(profileId);
-		const ordersData = await this.fetchOrdersData(
-			integration.shopDomain,
-			integration.accessToken,
-			startDate,
-			endDate,
+		// Obtener todos los clientes asociados al perfil
+		const customers = await this.prisma.customer.findMany({
+			where: {
+				profileId,
+				globalStatus: GlobalStatus.ACTIVE,
+				AND: [
+					{
+						shopifyCustomerId: {
+							not: null,
+						},
+					},
+					{
+						shopifyCustomerId: {
+							not: '',
+						},
+					},
+				],
+			},
+			include: {
+				ShopifyOrder: {
+					where: {
+						shopifyCreatedAt: {
+							gte: dayjs(startDate).startOf('day').toDate(),
+							lte: dayjs(endDate).endOf('day').toDate(),
+						},
+					},
+				},
+			},
+		});
+
+		// Dividir clientes en nuevos y recurrentes
+		const newCustomers = customers.filter(
+			(customer) => customer.ShopifyOrder.length === 1,
 		);
+		const returningCustomers = customers.filter(
+			(customer) => customer.ShopifyOrder.length > 1,
+		);
+
+		// Calcular porcentajes
+		const totalCustomers = customers.length;
+		const newPercentage = (
+			(newCustomers.length / totalCustomers) *
+			100
+		).toFixed(1);
+		const returningPercentage = (
+			(returningCustomers.length / totalCustomers) *
+			100
+		).toFixed(1);
+
+		return {
+			totalCustomers,
+			newCustomers: newCustomers.length,
+			returningCustomers: returningCustomers.length,
+			newPercentage: `${newPercentage}%`,
+			returningPercentage: `${returningPercentage}%`,
+		};
+	}
+
+	async getProducts(profileId: number) {
+		const integration = await this.getActiveIntegration(profileId);
+
+		if (!integration) {
+			throw new BadRequestException(
+				'No se encontró una integración activa para este perfil.',
+			);
+		}
+
+		const productsData = await this.prisma.shopifyProduct.findMany({
+			where: {
+				shopifyIntegrationId: integration.id,
+				globalStatus: GlobalStatus.ACTIVE,
+			},
+		});
+
+		return productsData;
+	}
+
+	async getLowInventory(profileId: number) {
+		const integration = await this.getActiveIntegration(profileId);
+
+		if (!integration) {
+			throw new BadRequestException(
+				'No se encontró una integración activa para este perfil.',
+			);
+		}
+
+		const productsData = await this.prisma.shopifyProduct.findMany({
+			where: {
+				shopifyIntegrationId: integration.id,
+				globalStatus: GlobalStatus.ACTIVE,
+				totalInventory: {
+					lt: 5,
+				},
+			},
+		});
+
+		return productsData;
+	}
+
+	async getOrders(profileId: number, startDate: string, endDate: string) {
+		if (!this.areValidDates(startDate, endDate)) {
+			throw new BadRequestException(
+				'Las fechas proporcionadas son inválidas.',
+			);
+		}
+
+		const integration = await this.getActiveIntegration(profileId);
+
+		if (!integration) {
+			throw new BadRequestException(
+				'No se encontró una integración activa para este perfil.',
+			);
+		}
+
+		const ordersData = await this.prisma.shopifyOrder.findMany({
+			where: {
+				shopifyIntegrationId: integration.id,
+				shopifyCreatedAt: {
+					gte: dayjs(startDate).startOf('day').toDate(),
+					lte: dayjs(endDate).endOf('day').toDate(),
+				},
+				globalStatus: GlobalStatus.ACTIVE,
+			},
+		});
 
 		return ordersData;
 	}
@@ -101,26 +221,6 @@ export class ShopifyDataService extends Service {
 		}
 
 		return integration;
-	}
-
-	private async fetchOrdersData(
-		shop: string,
-		accessToken: string,
-		startDate: string,
-		endDate: string,
-	): Promise<ShopifyOrdersResponse> {
-		const query = GetOrdersData(startDate, endDate);
-
-		const { graphqlClient } = this.createShopifyClient(shop, accessToken);
-		const { data, errors } =
-			await graphqlClient.request<ShopifyOrdersResponse>(query);
-
-		if (errors?.graphQLErrors?.length) {
-			console.error(JSON.stringify(errors.graphQLErrors, null, 2));
-			throw new BadRequestException('Error al obtener datos de órdenes.');
-		}
-
-		return data;
 	}
 
 	/**

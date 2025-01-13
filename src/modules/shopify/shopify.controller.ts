@@ -46,9 +46,55 @@ export class ShopifyController {
 	@Get(':profileId/shop')
 	@ResponseMessage('Shop info')
 	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
-	async getShopInfo(@Param('profileId', ParseIntPipe) profileId: number) {
-		const shop = await this.shopifyDataService.getShopInfo(profileId);
+	async getShop(@Param('profileId', ParseIntPipe) profileId: number) {
+		const shop = await this.shopifyDataService.getShop(profileId);
 		return { shop };
+	}
+
+	@Get(':profileId/customers')
+	@ResponseMessage('Customers data')
+	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
+	async getCustomersData(
+		@Param('profileId', ParseIntPipe) profileId: number,
+	) {
+		const customers = await this.shopifyDataService.getCustomers(profileId);
+		return customers;
+	}
+
+	@Get(':profileId/newVsReturningCustomer')
+	@ResponseMessage('New vs Returning Customer data')
+	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
+	async getNewVsReturningCustomer(
+		@Param('profileId', ParseIntPipe) profileId: number,
+		@Query('startDate') startDate: string,
+		@Query('endDate') endDate: string,
+	) {
+		const data = this.shopifyDataService.getNewVsReturningCustomer(
+			profileId,
+			startDate,
+			endDate,
+		);
+
+		return data;
+	}
+
+	@Get(':profileId/products')
+	@ResponseMessage('Products data')
+	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
+	async getProductsData(@Param('profileId', ParseIntPipe) profileId: number) {
+		const products = await this.shopifyDataService.getProducts(profileId);
+		return products;
+	}
+
+	@Get(':profileId/lowInventory')
+	@ResponseMessage('Low inventory products data')
+	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
+	async getLowInventoryProducts(
+		@Param('profileId', ParseIntPipe) profileId: number,
+	) {
+		const products =
+			await this.shopifyDataService.getLowInventory(profileId);
+		return products;
 	}
 
 	@Get(':profileId/orders')
@@ -59,19 +105,19 @@ export class ShopifyController {
 		@Query('startDate') startDate: string,
 		@Query('endDate') endDate: string,
 	) {
-		const ordersData = await this.shopifyDataService.getShopOrdersData(
+		const orders = await this.shopifyDataService.getOrders(
 			profileId,
 			startDate,
 			endDate,
 		);
-		return ordersData;
+		return orders;
 	}
 
 	/**
 	 * Endpoint para recibir webhooks.
 	 * Shopify enviará las notificaciones POST a este endpoint.
 	 */
-	@Post('webhook')
+	@Post('webhooks')
 	async handleWebhook(
 		@Headers('X-Shopify-Hmac-SHA256') hmac: string,
 		@Headers('X-Shopify-Topic') topic: string,

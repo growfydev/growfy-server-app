@@ -1,9 +1,4 @@
-import {
-	Injectable,
-	BadRequestException,
-	forwardRef,
-	Inject,
-} from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import {
@@ -18,7 +13,6 @@ import { Service } from 'src/service';
 import { GetAllCustomers, parseCustomers } from './graphqlQueries/customers';
 import { GetAllProducts, parseProducts } from './graphqlQueries/products';
 import { GetOrdersData, parseOrders } from './graphqlQueries/orders';
-import { ShopifyDataService } from './shopify.data.service';
 import {
 	ShopifyCustomerResponse,
 	ShopifyOrdersResponse,
@@ -33,11 +27,7 @@ export class ShopifyAuthService extends Service {
 	private readonly scopes = configLoader().shopify.scopes;
 	private readonly webhooksUri = configLoader().shopify.webhooksUri;
 
-	constructor(
-		private readonly prisma: PrismaService,
-		@Inject(forwardRef(() => ShopifyDataService))
-		private readonly shopifyDataService: ShopifyDataService,
-	) {
+	constructor(private readonly prisma: PrismaService) {
 		super(ShopifyAuthService.name);
 	}
 
@@ -375,11 +365,37 @@ export class ShopifyAuthService extends Service {
 
 			// Upsert de clientes
 			for (const customer of customers) {
-				await this.prisma.customer.upsert({
-					where: { shopifyCustomerId: customer.shopifyCustomerId },
-					update: customer,
-					create: customer,
+				// Primero buscamos si existe el cliente con cualquiera de los campos únicos
+				const existingCustomer = await this.prisma.customer.findFirst({
+					where: {
+						OR: [
+							{ shopifyCustomerId: customer.shopifyCustomerId },
+							{ email: customer.email },
+							{ phone: customer.phone },
+						].filter(
+							(condition) =>
+								// Solo incluimos condiciones donde el valor no sea null o undefined
+								Object.values(condition)[0] != null,
+						),
+					},
 				});
+
+				if (existingCustomer) {
+					// Si existe, actualizamos
+					await this.prisma.customer.update({
+						where: {
+							id: existingCustomer.id,
+						},
+						data: {
+							...customer,
+						},
+					});
+				} else {
+					// Si no existe, creamos uno nuevo
+					await this.prisma.customer.create({
+						data: customer,
+					});
+				}
 			}
 
 			hasNextPage = data.customers.pageInfo.hasNextPage;
