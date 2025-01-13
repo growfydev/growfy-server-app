@@ -194,6 +194,7 @@ export class ShopifyDataService extends Service {
 						shopifyProduct: true,
 					},
 				},
+				Customer: true,
 			},
 		});
 
@@ -250,25 +251,79 @@ export class ShopifyDataService extends Service {
 			(p) => p.inventory < 10,
 		);
 
+		// Calcular el comportamiento del cliente
+		let newCustomers = 0;
+		let returningCustomers = 0;
+
+		for (const order of orders) {
+			const customerId = order.Customer?.shopifyCustomerId;
+			if (!customerId) continue;
+
+			const previousOrders = await this.prisma.shopifyOrder.count({
+				where: {
+					shopifyCustomerId: customerId,
+					shopifyCreatedAt: {
+						lt: dayjs(startDate).startOf('day').toDate(),
+					},
+					globalStatus: GlobalStatus.ACTIVE,
+				},
+			});
+
+			if (previousOrders > 0) {
+				returningCustomers++;
+			} else {
+				newCustomers++;
+			}
+		}
+
+		const totalCustomers = newCustomers + returningCustomers;
+		const newCustomerPercentage = (
+			(newCustomers / totalCustomers) *
+			100
+		).toFixed(2);
+		const returningCustomerPercentage = (
+			(returningCustomers / totalCustomers) *
+			100
+		).toFixed(2);
+
 		return {
 			stats: {
 				currency: integration.shopCurrency,
 				totalOrders,
-				totalRevenue: Number(totalRevenue),
-				avgOrderValue: Number(avgOrderValue) || 0,
+				totalRevenue: isNaN(Number(totalRevenue))
+					? 0
+					: Number(totalRevenue),
+				avgOrderValue: isNaN(Number(avgOrderValue))
+					? 0
+					: Number(avgOrderValue),
 				products: {
 					topProducts: topProducts.map((p, index) => ({
 						productId: p.ProductId,
 						rank: index + 1,
 						name: p.name,
 						units: p.units,
-						revenue: p.revenue.toFixed(2),
+						revenue: isNaN(p.revenue)
+							? '0.00'
+							: p.revenue.toFixed(2),
 					})),
 					lowInventory: lowInventoryProducts.map((p) => ({
 						productId: p.ProductId,
 						name: p.name,
 						inventory: p.inventory,
 					})),
+				},
+				customers: {
+					totalCustomers,
+					newCustomers,
+					returningCustomers,
+					newCustomerPercentage: isNaN(Number(newCustomerPercentage))
+						? '0.00%'
+						: `${newCustomerPercentage}%`,
+					returningCustomerPercentage: isNaN(
+						Number(returningCustomerPercentage),
+					)
+						? '0.00%'
+						: `${returningCustomerPercentage}%`,
 				},
 			},
 			orders,
