@@ -32,7 +32,7 @@ export class ShopifyDataService extends Service {
 			);
 		}
 
-		const customersData = await this.prisma.customer.findMany({
+		const customers = await this.prisma.customer.findMany({
 			where: {
 				profileId: integration.profileId,
 				globalStatus: GlobalStatus.ACTIVE,
@@ -51,7 +51,7 @@ export class ShopifyDataService extends Service {
 			},
 		});
 
-		return customersData;
+		return customers;
 	}
 
 	async getNewVsReturningCustomer(
@@ -132,14 +132,14 @@ export class ShopifyDataService extends Service {
 			);
 		}
 
-		const productsData = await this.prisma.shopifyProduct.findMany({
+		const products = await this.prisma.shopifyProduct.findMany({
 			where: {
 				shopifyIntegrationId: integration.id,
 				globalStatus: GlobalStatus.ACTIVE,
 			},
 		});
 
-		return productsData;
+		return products;
 	}
 
 	async getLowInventory(profileId: number) {
@@ -151,7 +151,7 @@ export class ShopifyDataService extends Service {
 			);
 		}
 
-		const productsData = await this.prisma.shopifyProduct.findMany({
+		const products = await this.prisma.shopifyProduct.findMany({
 			where: {
 				shopifyIntegrationId: integration.id,
 				globalStatus: GlobalStatus.ACTIVE,
@@ -161,7 +161,7 @@ export class ShopifyDataService extends Service {
 			},
 		});
 
-		return productsData;
+		return products;
 	}
 
 	async getOrders(profileId: number, startDate: string, endDate: string) {
@@ -179,7 +179,7 @@ export class ShopifyDataService extends Service {
 			);
 		}
 
-		const ordersData = await this.prisma.shopifyOrder.findMany({
+		const orders = await this.prisma.shopifyOrder.findMany({
 			where: {
 				shopifyIntegrationId: integration.id,
 				shopifyCreatedAt: {
@@ -188,9 +188,91 @@ export class ShopifyDataService extends Service {
 				},
 				globalStatus: GlobalStatus.ACTIVE,
 			},
+			include: {
+				ShopifyLineItem: {
+					include: {
+						shopifyProduct: true,
+					},
+				},
+			},
 		});
 
-		return ordersData;
+		const totalOrders = orders.length;
+
+		const totalRevenue = orders
+			.reduce((acc, order) => acc + Number(order.totalPrice), 0)
+			.toFixed(2);
+
+		const avgOrderValue = (Number(totalRevenue) / totalOrders).toFixed(2);
+
+		// Calcular los productos más vendidos
+		const productSales: {
+			[key: string]: {
+				name: string;
+				units: number;
+				revenue: number;
+				inventory: number;
+				ProductId: string;
+			};
+		} = {};
+
+		orders.forEach((order) => {
+			order.ShopifyLineItem.forEach((lineItem) => {
+				if (!lineItem.shopifyProduct) return;
+
+				const { title: productName, totalInventory } =
+					lineItem.shopifyProduct;
+				const lineRevenue = Number(
+					lineItem.discountedTotal || lineItem.originalTotal || 0,
+				);
+				const lineUnits = lineItem.quantity || 0;
+
+				if (!productSales[lineItem.shopifyProductId]) {
+					productSales[lineItem.shopifyProductId] = {
+						name: productName || 'Producto desconocido',
+						ProductId: lineItem.shopifyProductId,
+						units: 0,
+						revenue: 0,
+						inventory: totalInventory || 0,
+					};
+				}
+
+				productSales[lineItem.shopifyProductId].units += lineUnits;
+				productSales[lineItem.shopifyProductId].revenue += lineRevenue;
+			});
+		});
+
+		const topProducts = Object.values(productSales)
+			.sort((a, b) => b.units - a.units)
+			.slice(0, 3);
+
+		const lowInventoryProducts = topProducts.filter(
+			(p) => p.inventory < 10,
+		);
+
+		return {
+			stats: {
+				currency: integration.shopCurrency,
+				totalOrders,
+				totalRevenue: Number(totalRevenue),
+				avgOrderValue: Number(avgOrderValue) || 0,
+				products: {
+					topProducts: topProducts.map((p, index) => ({
+						productId: p.ProductId,
+						rank: index + 1,
+						name: p.name,
+						units: p.units,
+						revenue: p.revenue.toFixed(2),
+					})),
+					lowInventory: lowInventoryProducts.map((p) => ({
+						productId: p.ProductId,
+						name: p.name,
+						inventory: p.inventory,
+					})),
+				},
+			},
+			orders,
+		};
 	}
 
 	private areValidDates(startDate: string, endDate: string): boolean {
