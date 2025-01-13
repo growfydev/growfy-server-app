@@ -280,11 +280,11 @@ export class ShopifyDataService extends Service {
 		const newCustomerPercentage = (
 			(newCustomers / totalCustomers) *
 			100
-		).toFixed(2);
+		).toFixed(0);
 		const returningCustomerPercentage = (
 			(returningCustomers / totalCustomers) *
 			100
-		).toFixed(2);
+		).toFixed(0);
 
 		return {
 			stats: {
@@ -302,9 +302,7 @@ export class ShopifyDataService extends Service {
 						rank: index + 1,
 						name: p.name,
 						units: p.units,
-						revenue: isNaN(p.revenue)
-							? '0.00'
-							: p.revenue.toFixed(2),
+						revenue: isNaN(p.revenue) ? '0' : p.revenue.toFixed(0),
 					})),
 					lowInventory: lowInventoryProducts.map((p) => ({
 						productId: p.ProductId,
@@ -317,12 +315,12 @@ export class ShopifyDataService extends Service {
 					newCustomers,
 					returningCustomers,
 					newCustomerPercentage: isNaN(Number(newCustomerPercentage))
-						? '0.00%'
+						? '0%'
 						: `${newCustomerPercentage}%`,
 					returningCustomerPercentage: isNaN(
 						Number(returningCustomerPercentage),
 					)
-						? '0.00%'
+						? '0%'
 						: `${returningCustomerPercentage}%`,
 				},
 			},
