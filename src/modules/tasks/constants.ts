@@ -1,5 +1,6 @@
 export enum Queues {
 	TASK = 'Task',
+	CRON = 'Cron',
 }
 
 export enum Tasks {
