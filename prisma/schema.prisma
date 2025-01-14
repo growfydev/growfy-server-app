@@ -286,26 +286,27 @@ enum StorageServices {
 }
 
 model ShopifyIntegration {
-    id             Int              @id @default(autoincrement())
-    profileId      Int              @unique
-    shopName       String?
-    accessToken    String?
-    code           String?
-    isAuth         Boolean          @default(false)
-    globalStatus   GlobalStatus     @default(ACTIVE)
-    createdAt      DateTime         @default(now())
-    updatedAt      DateTime?        @updatedAt
-    shopEmail      String?
-    shopDomain     String?
-    shopCountry    String?
-    shopCurrency   String?
-    shopOwner      String?
-    shopPlan       String?
-    hasDiscounts   Boolean?         @default(false)
-    hasGiftCards   Boolean?         @default(false)
-    Profile        Profile          @relation(references: [id], fields: [profileId])
-    ShopifyOrder   ShopifyOrder[]
-    ShopifyProduct ShopifyProduct[]
+    id                Int                 @id @default(autoincrement())
+    profileId         Int                 @unique
+    shopName          String?
+    accessToken       String?
+    code              String?
+    isAuth            Boolean             @default(false)
+    globalStatus      GlobalStatus        @default(ACTIVE)
+    createdAt         DateTime            @default(now())
+    updatedAt         DateTime?           @updatedAt
+    shopEmail         String?
+    shopDomain        String?
+    shopCountry       String?
+    shopCurrency      String?
+    shopOwner         String?
+    shopPlan          String?
+    hasDiscounts      Boolean?            @default(false)
+    hasGiftCards      Boolean?            @default(false)
+    Profile           Profile             @relation(references: [id], fields: [profileId])
+    ShopifyOrder      ShopifyOrder[]
+    ShopifyProduct    ShopifyProduct[]
+    ShopifyDailyStats ShopifyDailyStats[]
 }
 
 model ShopifyOrder {
@@ -370,4 +371,23 @@ model ShopifyProduct {
     updatedAt            DateTime?          @updatedAt
     ShopifyLineItem      ShopifyLineItem[]
     shopifyIntegration   ShopifyIntegration @relation(fields: [shopifyIntegrationId], references: [id])
+}
+
+model ShopifyDailyStats {
+    id                   Int      @id @default(autoincrement())
+    shopifyIntegrationId Int
+    date                 DateTime @default(now())
+    currency             String
+    totalOrders          Int
+    totalRevenue         Float
+    avgOrderValue        Float
+
+    products  Json
+    customers Json
+
+    globalStatus GlobalStatus @default(ACTIVE)
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime?    @updatedAt
+
+    shopifyIntegration ShopifyIntegration @relation(fields: [shopifyIntegrationId], references: [id])
 }
