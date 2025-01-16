@@ -53,6 +53,12 @@ export type Config = {
 			redirectUri: string;
 			scope: string[];
 		};
+		youtube: {
+			apiKey: string;
+			clientId: string;
+			clientSecret: string;
+			redirectUri: string;
+		};
 	};
 	dropbox: {
 		clientId: string;

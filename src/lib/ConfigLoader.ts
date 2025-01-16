@@ -41,6 +41,10 @@ const {
 	SHOPIFY_REDIRECT_URI,
 	SHOPIFY_SCOPES,
 	SHOPIFY_WEBHOOKS_URI,
+	YOUTUBE_API_KEY,
+	YOUTUBE_CLIENT_ID,
+	YOUTUBE_CLIENT_SECRET,
+	YOUTUBE_REDIRECT_URI,
 } = process.env;
 
 function configLoader(): Config {
@@ -98,6 +102,12 @@ function configLoader(): Config {
 				clientSecret: GOOGLE_CLIENT_SECRET,
 				redirectUri: GOOGLE_REDIRECT_URI,
 				scope: ['https://www.googleapis.com/auth/drive'],
+			},
+			youtube: {
+				apiKey: YOUTUBE_API_KEY,
+				clientId: YOUTUBE_CLIENT_ID,
+				clientSecret: YOUTUBE_CLIENT_SECRET,
+				redirectUri: YOUTUBE_REDIRECT_URI,
 			},
 		},
 		dropbox: {
