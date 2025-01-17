@@ -6,6 +6,8 @@ import { TaskQueueProcessor } from './task.processor';
 import { TaskQueueService } from './tasks-queue.service';
 import { Module } from '@nestjs/common';
 import { Queues } from './constants';
+import { CronTaskService } from './cron/cron.service';
+import { CronTaskProcessor } from './cron/cron.processor';
 
 @Module({
 	imports: [
@@ -18,9 +20,18 @@ import { Queues } from './constants';
 		BullModule.registerQueue({
 			name: Queues.TASK,
 		}),
+		BullModule.registerQueue({
+			name: Queues.CRON,
+		}),
 		PostsModule,
 	],
-	providers: [PrismaService, TaskQueueService, TaskQueueProcessor],
+	providers: [
+		PrismaService,
+		TaskQueueService,
+		TaskQueueProcessor,
+		CronTaskService,
+		CronTaskProcessor,
+	],
 	exports: [TaskQueueService, TaskQueueProcessor, BullModule],
 })
 export class TaskModule {}
