@@ -7,12 +7,20 @@ import {
 	PostRescheduledPayload,
 	EmailSentPayload,
 } from './interface/notification.payloads';
+import { Service } from 'src/service';
 
 @Injectable()
-export class NotificationService {
-	constructor(private readonly emailService: EmailService) {}
+export class NotificationService extends Service {
+	constructor(private readonly emailService: EmailService) {
+		super(NotificationService.name);
+	}
 
 	private sendEmail(to: string | string[], subject: string, text: string) {
+		if (!to || (Array.isArray(to) && to.length === 0)) {
+			this.logger.error('No recipients provided for email');
+			return;
+		}
+
 		if (Array.isArray(to)) {
 			to.forEach((email) => {
 				this.emailService.to(email).subject(subject).text(text).send();
@@ -20,14 +28,16 @@ export class NotificationService {
 		} else {
 			this.emailService.to(to).subject(subject).text(text).send();
 		}
+		this.logger.log(`Email sent to ${to}`);
 	}
 
 	@OnEvent('post.scheduled')
 	handlePostScheduledEvent(payload: PostScheduledPayload) {
+		const postIds = payload.postIds.join(', ');
 		this.sendEmail(
 			payload.email,
 			'Nueva publicación programada',
-			`Se ha programado una nueva publicación con ID: ${payload.postId}`,
+			`Se ha programado una nueva publicación con ID: ${postIds}`,
 		);
 	}
 
