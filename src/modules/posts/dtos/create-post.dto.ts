@@ -30,4 +30,7 @@ export class CreatePostDto {
 	@IsNumber()
 	@IsOptional()
 	readonly unix?: number;
+
+	@IsOptional()
+	readonly email?: string | string[];
 }
