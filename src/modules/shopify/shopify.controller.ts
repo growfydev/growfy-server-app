@@ -9,14 +9,20 @@ import {
 	Post,
 	Query,
 } from '@nestjs/common';
-import { ShopifyService } from './shopify.service';
+import { ShopifyAuthService } from './shopify.auth.service';
+import { ShopifyDataService } from './shopify.data.service';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { ProfileMemberRoles, Role } from '@prisma/client';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
+import { ShopifyCronService } from './shopify.cron.service';
 
 @Controller('shopify')
 export class ShopifyController {
-	constructor(private readonly shopifyService: ShopifyService) {}
+	constructor(
+		private readonly shopifyAuthService: ShopifyAuthService,
+		private readonly shopifyDataService: ShopifyDataService,
+		private readonly shopifyCronService: ShopifyCronService,
+	) {}
 
 	@Get(':profileId/auth/:shop')
 	@ResponseMessage('Redirect to Shopify')
@@ -25,14 +31,14 @@ export class ShopifyController {
 		@Param('profileId', ParseIntPipe) profileId: number,
 		@Param('shop') shop: string,
 	) {
-		const url = await this.shopifyService.getAuthUrl(profileId, shop);
+		const url = await this.shopifyAuthService.getAuthUrl(profileId, shop);
 		return { url };
 	}
 
 	@Get('oauth2callback')
 	@ResponseMessage('Access token received')
 	async callback(@Query('shop') shop: string, @Query('code') code: string) {
-		const accessToken = await this.shopifyService.handleCallback(
+		const accessToken = await this.shopifyAuthService.handleCallback(
 			shop,
 			code,
 		);
@@ -42,16 +48,102 @@ export class ShopifyController {
 	@Get(':profileId/shop')
 	@ResponseMessage('Shop info')
 	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
-	async getShopInfo(@Param('profileId', ParseIntPipe) profileId: number) {
-		const shop = await this.shopifyService.getShopInfo(profileId);
+	async getShop(@Param('profileId', ParseIntPipe) profileId: number) {
+		const shop = await this.shopifyDataService.getShop(profileId);
 		return { shop };
 	}
+
+	@Get(':profileId/customers')
+	@ResponseMessage('Customers data')
+	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
+	async getCustomersData(
+		@Param('profileId', ParseIntPipe) profileId: number,
+	) {
+		const customers = await this.shopifyDataService.getCustomers(profileId);
+		return customers;
+	}
+
+	@Get(':profileId/newVsReturningCustomer')
+	@ResponseMessage('New vs Returning Customer data')
+	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
+	async getNewVsReturningCustomer(
+		@Param('profileId', ParseIntPipe) profileId: number,
+		@Query('startDate') startDate: string,
+		@Query('endDate') endDate: string,
+	) {
+		const data = this.shopifyDataService.getNewVsReturningCustomer(
+			profileId,
+			startDate,
+			endDate,
+		);
+
+		return data;
+	}
+
+	@Get(':profileId/products')
+	@ResponseMessage('Products data')
+	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
+	async getProductsData(@Param('profileId', ParseIntPipe) profileId: number) {
+		const products = await this.shopifyDataService.getProducts(profileId);
+		return products;
+	}
+
+	@Get(':profileId/lowInventory')
+	@ResponseMessage('Low inventory products data')
+	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
+	async getLowInventoryProducts(
+		@Param('profileId', ParseIntPipe) profileId: number,
+	) {
+		const products =
+			await this.shopifyDataService.getLowInventory(profileId);
+		return products;
+	}
+
+	@Get(':profileId/orders')
+	@ResponseMessage('Orders data')
+	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
+	async getOrdersData(
+		@Param('profileId', ParseIntPipe) profileId: number,
+		@Query('startDate') startDate: string,
+		@Query('endDate') endDate: string,
+	) {
+		const orders = await this.shopifyDataService.getOrders(
+			profileId,
+			startDate,
+			endDate,
+		);
+		return orders;
+	}
+
+	@Get(':profileId/dailySummaries')
+	@ResponseMessage('Daily Summaries data')
+	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
+	async getDailySummaries(
+		@Param('profileId', ParseIntPipe) profileId: number,
+		@Query('month') month: string,
+		@Query('year') year: string,
+	) {
+		const summaries = await this.shopifyCronService.getDailySummaries(
+			profileId,
+			month,
+			year,
+		);
+		return { summaries };
+	}
+
+	/**
+	 @Get('save')
+	async saveDailyStats() {
+		const res = await this.shopifyCronService.saveDailyStats();
+		return res;
+	}
+	 */
 
 	/**
 	 * Endpoint para recibir webhooks.
 	 * Shopify enviará las notificaciones POST a este endpoint.
 	 */
-	@Post('webhook')
+	@Post('webhooks')
 	async handleWebhook(
 		@Headers('X-Shopify-Hmac-SHA256') hmac: string,
 		@Headers('X-Shopify-Topic') topic: string,
@@ -59,7 +151,7 @@ export class ShopifyController {
 		@Body() body: object,
 	) {
 		// **Validar la firma HMAC**
-		const isValid = this.shopifyService.verifyWebhookHmac(hmac, body);
+		const isValid = this.shopifyAuthService.verifyWebhookHmac(hmac, body);
 		if (!isValid) {
 			throw new BadRequestException('HMAC de Shopify inválido.');
 		}
