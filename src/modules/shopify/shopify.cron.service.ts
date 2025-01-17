@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/core/prisma.service';
 import { Service } from 'src/service';
-import { CronTask } from '../tasks/cron/cron.decorator';
+//import { CronTask } from '../tasks/cron/cron.decorator';
 import dayjs from 'dayjs';
-import { GlobalStatus } from '@prisma/client';
+import { GlobalStatus, ShopifyIntegration } from '@prisma/client';
 
 @Injectable()
 export class ShopifyCronService extends Service {
@@ -11,7 +11,7 @@ export class ShopifyCronService extends Service {
 		super(ShopifyCronService.name);
 	}
 
-	@CronTask('* * * * *')
+	//@CronTask('* * * * *')
 	async saveDailyStats() {
 		this.logger.log('Ejecutando tarea');
 		console.error('Ejecutando tarea');
@@ -216,8 +216,17 @@ export class ShopifyCronService extends Service {
 						},
 					};
 
-					await this.prisma.shopifyDailyStats.create({
-						data: {
+					await this.prisma.shopifyDailyStats.upsert({
+						where: {
+							shopifyIntegrationId_date: {
+								shopifyIntegrationId: integration.id,
+								date: start,
+							},
+						},
+						update: {
+							...stats,
+						},
+						create: {
 							shopifyIntegrationId: integration.id,
 							date: start,
 							...stats,
@@ -239,6 +248,9 @@ export class ShopifyCronService extends Service {
 			}
 
 			this.logger.log('Daily stats calculation completed successfully');
+			return {
+				cron: 'Todo correcto',
+			};
 		} catch (error) {
 			this.logger.error('Failed to complete daily stats calculation:', {
 				error: error.message,
@@ -246,5 +258,75 @@ export class ShopifyCronService extends Service {
 			});
 			throw error;
 		}
+	}
+
+	async getDailySummaries(profileId: number, month: string, year: string) {
+		// Validar mes y año
+		if (!this.isValidMonthAndYear(month, year)) {
+			throw new BadRequestException(
+				'El mes o el año proporcionados son inválidos.',
+			);
+		}
+
+		// Obtener el rango de fechas para el mes y año proporcionados
+		const startDate = dayjs(`${year}-${month}-01`).startOf('day');
+		const endDate = startDate.endOf('month').endOf('day');
+
+		// Validar el perfil e integración activa
+		const integration = await this.getActiveIntegration(profileId);
+		if (!integration) {
+			throw new BadRequestException(
+				'No se encontró una integración activa para este perfil.',
+			);
+		}
+
+		// Consultar las dailies para el rango de fechas y perfil especificado
+		const dailySummaries = await this.prisma.shopifyDailyStats.findMany({
+			where: {
+				shopifyIntegrationId: integration.id,
+				date: {
+					gte: startDate.toDate(),
+					lte: endDate.toDate(),
+				},
+				globalStatus: GlobalStatus.ACTIVE,
+			},
+		});
+
+		// Devolver los resultados
+		return dailySummaries;
+	}
+
+	// Método auxiliar para validar el mes y el año
+	private isValidMonthAndYear(month: string, year: string): boolean {
+		const monthNumber = parseInt(month, 10);
+		const yearNumber = parseInt(year, 10);
+
+		return (
+			!isNaN(monthNumber) &&
+			!isNaN(yearNumber) &&
+			monthNumber >= 1 &&
+			monthNumber <= 12 &&
+			yearNumber > 0
+		);
+	}
+
+	private async getActiveIntegration(
+		profileId: number,
+	): Promise<ShopifyIntegration> {
+		const integration = await this.prisma.shopifyIntegration.findFirst({
+			where: {
+				Profile: { id: profileId },
+				isAuth: true,
+				globalStatus: GlobalStatus.ACTIVE,
+			},
+		});
+
+		if (!integration) {
+			throw new BadRequestException(
+				'No se encontró una integración activa para este perfil.',
+			);
+		}
+
+		return integration;
 	}
 }

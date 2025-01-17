@@ -14,12 +14,14 @@ import { ShopifyDataService } from './shopify.data.service';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { ProfileMemberRoles, Role } from '@prisma/client';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
+import { ShopifyCronService } from './shopify.cron.service';
 
 @Controller('shopify')
 export class ShopifyController {
 	constructor(
 		private readonly shopifyAuthService: ShopifyAuthService,
 		private readonly shopifyDataService: ShopifyDataService,
+		private readonly shopifyCronService: ShopifyCronService,
 	) {}
 
 	@Get(':profileId/auth/:shop')
@@ -112,6 +114,30 @@ export class ShopifyController {
 		);
 		return orders;
 	}
+
+	@Get(':profileId/dailySummaries')
+	@ResponseMessage('Daily Summaries data')
+	@Auth([Role.USER], [ProfileMemberRoles.OWNER])
+	async getDailySummaries(
+		@Param('profileId', ParseIntPipe) profileId: number,
+		@Query('month') month: string,
+		@Query('year') year: string,
+	) {
+		const summaries = await this.shopifyCronService.getDailySummaries(
+			profileId,
+			month,
+			year,
+		);
+		return { summaries };
+	}
+
+	/**
+	 @Get('save')
+	async saveDailyStats() {
+		const res = await this.shopifyCronService.saveDailyStats();
+		return res;
+	}
+	 */
 
 	/**
 	 * Endpoint para recibir webhooks.

@@ -390,4 +390,6 @@ model ShopifyDailyStats {
     updatedAt    DateTime?    @updatedAt
 
     shopifyIntegration ShopifyIntegration @relation(fields: [shopifyIntegrationId], references: [id])
+
+    @@unique([shopifyIntegrationId, date])
 }
