@@ -40,12 +40,14 @@ import {
 	TransformedPost,
 } from './dtos/transformed-post.interface';
 import { JsonValue } from '@prisma/client/runtime/library';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class PostsService extends Service {
 	constructor(
 		private readonly prisma: PrismaService,
 		private readonly taskQueueService: TaskQueueService,
+		private readonly eventEmitter: EventEmitter2,
 	) {
 		super(PostsService.name);
 	}
@@ -54,24 +56,22 @@ export class PostsService extends Service {
 	 * Crea una nueva publicación con las validaciones necesarias.
 	 * @param postData - DTO con los datos de la publicación.
 	 * @param profileId - ID del perfil que crea la publicación.
-	 * @returns La nueva publicación creada.
+	 * @returns Las nuevas publicaciones creadas.
 	 */
-
 	async createPost(
 		postData: CreatePostDto,
 		profileId: number,
-	): Promise<{ post: Post }> {
-		const { typePost, provider, content, unix } = postData;
+	): Promise<{ posts: Post[] }> {
+		const { unix, providerContents, email } = postData;
 
-		const newPost = await this.processPostCreation(
+		const newPosts = await this.processPostCreation(
 			profileId,
-			typePost,
-			provider,
-			content,
+			providerContents,
 			unix,
+			email,
 		);
 
-		return { post: newPost };
+		return { posts: newPosts };
 	}
 
 	/**
@@ -86,10 +86,17 @@ export class PostsService extends Service {
 		profileId: number,
 		postId: number,
 		newUnixTime: number,
+		email?: string | string[],
 	): Promise<{ post: Post }> {
 		const post = await this.findAndValidatePost(profileId, postId);
 		await this.validatePostStatus(post);
-		await this.updateScheduledTask(post, profileId, postId, newUnixTime);
+		await this.updateScheduledTask(
+			post,
+			profileId,
+			postId,
+			newUnixTime,
+			email,
+		);
 		const updatedPost = {
 			...post,
 			task: { status: TaskStatus.PENDING, unix: newUnixTime },
@@ -218,9 +225,7 @@ export class PostsService extends Service {
 	/**
 	 * Procesa la creación de un post, incluyendo validaciones y manejo de publicación.
 	 * @param profileId - ID del perfil que crea la publicación.
-	 * @param typePost - Tipo de publicación.
-	 * @param provider - Proveedor de la publicación.
-	 * @param content - Contenido de la publicación.
+	 * @param providerContents - Proveedor de la publicación.
 	 * @param unix - Timestamp para programación.
 	 * @returns La nueva publicación creada.
 	 * @throws {BadRequestException} Si alguna validación falla.
@@ -228,87 +233,97 @@ export class PostsService extends Service {
 	 */
 	private async processPostCreation(
 		profileId: number,
-		typePost: number,
-		provider: number,
-		content: Prisma.JsonValue,
+		providerContents: {
+			provider: number;
+			typePost: number;
+			content: Prisma.JsonValue;
+		}[],
 		unix: number,
-	): Promise<Post> {
-		const profile = await this.validateProfile(profileId);
-		if (!profile) {
-			throw new BadRequestException(
-				`No hay perfil asociado con el proveedor "${provider}".`,
+		email?: string | string[],
+	): Promise<Post[]> {
+		const newPosts: Post[] = [];
+
+		for (const { provider, typePost, content } of providerContents) {
+			const profile = await this.validateProfile(profileId);
+			if (!profile) {
+				throw new BadRequestException(
+					`No hay perfil asociado con el proveedor "${provider}".`,
+				);
+			}
+			const postType = await this.getAndValidatePostType(typePost);
+			if (!postType) {
+				throw new BadRequestException(
+					`Tipo de publicación "${typePost}" no encontrado.`,
+				);
+			}
+			const providerData = await this.getAndValidateProvider(provider);
+			if (!providerData) {
+				throw new BadRequestException(
+					`Proveedor "${provider}" no encontrado.`,
+				);
+			}
+			const providerPostType = await this.validateProviderPostType(
+				providerData.id,
+				postType.id,
 			);
-		}
-		const postType = await this.getAndValidatePostType(typePost);
-		if (!postType) {
-			throw new BadRequestException(
-				`Tipo de publicación "${typePost}" no encontrado.`,
+			if (!providerPostType) {
+				throw new BadRequestException(
+					`Relación proveedor-tipo de publicación no encontrada para el proveedor "${provider}" y tipo de publicación "${typePost}".`,
+				);
+			}
+
+			const contentLimitsValid = await this.validateContentLimits(
+				content,
+				providerPostType,
+				provider,
+				typePost,
 			);
-		}
-		const providerData = await this.getAndValidateProvider(provider);
-		if (!providerData) {
-			throw new BadRequestException(
-				`Proveedor "${provider}" no encontrado.`,
+			if (!contentLimitsValid) {
+				throw new BadRequestException(
+					`El contenido no cumple con los límites de caracteres o campos requeridos para el proveedor "${provider}" y tipo de publicación "${typePost}".`,
+				);
+			}
+			const contentFieldsValid = await this.validateContentFields(
+				content,
+				providerPostType,
+				typePost,
 			);
-		}
-		const providerPostType = await this.validateProviderPostType(
-			providerData.id,
-			postType.id,
-		);
-		if (!providerPostType) {
-			throw new BadRequestException(
-				`Relación proveedor-tipo de publicación no encontrada para el proveedor "${provider}" y tipo de publicación "${typePost}".`,
+			if (!contentFieldsValid) {
+				throw new BadRequestException(
+					`El contenido no cumple con los campos requeridos para el proveedor "${provider}" y tipo de publicación "${typePost}".`,
+				);
+			}
+
+			// Validar propiedades del post
+			const newPost = await this.createPostRecord(
+				postType,
+				providerPostType,
+				profileId,
+				content,
+				unix,
 			);
+			if (!newPost) {
+				throw new BadRequestException(
+					`Error al crear la publicación para el proveedor "${provider}" y tipo de publicación "${typePost}".`,
+				);
+			}
+
+			const handlePostPublication = await this.handlePostPublication(
+				profileId,
+				newPost.id,
+				unix,
+				email,
+			);
+			if (!handlePostPublication) {
+				throw new BadRequestException(
+					`Error al manejar la publicación para el proveedor "${provider}" y tipo de publicación "${typePost}".`,
+				);
+			}
+
+			newPosts.push(newPost);
 		}
 
-		const contentLimitsValid = await this.validateContentLimits(
-			content,
-			providerPostType,
-			provider,
-			typePost,
-		);
-		if (!contentLimitsValid) {
-			throw new BadRequestException(
-				`El contenido no cumple con los límites de caracteres o campos requeridos para el proveedor "${provider}" y tipo de publicación "${typePost}".`,
-			);
-		}
-		const contentFieldsValid = await this.validateContentFields(
-			content,
-			providerPostType,
-			typePost,
-		);
-		if (!contentFieldsValid) {
-			throw new BadRequestException(
-				`El contenido no cumple con los campos requeridos para el proveedor "${provider}" y tipo de publicación "${typePost}".`,
-			);
-		}
-
-		// Validar propiedades del post
-		const newPost = await this.createPostRecord(
-			postType,
-			providerPostType,
-			profileId,
-			content,
-			unix,
-		);
-		if (!newPost) {
-			throw new BadRequestException(
-				`Error al crear la publicación para el proveedor "${provider}" y tipo de publicación "${typePost}".`,
-			);
-		}
-
-		const handlePostPublication = await this.handlePostPublication(
-			profileId,
-			newPost.id,
-			unix,
-		);
-		if (!handlePostPublication) {
-			throw new BadRequestException(
-				`Error al manejar la publicación para el proveedor "${provider}" y tipo de publicación "${typePost}".`,
-			);
-		}
-
-		return newPost;
+		return newPosts;
 	}
 
 	/**
@@ -323,11 +338,24 @@ export class PostsService extends Service {
 		profileId: number,
 		postId: number,
 		unix?: number,
+		email?: string | string[],
 	): Promise<boolean> {
 		if (unix) {
 			await this.taskQueueService.scheduleTask(profileId, postId, unix);
+			if (email) {
+				this.eventEmitter.emit('post.scheduled', {
+					postId,
+					email,
+				});
+			}
 		} else {
 			await this.publishPost(profileId, postId);
+			if (email) {
+				this.eventEmitter.emit('post.published', {
+					postId,
+					email,
+				});
+			}
 		}
 		return true;
 	}
@@ -1059,6 +1087,7 @@ export class PostsService extends Service {
 		profileId: number,
 		postId: number,
 		newUnixTime: number,
+		email?: string | string[],
 	): Promise<void> {
 		try {
 			await Promise.all([
@@ -1072,6 +1101,10 @@ export class PostsService extends Service {
 				this.prisma.task.update({
 					where: { id: post.task.id },
 					data: { unix: newUnixTime },
+				}),
+				this.eventEmitter.emit('post.rescheduled', {
+					postId,
+					email,
 				}),
 			]);
 		} catch (error) {

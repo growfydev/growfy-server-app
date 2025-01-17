@@ -9,6 +9,8 @@ import { ProviderModule } from '../modules/provider/provider.module';
 import { CustomerModule } from '../modules/customer/customer.module';
 import { StorageModule } from 'src/modules/storage/storage.module';
 import { ShopifyModule } from 'src/modules/shopify/shopify.module';
+import { WebsocketModule } from 'src/modules/websocket/websocket.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 const CoreModules = [
 	SetupModule,
@@ -17,9 +19,11 @@ const CoreModules = [
 	CustomerModule,
 	StorageModule,
 	ShopifyModule,
+	EventEmitterModule.forRoot(),
 ];
 
 const AuthModules = [AuthModule];
+const realTimeModules = [WebsocketModule];
 
 const ThirdPartyModules = [SmsModule];
 
@@ -33,6 +37,7 @@ const Modules = [
 	...ThirdPartyModules,
 	...PaymentModules,
 	...TaskManagementModules,
+	...realTimeModules,
 ];
 
 export default Modules;

@@ -148,7 +148,7 @@ export class ShopifyController {
 		@Headers('X-Shopify-Hmac-SHA256') hmac: string,
 		@Headers('X-Shopify-Topic') topic: string,
 		@Headers('X-Shopify-Shop-Domain') shop: string,
-		@Body() body: any,
+		@Body() body: object,
 	) {
 		// **Validar la firma HMAC**
 		const isValid = this.shopifyAuthService.verifyWebhookHmac(hmac, body);
