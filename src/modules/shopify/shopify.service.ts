@@ -279,7 +279,7 @@ export class ShopifyService {
 	private async listWebhooks(
 		shop: string,
 		accessToken: string,
-	): Promise<object[]> {
+	): Promise<{ id: number; topic: string }[]> {
 		try {
 			const response = await axios.get(
 				`${this.baseUrl(shop)}/webhooks.json`,
@@ -345,7 +345,9 @@ export class ShopifyService {
 
 			// Filtrar los webhooks que coincidan con el mismo topic y dirección
 			for (const webhook of existingWebhooks) {
-				if (webhook.topic === topic) {
+				if (
+					(webhook as { id: number; topic: string }).topic === topic
+				) {
 					// Eliminar el webhook existente
 					await this.deleteWebhook(shop, accessToken, webhook.id);
 				}
