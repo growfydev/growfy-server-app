@@ -71,6 +71,7 @@ export class PostsController {
 			+profileId,
 			+postId,
 			reschedulePostDto.newUnixTime,
+			reschedulePostDto.email,
 		);
 	}
 }

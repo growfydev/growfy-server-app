@@ -1,5 +1,5 @@
 export interface PostScheduledPayload {
-	postId: number;
+	postIds: number[];
 	email: string | string[];
 }
 
