@@ -6,6 +6,7 @@ import { ShopifyCronService } from './shopify.cron.service';
 import { PrismaService } from 'src/core/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { AuthModule } from '../auth/auth.module';
+import { ShopifyWebhookService } from './shopify.webhooks.service';
 
 @Module({
 	imports: [AuthModule],
@@ -14,6 +15,7 @@ import { AuthModule } from '../auth/auth.module';
 		ShopifyAuthService,
 		ShopifyDataService,
 		ShopifyCronService,
+		ShopifyWebhookService,
 		PrismaService,
 		JwtService,
 	],

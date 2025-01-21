@@ -287,7 +287,7 @@ enum StorageServices {
 
 model ShopifyIntegration {
     id                Int                 @id @default(autoincrement())
-    profileId         Int                 @unique
+    profileId         Int?                @unique
     shopName          String?
     accessToken       String?
     code              String?
@@ -303,7 +303,7 @@ model ShopifyIntegration {
     shopPlan          String?
     hasDiscounts      Boolean?            @default(false)
     hasGiftCards      Boolean?            @default(false)
-    Profile           Profile             @relation(references: [id], fields: [profileId])
+    Profile           Profile?            @relation(references: [id], fields: [profileId])
     ShopifyOrder      ShopifyOrder[]
     ShopifyProduct    ShopifyProduct[]
     ShopifyDailyStats ShopifyDailyStats[]

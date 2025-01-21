@@ -5,7 +5,7 @@ import {
 	createAdminApiClient,
 	createAdminRestApiClient,
 } from '@shopify/admin-api-client';
-import { ShopifyIntegration } from '@prisma/client';
+import { GlobalStatus, ShopifyIntegration } from '@prisma/client';
 
 import { PrismaService } from 'src/core/prisma.service';
 import configLoader from '../../lib/ConfigLoader';
@@ -47,7 +47,10 @@ export class ShopifyAuthService extends Service {
 			where: { shopDomain: shop },
 		});
 
-		if (integration?.isAuth) {
+		if (
+			integration?.isAuth &&
+			integration?.globalStatus === GlobalStatus.ACTIVE
+		) {
 			throw new BadRequestException(
 				'La tienda ya está integrada en otra cuenta.',
 			);
@@ -71,7 +74,7 @@ export class ShopifyAuthService extends Service {
 
 		const accessToken = await this.fetchAccessToken(shop, code);
 		const integration = await this.prisma.shopifyIntegration.findFirst({
-			where: { shopDomain: shop },
+			where: { shopDomain: shop, globalStatus: GlobalStatus.ACTIVE },
 		});
 
 		if (!integration) {
@@ -104,6 +107,7 @@ export class ShopifyAuthService extends Service {
 			where: {
 				Profile: { id: profileId },
 				isAuth: true,
+				globalStatus: GlobalStatus.ACTIVE,
 			},
 		});
 
@@ -166,19 +170,40 @@ export class ShopifyAuthService extends Service {
 		integration: ShopifyIntegration | null,
 	): Promise<void> {
 		if (integration) {
-			// Desvincular perfiles asociados a esta integración
+			await this.prisma.shopifyIntegration.updateMany({
+				where: {
+					profileId: profileId,
+					id: { not: integration.id },
+				},
+				data: {
+					profileId: null,
+				},
+			});
+
 			await this.prisma.profile.updateMany({
 				where: { shopifyIntegrationId: integration.id },
-				data: { shopifyIntegrationId: null },
+				data: {
+					shopifyIntegrationId: null,
+				},
 			});
 
 			// Vincular la integración al perfil actual
 			await this.prisma.shopifyIntegration.update({
 				where: { id: integration.id },
-				data: { profileId },
+				data: { profileId, globalStatus: GlobalStatus.ACTIVE },
 			});
 		} else {
-			// Crear una nueva integración y vincularla al perfil
+			// Remove 'profileId' from any ShopifyIntegration with the same 'profileId'
+			await this.prisma.shopifyIntegration.updateMany({
+				where: {
+					profileId: profileId,
+				},
+				data: {
+					profileId: null,
+				},
+			});
+
+			// Create a new integration and link it to the profile
 			const newIntegration = await this.prisma.shopifyIntegration.create({
 				data: {
 					profileId,
@@ -338,7 +363,11 @@ export class ShopifyAuthService extends Service {
 		accessToken: string,
 	): Promise<void> {
 		const integration = await this.prisma.shopifyIntegration.findFirst({
-			where: { shopDomain: shop, isAuth: true },
+			where: {
+				shopDomain: shop,
+				isAuth: true,
+				globalStatus: GlobalStatus.ACTIVE,
+			},
 		});
 
 		if (!integration) {
@@ -414,7 +443,11 @@ export class ShopifyAuthService extends Service {
 		accessToken: string,
 	): Promise<void> {
 		const integration = await this.prisma.shopifyIntegration.findFirst({
-			where: { shopDomain: shop, isAuth: true },
+			where: {
+				shopDomain: shop,
+				isAuth: true,
+				globalStatus: GlobalStatus.ACTIVE,
+			},
 		});
 
 		if (!integration) {
@@ -503,7 +536,11 @@ export class ShopifyAuthService extends Service {
 		endDate: dayjs.Dayjs,
 	): Promise<void> {
 		const integration = await this.prisma.shopifyIntegration.findFirst({
-			where: { shopDomain: shop, isAuth: true },
+			where: {
+				shopDomain: shop,
+				isAuth: true,
+				globalStatus: GlobalStatus.ACTIVE,
+			},
 		});
 
 		if (!integration) {

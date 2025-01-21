@@ -8,6 +8,7 @@ import {
 	ParseIntPipe,
 	Post,
 	Query,
+	Res,
 } from '@nestjs/common';
 import { ShopifyAuthService } from './shopify.auth.service';
 import { ShopifyDataService } from './shopify.data.service';
@@ -15,6 +16,9 @@ import { Auth } from '../auth/decorators/auth.decorator';
 import { ProfileMemberRoles, Role } from '@prisma/client';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
 import { ShopifyCronService } from './shopify.cron.service';
+import { ShopifyWebhookService } from './shopify.webhooks.service';
+import { Response } from 'express';
+import configLoader from 'src/lib/ConfigLoader';
 
 @Controller('shopify')
 export class ShopifyController {
@@ -22,6 +26,7 @@ export class ShopifyController {
 		private readonly shopifyAuthService: ShopifyAuthService,
 		private readonly shopifyDataService: ShopifyDataService,
 		private readonly shopifyCronService: ShopifyCronService,
+		private readonly shopifyWebhookService: ShopifyWebhookService,
 	) {}
 
 	@Get(':profileId/auth/:shop')
@@ -36,13 +41,15 @@ export class ShopifyController {
 	}
 
 	@Get('oauth2callback')
-	@ResponseMessage('Access token received')
-	async callback(@Query('shop') shop: string, @Query('code') code: string) {
-		const accessToken = await this.shopifyAuthService.handleCallback(
-			shop,
-			code,
-		);
-		return { accessToken };
+	@ResponseMessage('Redirecting to frontend')
+	async callback(
+		@Query('shop') shop: string,
+		@Query('code') code: string,
+		@Res() res: Response,
+	) {
+		await this.shopifyAuthService.handleCallback(shop, code);
+		const redirectUrl = `${configLoader().client_url}/dashboard/shopify`;
+		return res.redirect(redirectUrl);
 	}
 
 	@Get(':profileId/shop')
@@ -132,14 +139,6 @@ export class ShopifyController {
 	}
 
 	/**
-	 @Get('save')
-	async saveDailyStats() {
-		const res = await this.shopifyCronService.saveDailyStats();
-		return res;
-	}
-	 */
-
-	/**
 	 * Endpoint para recibir webhooks.
 	 * Shopify enviará las notificaciones POST a este endpoint.
 	 */
@@ -157,7 +156,7 @@ export class ShopifyController {
 		}
 
 		if (topic === 'orders/create') {
-			console.log(`Orden creada en la tienda ${shop}:`, body);
+			this.shopifyWebhookService.ordersCreate(shop, body);
 		}
 
 		if (topic === 'orders/updated') {
