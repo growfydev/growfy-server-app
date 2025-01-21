@@ -1,11 +1,12 @@
 import { JsonValue } from '@prisma/client/runtime/library';
 import {
-	IsObject,
-	IsNumber,
-	IsOptional,
 	IsArray,
 	ArrayNotEmpty,
 	ValidateNested,
+	IsNumber,
+	IsObject,
+	IsOptional,
+	IsEmail,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -30,4 +31,8 @@ export class CreatePostDto {
 	@IsNumber()
 	@IsOptional()
 	readonly unix?: number;
+
+	@IsOptional()
+	@IsEmail({}, { each: true })
+	readonly email?: string | string[];
 }

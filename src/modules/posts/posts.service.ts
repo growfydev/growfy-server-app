@@ -40,12 +40,19 @@ import {
 	TransformedPost,
 } from './dtos/transformed-post.interface';
 import { JsonValue } from '@prisma/client/runtime/library';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import {
+	PostPublishedPayload,
+	PostRescheduledPayload,
+	PostScheduledPayload,
+} from '../notification/interface/notification.payloads';
 
 @Injectable()
 export class PostsService extends Service {
 	constructor(
 		private readonly prisma: PrismaService,
 		private readonly taskQueueService: TaskQueueService,
+		private readonly eventEmitter: EventEmitter2,
 	) {
 		super(PostsService.name);
 	}
@@ -60,13 +67,25 @@ export class PostsService extends Service {
 		postData: CreatePostDto,
 		profileId: number,
 	): Promise<{ posts: Post[] }> {
-		const { unix, providerContents } = postData;
+		const { unix, providerContents, email } = postData;
 
 		const newPosts = await this.processPostCreation(
 			profileId,
 			providerContents,
 			unix,
+			email,
 		);
+
+		const postIds = newPosts.map((post) => post.id);
+
+		// Emitir evento de programación de publicación
+		if (email) {
+			const payload: PostScheduledPayload = {
+				postIds,
+				email,
+			};
+			this.eventEmitter.emit('post.scheduled', payload);
+		}
 
 		return { posts: newPosts };
 	}
@@ -83,14 +102,28 @@ export class PostsService extends Service {
 		profileId: number,
 		postId: number,
 		newUnixTime: number,
+		email: string | string[],
 	): Promise<{ post: Post }> {
 		const post = await this.findAndValidatePost(profileId, postId);
 		await this.validatePostStatus(post);
-		await this.updateScheduledTask(post, profileId, postId, newUnixTime);
+		await this.updateScheduledTask(
+			post,
+			profileId,
+			postId,
+			newUnixTime,
+			email,
+		);
 		const updatedPost = {
 			...post,
 			task: { status: TaskStatus.PENDING, unix: newUnixTime },
 		};
+		if (email) {
+			const payload: PostRescheduledPayload = {
+				postId,
+				email,
+			};
+			this.eventEmitter.emit('post.rescheduled', payload);
+		}
 
 		this.logger.debug(
 			`Post ${postId} reprogramado exitosamente para el timestamp ${newUnixTime}`,
@@ -179,7 +212,11 @@ export class PostsService extends Service {
 	 * @param postId - ID del post a publicar.
 	 * @throws {Error} Si el post no existe o si falla la publicación.
 	 */
-	async publishPost(profileId: number, postId: number): Promise<void> {
+	async publishPost(
+		profileId: number,
+		postId: number,
+		email?: string | string[],
+	): Promise<void> {
 		const post = await this.getPostWithRelations(postId);
 		if (!post) {
 			throw new NotFoundException(
@@ -198,13 +235,22 @@ export class PostsService extends Service {
 		console.log(properties);
 
 		// Validamos las propiedades del
-		await this.validatePostProperties(publishData, properties);
+		//await this.validatePostProperties(publishData, properties);
 
 		const publishSuccess = await this.executePublish(publishData);
 		if (!publishSuccess) {
 			throw new BadRequestException(
 				`Error al publicar el post con ID: ${postId}`,
 			);
+		}
+
+		// Emitir evento de publicación
+		if (email) {
+			const payload: PostPublishedPayload = {
+				postId,
+				email,
+			};
+			this.eventEmitter.emit('post.published', payload);
 		}
 		await this.update(profileId, postId);
 	}
@@ -229,6 +275,7 @@ export class PostsService extends Service {
 			content: Prisma.JsonValue;
 		}[],
 		unix: number,
+		email?: string | string[],
 	): Promise<Post[]> {
 		const newPosts: Post[] = [];
 
@@ -301,6 +348,7 @@ export class PostsService extends Service {
 				profileId,
 				newPost.id,
 				unix,
+				email,
 			);
 			if (!handlePostPublication) {
 				throw new BadRequestException(
@@ -326,11 +374,12 @@ export class PostsService extends Service {
 		profileId: number,
 		postId: number,
 		unix?: number,
+		email?: string | string[],
 	): Promise<boolean> {
 		if (unix) {
 			await this.taskQueueService.scheduleTask(profileId, postId, unix);
 		} else {
-			await this.publishPost(profileId, postId);
+			await this.publishPost(profileId, postId, email);
 		}
 		return true;
 	}
@@ -1062,6 +1111,7 @@ export class PostsService extends Service {
 		profileId: number,
 		postId: number,
 		newUnixTime: number,
+		email?: string | string[],
 	): Promise<void> {
 		try {
 			await Promise.all([
@@ -1077,6 +1127,12 @@ export class PostsService extends Service {
 					data: { unix: newUnixTime },
 				}),
 			]);
+			if (email) {
+				this.eventEmitter.emit('post.rescheduled', {
+					postId,
+					email,
+				});
+			}
 		} catch (error) {
 			this.logger.error(
 				`Error al reprogramar el post ${postId}: ${error.message}`,

@@ -1,18 +1,18 @@
 export interface PostScheduledPayload {
-	postId: number;
-	email: string;
+	postIds: number[];
+	email: string | string[];
 }
 
 export interface PostPublishedPayload {
 	postId: number;
-	email: string;
+	email: string | string[];
 }
 
 export interface PostRescheduledPayload {
 	postId: number;
-	email: string;
+	email: string | string[];
 }
 
 export interface EmailSentPayload {
-	email: string;
+	email: string | string[];
 }
