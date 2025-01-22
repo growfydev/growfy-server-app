@@ -11,7 +11,7 @@ import { StorageModule } from 'src/modules/storage/storage.module';
 import { ShopifyModule } from 'src/modules/shopify/shopify.module';
 import { WebsocketModule } from 'src/modules/websocket/websocket.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { TickesModule } from 'src/ticket/tickes.module';
+import { TickesModule } from 'src/modules/ticket/tickes.module';
 
 const CoreModules = [
 	TickesModule,
