@@ -39,7 +39,20 @@ export class TicketsService {
 		});
 	}
 
-	async updateTicketStatus(id: number, status: string): Promise<Ticket> {
+	async updateTicketStatus(
+		id: number,
+		profileId: number,
+		status: string,
+	): Promise<Ticket> {
+		// Verificar que el ticket pertenezca al perfil
+		const ticket = await this.prisma.ticket.findFirst({
+			where: { id, profileId },
+		});
+
+		if (!ticket) {
+			throw new Error('Ticket not found');
+		}
+
 		return this.prisma.ticket.update({
 			where: { id },
 			data: { status },
