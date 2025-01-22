@@ -10,6 +10,7 @@ datasource db {
 enum Role {
     ADMIN
     USER
+    VIRTUAL_ASSISTANT // Añadir el rol de Virtual Assistant
 }
 
 enum ProfileMemberRoles {
@@ -93,6 +94,21 @@ model User {
     updatedAt    DateTime?    @updatedAt
     members      Member[]
     profiles     Profile[]
+    Ticket       Ticket[]
+}
+
+model Ticket {
+    id Int @id @default(autoincrement())
+
+    title        String
+    description  String
+    status       String    @default("OPEN")
+    profileId    Int
+    assignedToId Int?
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime? @updatedAt
+    profile      Profile   @relation(fields: [profileId], references: [id])
+    assignedTo   User?     @relation(fields: [assignedToId], references: [id])
 }
 
 model Member {
@@ -137,6 +153,7 @@ model Profile {
 
     ShopifyIntegration   ShopifyIntegration?
     shopifyIntegrationId Int?
+    Ticket               Ticket[]
 }
 
 model Customer {
