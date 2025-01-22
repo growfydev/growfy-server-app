@@ -16,13 +16,7 @@ export class TicketsController {
 		@Body() createTicketDto: CreateTicketDto,
 		@Param('profileId') profileId: number,
 	) {
-		return this.ticketsService.createTicket(
-			createTicketDto.title,
-			createTicketDto.description,
-			+profileId,
-			createTicketDto.priority,
-			createTicketDto.type,
-		);
+		return this.ticketsService.createTicket(+profileId, createTicketDto);
 	}
 
 	@Get('profile/:profileId')
