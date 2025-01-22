@@ -9,7 +9,7 @@ import { CreateTicketDto } from './dto/create-dto';
 export class TicketsController {
 	constructor(private readonly ticketsService: TicketsService) {}
 
-	@Post()
+	@Post(':profileId')
 	@ResponseMessage('Ticket creado exitosamente')
 	@Auth([Role.VIRTUAL_ASSISTANT])
 	async createTicket(
@@ -20,6 +20,8 @@ export class TicketsController {
 			createTicketDto.title,
 			createTicketDto.description,
 			+profileId,
+			createTicketDto.priority,
+			createTicketDto.type,
 		);
 	}
 

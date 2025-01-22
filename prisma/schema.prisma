@@ -10,7 +10,20 @@ datasource db {
 enum Role {
     ADMIN
     USER
-    VIRTUAL_ASSISTANT // Añadir el rol de Virtual Assistant
+    VIRTUAL_ASSISTANT
+}
+
+enum TicketPriority {
+    LOW
+    MEDIUM
+    HIGH
+    URGENT
+}
+
+enum TicketType {
+    BILLING
+    TECHNICAL
+    GENERAL
 }
 
 enum ProfileMemberRoles {
@@ -102,13 +115,15 @@ model Ticket {
 
     title        String
     description  String
-    status       String    @default("OPEN")
+    status       String         @default("OPEN")
+    priority     TicketPriority
+    type         TicketType
     profileId    Int
     assignedToId Int?
-    createdAt    DateTime  @default(now())
-    updatedAt    DateTime? @updatedAt
-    profile      Profile   @relation(fields: [profileId], references: [id])
-    assignedTo   User?     @relation(fields: [assignedToId], references: [id])
+    createdAt    DateTime       @default(now())
+    updatedAt    DateTime?      @updatedAt
+    profile      Profile        @relation(fields: [profileId], references: [id])
+    assignedTo   User?          @relation(fields: [assignedToId], references: [id])
 }
 
 model Member {

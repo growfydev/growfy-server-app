@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../core/prisma.service';
-import { Ticket } from '@prisma/client';
+import { Ticket, TicketPriority, TicketType } from '@prisma/client';
 
 @Injectable()
 export class TicketsService {
@@ -10,6 +10,8 @@ export class TicketsService {
 		title: string,
 		description: string,
 		profileId: number,
+		priority: TicketPriority,
+		type: TicketType,
 	): Promise<Ticket> {
 		// Buscar un agente virtual disponible
 		const virtualAssistant = await this.prisma.user.findFirst({
@@ -22,6 +24,8 @@ export class TicketsService {
 				title,
 				description,
 				profileId,
+				priority,
+				type,
 				assignedToId: virtualAssistant?.id,
 			},
 		});
