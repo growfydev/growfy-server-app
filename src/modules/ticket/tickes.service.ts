@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../core/prisma.service';
+import { PrismaService } from '../../core/prisma.service';
 import { Ticket } from '@prisma/client';
+import { CreateTicketDto } from './dto/create-dto';
 
 @Injectable()
 export class TicketsService {
 	constructor(private readonly prisma: PrismaService) {}
 
 	async createTicket(
-		title: string,
-		description: string,
 		profileId: number,
+		createTicketData: CreateTicketDto,
 	): Promise<Ticket> {
-		// Buscar un agente virtual disponible
+		const { title, description, priority, type } = createTicketData;
 		const virtualAssistant = await this.prisma.user.findFirst({
 			where: { role: 'VIRTUAL_ASSISTANT' },
 		});
@@ -22,6 +22,8 @@ export class TicketsService {
 				title,
 				description,
 				profileId,
+				priority,
+				type,
 				assignedToId: virtualAssistant?.id,
 			},
 		});

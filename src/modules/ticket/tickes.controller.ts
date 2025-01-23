@@ -9,35 +9,31 @@ import { CreateTicketDto } from './dto/create-dto';
 export class TicketsController {
 	constructor(private readonly ticketsService: TicketsService) {}
 
-	@Post()
+	@Post(':profileId')
 	@ResponseMessage('Ticket creado exitosamente')
-	@Auth([Role.USER])
+	@Auth([Role.VIRTUAL_ASSISTANT])
 	async createTicket(
 		@Body() createTicketDto: CreateTicketDto,
 		@Param('profileId') profileId: number,
 	) {
-		return this.ticketsService.createTicket(
-			createTicketDto.title,
-			createTicketDto.description,
-			+profileId,
-		);
+		return this.ticketsService.createTicket(+profileId, createTicketDto);
 	}
 
 	@Get('profile/:profileId')
-	@Auth([Role.USER])
+	@Auth([Role.VIRTUAL_ASSISTANT])
 	async getTicketsByProfile(@Param('profileId') profileId: number) {
 		return this.ticketsService.getTicketsByProfile(+profileId);
 	}
 
 	@Get(':id')
-	@Auth([Role.USER])
+	@Auth([Role.VIRTUAL_ASSISTANT])
 	async getTicketById(@Param('id') id: number) {
 		return this.ticketsService.getTicketById(id);
 	}
 
 	@Patch(':profileId/:id/status')
 	@ResponseMessage('Estado del ticket actualizado exitosamente')
-	@Auth([Role.USER])
+	@Auth([Role.VIRTUAL_ASSISTANT])
 	async updateTicketStatus(
 		@Param('id') id: number,
 		@Param('profileId') profileId: number,
