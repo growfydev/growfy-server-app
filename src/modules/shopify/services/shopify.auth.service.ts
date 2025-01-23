@@ -8,16 +8,18 @@ import {
 import { GlobalStatus, ShopifyIntegration } from '@prisma/client';
 
 import { PrismaService } from 'src/core/prisma.service';
-import configLoader from '../../lib/ConfigLoader';
+import configLoader from '../../../lib/ConfigLoader';
 import { Service } from 'src/service';
-import { GetAllCustomers, parseCustomers } from './graphqlQueries/customers';
-import { GetAllProducts, parseProducts } from './graphqlQueries/products';
-import { GetOrdersData, parseOrders } from './graphqlQueries/orders';
+import { GetAllCustomers, parseCustomers } from '../graphql/customers';
+import { GetAllProducts, parseProducts } from '../graphql/products';
+import { GetOrdersData, parseOrders } from '../graphql/orders';
 import {
 	ShopifyCustomerResponse,
 	ShopifyOrdersResponse,
 	ShopifyProductResponse,
-} from './graphqlQueries/types';
+} from '../graphql/types';
+import { WebhookTopics } from '../common/webhook-topics';
+import { ShopifyWebhookBody } from '../common/types';
 
 @Injectable()
 export class ShopifyAuthService extends Service {
@@ -129,7 +131,7 @@ export class ShopifyAuthService extends Service {
 	 * @param hmac - HMAC del encabezado de la solicitud de webhook.
 	 * @param body - Cuerpo sin procesar de la solicitud de webhook.
 	 */
-	verifyWebhookHmac(hmac: string, body: any): boolean {
+	verifyWebhookHmac(hmac: string, body: ShopifyWebhookBody): boolean {
 		console.log('hmac', hmac);
 		console.log('body', body);
 
@@ -296,15 +298,8 @@ export class ShopifyAuthService extends Service {
 		shop: string,
 		accessToken: string,
 	): Promise<void> {
-		const webhookTopics = [
-			'orders/create',
-			'orders/updated',
-			'customers/create',
-			'customers/update',
-			'products/create',
-			'products/update',
-			'products/delete',
-		];
+		const webhookTopics = Object.values(WebhookTopics);
+
 		const { restClient } = this.createShopifyClient(shop, accessToken);
 
 		const response = await restClient.get('webhooks');
@@ -574,11 +569,11 @@ export class ShopifyAuthService extends Service {
 					where: { orderId: order.orderId },
 					update: {
 						...order,
-						ShopifyLineItem: undefined, // Excluir line items
+						ShopifyLineItem: undefined,
 					},
 					create: {
 						...order,
-						ShopifyLineItem: undefined, // Excluir line items
+						ShopifyLineItem: undefined,
 					},
 				});
 

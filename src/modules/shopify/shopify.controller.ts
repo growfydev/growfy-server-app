@@ -10,15 +10,18 @@ import {
 	Query,
 	Res,
 } from '@nestjs/common';
-import { ShopifyAuthService } from './shopify.auth.service';
-import { ShopifyDataService } from './shopify.data.service';
+import { ShopifyAuthService } from './services/shopify.auth.service';
+import { ShopifyDataService } from './services/shopify.data.service';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { ProfileMemberRoles, Role } from '@prisma/client';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
-import { ShopifyCronService } from './shopify.cron.service';
-import { ShopifyWebhookService } from './shopify.webhooks.service';
+import { ShopifyCronService } from './services/shopify.cron.service';
+import { ShopifyWebhookService } from './services/shopify.webhooks.service';
 import { Response } from 'express';
 import configLoader from 'src/lib/ConfigLoader';
+import { ShopifyOrder, ShopifyOrderDelete } from './restapi/types';
+import { ShopifyWebhookBody } from './common/types';
+import { WebhookTopics } from './common/webhook-topics';
 
 @Controller('shopify')
 export class ShopifyController {
@@ -147,7 +150,7 @@ export class ShopifyController {
 		@Headers('X-Shopify-Hmac-SHA256') hmac: string,
 		@Headers('X-Shopify-Topic') topic: string,
 		@Headers('X-Shopify-Shop-Domain') shop: string,
-		@Body() body: object,
+		@Body() body: ShopifyWebhookBody,
 	) {
 		// **Validar la firma HMAC**
 		const isValid = this.shopifyAuthService.verifyWebhookHmac(hmac, body);
@@ -155,12 +158,23 @@ export class ShopifyController {
 			throw new BadRequestException('HMAC de Shopify inválido.');
 		}
 
-		if (topic === 'orders/create') {
-			this.shopifyWebhookService.ordersCreate(shop, body);
-		}
+		switch (topic) {
+			case WebhookTopics.ORDERS_CREATE:
+				this.shopifyWebhookService.ordersCreate(
+					shop,
+					body as ShopifyOrder,
+				);
+				break;
 
-		if (topic === 'orders/updated') {
-			console.log(`Orden actualizada en la tienda ${shop}:`, body);
+			case WebhookTopics.ORDERS_DELETE:
+				this.shopifyWebhookService.ordersDelete(
+					shop,
+					body as ShopifyOrderDelete,
+				);
+				break;
+			default:
+				return { success: true };
+			//throw new BadRequestException('Webhook topic no soportado.');
 		}
 
 		return { success: true };
