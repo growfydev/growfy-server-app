@@ -22,7 +22,7 @@ interface Company {
 	location_id: number;
 }
 
-interface Customer {
+interface ShopifyCustomer {
 	id: number;
 	email: string;
 	created_at: string;
@@ -34,13 +34,35 @@ interface Customer {
 	verified_email: boolean;
 	multipass_identifier: string | null;
 	tax_exempt: boolean;
-	phone: string;
+	phone: string | null;
 	email_marketing_consent: MarketingConsent;
 	sms_marketing_consent: MarketingConsent;
 	tags: string;
 	currency: string;
 	tax_exemptions: any[];
 	admin_graphql_api_id: string;
+	default_address: Address | null;
+	addresses: Address[];
+}
+
+interface Address {
+	id: number;
+	customer_id: number;
+	first_name: string;
+	last_name: string;
+	company: string | null;
+	address1: string;
+	address2: string | null;
+	city: string;
+	province: string;
+	country: string;
+	zip: string;
+	phone: string;
+	name: string;
+	province_code: string;
+	country_code: string;
+	country_name: string;
+	default: boolean;
 }
 
 interface MarketingConsent {
@@ -204,7 +226,7 @@ interface ShopifyOrder {
 	updated_at: string;
 	user_id: string | null;
 	billing_address: any | null;
-	customer: Customer;
+	customer: ShopifyCustomer;
 	discount_applications: any[];
 	fulfillments: any[];
 	line_items: LineItem[];
@@ -219,11 +241,117 @@ interface ShopifyOrderDelete {
 	id: number;
 }
 
+interface ShopifyProduct {
+	admin_graphql_api_id: string;
+	body_html: string;
+	created_at: string;
+	handle: string;
+	id: number;
+	product_type: string;
+	published_at: string;
+	template_suffix: string;
+	title: string;
+	updated_at: string;
+	vendor: string;
+	status: string;
+	published_scope: string;
+	tags: string;
+	variants: Variant[];
+	options: Option[];
+	images: Image[];
+	image: Image;
+	media: Media[];
+	variant_gids: VariantGid[];
+	has_variants_that_requires_components: boolean;
+	category: Category;
+}
+
+interface Variant {
+	admin_graphql_api_id: string;
+	barcode: string;
+	compare_at_price: string | null;
+	created_at: string;
+	id: number;
+	inventory_policy: string;
+	position: number;
+	price: string;
+	product_id: number;
+	sku: string;
+	taxable: boolean;
+	title: string;
+	updated_at: string;
+	option1: string;
+	option2: string | null;
+	option3: string | null;
+	image_id: number | null;
+	inventory_item_id: number;
+	inventory_quantity: number;
+	old_inventory_quantity: number;
+}
+
+interface Option {
+	name: string;
+	id: number;
+	product_id: number;
+	position: number;
+	values: string[];
+}
+
+interface Image {
+	id: number;
+	product_id: number;
+	position: number;
+	created_at: string;
+	updated_at: string;
+	alt: string | null;
+	width: number;
+	height: number;
+	src: string;
+	variant_ids: number[];
+	admin_graphql_api_id: string;
+}
+
+interface Media {
+	id: number;
+	product_id: number;
+	position: number;
+	created_at: string;
+	updated_at: string;
+	alt: string | null;
+	status: string;
+	media_content_type: string;
+	preview_image: PreviewImage;
+	variant_ids: number[];
+	admin_graphql_api_id: string;
+}
+
+interface PreviewImage {
+	width: number;
+	height: number;
+	src: string;
+	status: string;
+}
+
+interface VariantGid {
+	admin_graphql_api_id: string;
+	updated_at: string;
+}
+
+interface Category {
+	admin_graphql_api_id: string;
+	name: string;
+	full_name: string;
+}
+
+interface ShopifyProductDelete {
+	id: number;
+}
+
 export {
 	ShopifyOrder,
 	ClientDetails,
 	Company,
-	Customer,
+	ShopifyCustomer,
 	LineItem,
 	MarketingConsent,
 	Money,
@@ -231,4 +359,6 @@ export {
 	ShippingAddress,
 	ShippingLine,
 	ShopifyOrderDelete,
+	ShopifyProduct,
+	ShopifyProductDelete,
 };

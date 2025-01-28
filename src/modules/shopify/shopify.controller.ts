@@ -19,7 +19,13 @@ import { ShopifyCronService } from './services/shopify.cron.service';
 import { ShopifyWebhookService } from './services/shopify.webhooks.service';
 import { Response } from 'express';
 import configLoader from 'src/lib/ConfigLoader';
-import { ShopifyOrder, ShopifyOrderDelete } from './restapi/types';
+import {
+	ShopifyCustomer,
+	ShopifyOrder,
+	ShopifyOrderDelete,
+	ShopifyProduct,
+	ShopifyProductDelete,
+} from './restapi/types';
 import { ShopifyWebhookBody } from './common/types';
 import { WebhookTopics } from './common/webhook-topics';
 
@@ -159,13 +165,38 @@ export class ShopifyController {
 		}
 
 		switch (topic) {
+			case WebhookTopics.CUSTOMERS_CREATE:
+			case WebhookTopics.CUSTOMERS_UPDATE:
+				this.shopifyWebhookService.customerCreateOrUpdate(
+					shop,
+					body as ShopifyCustomer,
+				);
+				break;
+			case WebhookTopics.CUSTOMERS_DELETE:
+				this.shopifyWebhookService.customerDelete(
+					shop,
+					body as ShopifyCustomer,
+				);
+			case WebhookTopics.PRODUCTS_CREATE:
+			case WebhookTopics.PRODUCTS_UPDATE:
+				this.shopifyWebhookService.productCreateOrUpdate(
+					shop,
+					body as ShopifyProduct,
+				);
+				break;
+			case WebhookTopics.PRODUCTS_DELETE:
+				this.shopifyWebhookService.productDelete(
+					shop,
+					body as ShopifyProductDelete,
+				);
+				break;
 			case WebhookTopics.ORDERS_CREATE:
-				this.shopifyWebhookService.ordersCreate(
+			case WebhookTopics.ORDERS_UPDATED:
+				this.shopifyWebhookService.orderCreateOrUpdate(
 					shop,
 					body as ShopifyOrder,
 				);
 				break;
-
 			case WebhookTopics.ORDERS_DELETE:
 				this.shopifyWebhookService.ordersDelete(
 					shop,
@@ -173,8 +204,7 @@ export class ShopifyController {
 				);
 				break;
 			default:
-				return { success: true };
-			//throw new BadRequestException('Webhook topic no soportado.');
+				throw new BadRequestException('Webhook topic no soportado.');
 		}
 
 		return { success: true };

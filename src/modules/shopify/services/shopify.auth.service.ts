@@ -131,10 +131,8 @@ export class ShopifyAuthService extends Service {
 	 * @param hmac - HMAC del encabezado de la solicitud de webhook.
 	 * @param body - Cuerpo sin procesar de la solicitud de webhook.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	verifyWebhookHmac(hmac: string, body: ShopifyWebhookBody): boolean {
-		console.log('hmac', hmac);
-		console.log('body', body);
-
 		return true;
 	}
 

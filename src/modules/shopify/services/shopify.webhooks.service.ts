@@ -1,9 +1,17 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/core/prisma.service';
 import { Service } from 'src/service';
-import { ShopifyOrder, ShopifyOrderDelete } from '../restapi/types';
+import {
+	ShopifyOrder,
+	ShopifyOrderDelete,
+	ShopifyCustomer,
+	ShopifyProduct,
+	ShopifyProductDelete,
+} from '../restapi/types';
 import { GlobalStatus, ShopifyIntegration } from '@prisma/client';
 import { parseOrder } from '../restapi/orders';
+import { parseCustomer } from '../restapi/customers';
+import { parseProduct } from '../restapi/products';
 
 @Injectable()
 export class ShopifyWebhookService extends Service {
@@ -11,13 +19,90 @@ export class ShopifyWebhookService extends Service {
 		super(ShopifyWebhookService.name);
 	}
 
-	async ordersCreate(shop: string, body: ShopifyOrder) {
+	async customerCreateOrUpdate(shop: string, body: ShopifyCustomer) {
 		const integration = await this.getIntegration(shop);
+		const customer = parseCustomer(body, integration.profileId);
 
+		const existingCustomer = await this.prisma.customer.findFirst({
+			where: {
+				OR: [
+					{ shopifyCustomerId: customer.shopifyCustomerId },
+					{ email: customer.email },
+					{ phone: customer.phone },
+				].filter(
+					(condition) =>
+						// Solo incluimos condiciones donde el valor no sea null o undefined
+						Object.values(condition)[0] != null,
+				),
+			},
+		});
+
+		if (existingCustomer) {
+			// Si existe, actualizamos
+			await this.prisma.customer.update({
+				where: {
+					id: existingCustomer.id,
+				},
+				data: {
+					...customer,
+				},
+			});
+		} else {
+			// Si no existe, creamos uno nuevo
+			await this.prisma.customer.create({
+				data: customer,
+			});
+		}
+	}
+
+	async customerDelete(shop: string, body: ShopifyCustomer) {
+		const integration = await this.getIntegration(shop);
+		const customer = parseCustomer(body, integration.profileId);
+
+		const existingCustomer = await this.prisma.customer.findFirst({
+			where: {
+				shopifyCustomerId: customer.shopifyCustomerId,
+			},
+		});
+
+		if (existingCustomer) {
+			await this.prisma.customer.update({
+				where: { id: existingCustomer.id },
+				data: {
+					globalStatus: GlobalStatus.DELETED,
+				},
+			});
+		}
+	}
+
+	async productCreateOrUpdate(shop: string, body: ShopifyProduct) {
+		const integration = await this.getIntegration(shop);
+		const product = parseProduct(body, integration.id);
+		await this.prisma.shopifyProduct.upsert({
+			where: { productId: product.productId },
+			update: product,
+			create: product,
+		});
+	}
+
+	async productDelete(shop: string, body: ShopifyProductDelete) {
+		const integration = await this.getIntegration(shop);
+		await this.prisma.shopifyProduct.update({
+			where: {
+				productId: `gid://shopify/Product/${body.id}`,
+				shopifyIntegrationId: integration.id,
+			},
+			data: {
+				globalStatus: GlobalStatus.DELETED,
+			},
+		});
+	}
+
+	async orderCreateOrUpdate(shop: string, body: ShopifyOrder) {
+		const integration = await this.getIntegration(shop);
 		const order = parseOrder(body, integration.id);
 
-		// Upsert de la orden
-		const createdOrder = await this.prisma.shopifyOrder.upsert({
+		const updatedOrCreatedOrder = await this.prisma.shopifyOrder.upsert({
 			where: { orderId: order.orderId },
 			update: {
 				...order,
@@ -29,17 +114,17 @@ export class ShopifyWebhookService extends Service {
 			},
 		});
 
-		// Upsert de line items
+		// Upsert de los line items asociados
 		for (const lineItem of order.ShopifyLineItem) {
 			await this.prisma.shopifyLineItem.upsert({
 				where: { lineItemId: lineItem.lineItemId },
 				update: {
 					...lineItem,
-					shopifyOrderId: createdOrder.orderId,
+					shopifyOrderId: updatedOrCreatedOrder.orderId,
 				},
 				create: {
 					...lineItem,
-					shopifyOrderId: createdOrder.orderId,
+					shopifyOrderId: updatedOrCreatedOrder.orderId,
 				},
 			});
 		}
