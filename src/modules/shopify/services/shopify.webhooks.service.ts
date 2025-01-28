@@ -107,10 +107,24 @@ export class ShopifyWebhookService extends Service {
 			update: {
 				...order,
 				ShopifyLineItem: undefined,
+				globalStatus: [
+					'REFUNDED',
+					'VOIDED',
+					'PARTIALLY_REFUNDED',
+				].includes(order.financialStatus)
+					? GlobalStatus.INACTIVE
+					: GlobalStatus.ACTIVE,
 			},
 			create: {
 				...order,
 				ShopifyLineItem: undefined,
+				globalStatus: [
+					'REFUNDED',
+					'VOIDED',
+					'PARTIALLY_REFUNDED',
+				].includes(order.financialStatus)
+					? GlobalStatus.INACTIVE
+					: GlobalStatus.ACTIVE,
 			},
 		});
 
