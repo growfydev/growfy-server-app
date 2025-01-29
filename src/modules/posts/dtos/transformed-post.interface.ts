@@ -1,4 +1,11 @@
-import { $Enums, Post, TaskStatus, Prisma, GlobalStatus } from '@prisma/client';
+import {
+	$Enums,
+	Post,
+	TaskStatus,
+	Prisma,
+	GlobalStatus,
+	PostStatus,
+} from '@prisma/client';
 import { JsonValue } from '@prisma/client/runtime/library';
 export interface TransformedPost {
 	id: number;
@@ -173,6 +180,9 @@ export interface PostsWhereClause {
 		providerId: {
 			in: number[];
 		};
+	};
+	status?: {
+		in: PostStatus[];
 	};
 }
 

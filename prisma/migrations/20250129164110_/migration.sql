@@ -1,5 +1,11 @@
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('ADMIN', 'USER');
+CREATE TYPE "Role" AS ENUM ('ADMIN', 'USER', 'VIRTUAL_ASSISTANT');
+
+-- CreateEnum
+CREATE TYPE "TicketPriority" AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'URGENT');
+
+-- CreateEnum
+CREATE TYPE "TicketType" AS ENUM ('BILLING', 'TECHNICAL', 'GENERAL');
 
 -- CreateEnum
 CREATE TYPE "ProfileMemberRoles" AS ENUM ('MEMBER', 'OWNER', 'MANAGER', 'ANALYST', 'EDITOR', 'CONTENT_CREATOR', 'CLIENT', 'GUEST');
@@ -42,6 +48,22 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
+CREATE TABLE "Ticket" (
+    "id" SERIAL NOT NULL,
+    "title" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'OPEN',
+    "priority" "TicketPriority" NOT NULL,
+    "type" "TicketType" NOT NULL,
+    "profileId" INTEGER NOT NULL,
+    "assignedToId" INTEGER,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+
+    CONSTRAINT "Ticket_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Member" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
@@ -73,6 +95,7 @@ CREATE TABLE "Profile" (
     "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3),
+    "shopifyIntegrationId" INTEGER,
 
     CONSTRAINT "Profile_pkey" PRIMARY KEY ("id")
 );
@@ -80,7 +103,10 @@ CREATE TABLE "Profile" (
 -- CreateTable
 CREATE TABLE "Customer" (
     "id" SERIAL NOT NULL,
+    "shopifyCustomerId" TEXT,
     "name" TEXT NOT NULL,
+    "email" TEXT,
+    "phone" TEXT,
     "profileId" INTEGER NOT NULL,
     "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -227,11 +253,127 @@ CREATE TABLE "StorageProfile" (
     CONSTRAINT "StorageProfile_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "ShopifyIntegration" (
+    "id" SERIAL NOT NULL,
+    "profileId" INTEGER NOT NULL,
+    "shopName" TEXT,
+    "accessToken" TEXT,
+    "code" TEXT,
+    "isAuth" BOOLEAN NOT NULL DEFAULT false,
+    "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+    "shopEmail" TEXT,
+    "shopDomain" TEXT,
+    "shopCountry" TEXT,
+    "shopCurrency" TEXT,
+    "shopOwner" TEXT,
+    "shopPlan" TEXT,
+    "hasDiscounts" BOOLEAN DEFAULT false,
+    "hasGiftCards" BOOLEAN DEFAULT false,
+
+    CONSTRAINT "ShopifyIntegration_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ShopifyOrder" (
+    "id" SERIAL NOT NULL,
+    "orderId" TEXT NOT NULL,
+    "orderNumber" TEXT,
+    "financialStatus" TEXT,
+    "currency" TEXT,
+    "subTotal" DECIMAL(65,30),
+    "totalPrice" DECIMAL(65,30),
+    "shopifyCreatedAt" TIMESTAMP(3),
+    "paymentMethods" TEXT[],
+    "shippingAddress" TEXT,
+    "shippingLat" DECIMAL(65,30),
+    "shippingLong" DECIMAL(65,30),
+    "statusPageUrl" TEXT,
+    "shopifyCustomerId" TEXT,
+    "shopifyIntegrationId" INTEGER NOT NULL,
+    "hasDiscounts" BOOLEAN DEFAULT false,
+    "hasGiftCards" BOOLEAN DEFAULT false,
+    "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+
+    CONSTRAINT "ShopifyOrder_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ShopifyLineItem" (
+    "id" SERIAL NOT NULL,
+    "shopifyOrderId" TEXT NOT NULL,
+    "lineItemId" TEXT NOT NULL,
+    "shopifyProductId" TEXT,
+    "quantity" INTEGER,
+    "price" DECIMAL(65,30),
+    "originalUnitPrice" DECIMAL(65,30),
+    "discountedUnitPrice" DECIMAL(65,30),
+    "originalTotal" DECIMAL(65,30),
+    "discountedTotal" DECIMAL(65,30),
+    "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+
+    CONSTRAINT "ShopifyLineItem_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ShopifyProduct" (
+    "id" SERIAL NOT NULL,
+    "productId" TEXT NOT NULL,
+    "shopifyIntegrationId" INTEGER NOT NULL,
+    "title" TEXT,
+    "totalInventory" INTEGER,
+    "vendor" TEXT,
+    "featuredImage" TEXT,
+    "featuredImageAltText" TEXT,
+    "minPrice" DECIMAL(65,30),
+    "maxPrice" DECIMAL(65,30),
+    "currency" TEXT,
+    "collections" TEXT[],
+    "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+
+    CONSTRAINT "ShopifyProduct_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ShopifyDailyStats" (
+    "id" SERIAL NOT NULL,
+    "shopifyIntegrationId" INTEGER NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "currency" TEXT NOT NULL,
+    "totalOrders" INTEGER NOT NULL,
+    "totalRevenue" DOUBLE PRECISION NOT NULL,
+    "avgOrderValue" DOUBLE PRECISION NOT NULL,
+    "products" JSONB NOT NULL,
+    "customers" JSONB NOT NULL,
+    "globalStatus" "GlobalStatus" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+
+    CONSTRAINT "ShopifyDailyStats_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Member_userId_profileId_key" ON "Member"("userId", "profileId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Customer_shopifyCustomerId_key" ON "Customer"("shopifyCustomerId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Customer_email_key" ON "Customer"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Customer_phone_key" ON "Customer"("phone");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Task_postId_key" ON "Task"("postId");
@@ -244,6 +386,27 @@ CREATE UNIQUE INDEX "ProfileRolePermission_profileRoles_permissionId_key" ON "Pr
 
 -- CreateIndex
 CREATE UNIQUE INDEX "StorageProfile_profileId_service_key" ON "StorageProfile"("profileId", "service");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ShopifyIntegration_profileId_key" ON "ShopifyIntegration"("profileId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ShopifyOrder_orderId_key" ON "ShopifyOrder"("orderId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ShopifyLineItem_lineItemId_key" ON "ShopifyLineItem"("lineItemId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ShopifyProduct_productId_key" ON "ShopifyProduct"("productId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ShopifyDailyStats_shopifyIntegrationId_date_key" ON "ShopifyDailyStats"("shopifyIntegrationId", "date");
+
+-- AddForeignKey
+ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_assignedToId_fkey" FOREIGN KEY ("assignedToId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Member" ADD CONSTRAINT "Member_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -289,3 +452,24 @@ ALTER TABLE "ProfileRolePermission" ADD CONSTRAINT "ProfileRolePermission_permis
 
 -- AddForeignKey
 ALTER TABLE "StorageProfile" ADD CONSTRAINT "StorageProfile_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ShopifyIntegration" ADD CONSTRAINT "ShopifyIntegration_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ShopifyOrder" ADD CONSTRAINT "ShopifyOrder_shopifyCustomerId_fkey" FOREIGN KEY ("shopifyCustomerId") REFERENCES "Customer"("shopifyCustomerId") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ShopifyOrder" ADD CONSTRAINT "ShopifyOrder_shopifyIntegrationId_fkey" FOREIGN KEY ("shopifyIntegrationId") REFERENCES "ShopifyIntegration"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ShopifyLineItem" ADD CONSTRAINT "ShopifyLineItem_shopifyOrderId_fkey" FOREIGN KEY ("shopifyOrderId") REFERENCES "ShopifyOrder"("orderId") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ShopifyLineItem" ADD CONSTRAINT "ShopifyLineItem_shopifyProductId_fkey" FOREIGN KEY ("shopifyProductId") REFERENCES "ShopifyProduct"("productId") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ShopifyProduct" ADD CONSTRAINT "ShopifyProduct_shopifyIntegrationId_fkey" FOREIGN KEY ("shopifyIntegrationId") REFERENCES "ShopifyIntegration"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ShopifyDailyStats" ADD CONSTRAINT "ShopifyDailyStats_shopifyIntegrationId_fkey" FOREIGN KEY ("shopifyIntegrationId") REFERENCES "ShopifyIntegration"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
