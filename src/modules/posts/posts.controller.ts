@@ -12,7 +12,7 @@ import { PostsService } from './posts.service';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { ExportPostsDto } from './dtos/export-posts.dto';
 import { Auth } from '../auth/decorators/auth.decorator';
-import { Role } from '@prisma/client';
+import { PostStatus, Role } from '@prisma/client';
 import { Response } from 'express';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
 import { ReschedulePostDto } from './dtos/resschedule-post.dto';
@@ -73,5 +73,17 @@ export class PostsController {
 			reschedulePostDto.newUnixTime,
 			reschedulePostDto.email,
 		);
+	}
+
+	@Get('today/:profileId')
+	@Auth([Role.USER])
+	async getTodayPosts(
+		@Param('profileId') profileId: number,
+		@Body('status') status?: PostStatus[],
+	) {
+		const statusArray = status
+			? status
+			: [PostStatus.QUEUED, PostStatus.PUBLISHED];
+		return this.postsService.fetchTodayPosts(+profileId, statusArray);
 	}
 }

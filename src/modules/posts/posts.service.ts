@@ -58,6 +58,43 @@ export class PostsService extends Service {
 	}
 
 	/**
+	 * Obtiene las publicaciones programadas para el día actual.
+	 * @param {number} profileId - ID del perfil.
+	 * @param {PostStatus[]} [status] - Estados de las publicaciones a filtrar.
+	 * @returns {Promise<PostWithIncludes[]>} Lista de publicaciones con sus relaciones.
+	 * @throws {NotFoundException} Si no se encuentran publicaciones.
+	 */
+	async fetchTodayPosts(
+		profileId: number,
+		status: PostStatus[] = ['QUEUED', 'PUBLISHED'],
+	): Promise<PostWithIncludes[]> {
+		const today = new Date();
+		const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+		const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+		const dateRange: DateRange = {
+			start: startOfDay,
+			end: endOfDay,
+		};
+
+		const whereClause = this.buildPostsWhereClause(profileId, dateRange);
+		whereClause.status = { in: status };
+
+		const posts = await this.prisma.post.findMany({
+			where: whereClause,
+			include: this.getPostsIncludeClause(),
+		});
+
+		if (!posts.length) {
+			throw new NotFoundException(
+				'No se encontraron publicaciones programadas para el día de hoy.',
+			);
+		}
+
+		return posts;
+	}
+
+	/**
 	 * Crea una nueva publicación con las validaciones necesarias.
 	 * @param postData - DTO con los datos de la publicación.
 	 * @param profileId - ID del perfil que crea la publicación.
@@ -1161,6 +1198,10 @@ export class PostsService extends Service {
 		);
 	}
 
+	/**
+	 * Obtiene las propiedades del post
+	 * @private
+	 */
 	private async getPostProperties(postId: number): Promise<JsonValue> {
 		const post = await this.prisma.post.findUnique({
 			where: { id: postId },
