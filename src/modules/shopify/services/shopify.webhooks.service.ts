@@ -7,11 +7,17 @@ import {
 	ShopifyCustomer,
 	ShopifyProduct,
 	ShopifyProductDelete,
+	ShopifyCheckout,
 } from '../restapi/types';
-import { GlobalStatus, ShopifyIntegration } from '@prisma/client';
+import {
+	GlobalStatus,
+	ShopifyCheckoutStatus,
+	ShopifyIntegration,
+} from '@prisma/client';
 import { parseOrder } from '../restapi/orders';
 import { parseCustomer } from '../restapi/customers';
 import { parseProduct } from '../restapi/products';
+import { parseCheckout } from '../restapi/checkouts';
 
 @Injectable()
 export class ShopifyWebhookService extends Service {
@@ -142,6 +148,21 @@ export class ShopifyWebhookService extends Service {
 				},
 			});
 		}
+
+		const checkout = await this.prisma.shopifyCheckout.findFirst({
+			where: {
+				checkoutId: order.shopifyCheckoutId,
+			},
+		});
+
+		if (checkout && checkout.status !== ShopifyCheckoutStatus.COMPLETED) {
+			await this.prisma.shopifyCheckout.update({
+				where: { id: checkout.id },
+				data: {
+					status: ShopifyCheckoutStatus.COMPLETED,
+				},
+			});
+		}
 	}
 
 	async ordersDelete(shop: string, body: ShopifyOrderDelete) {
@@ -155,6 +176,37 @@ export class ShopifyWebhookService extends Service {
 				globalStatus: GlobalStatus.DELETED,
 			},
 		});
+	}
+
+	async checkoutCreateOrUpdate(shop: string, body: ShopifyCheckout) {
+		const integration = await this.getIntegration(shop);
+		const checkout = parseCheckout(body, integration.id);
+
+		const savedCheckout = await this.prisma.shopifyCheckout.upsert({
+			where: { checkoutId: checkout.checkoutId },
+			update: {
+				...checkout,
+				ShopifyLineItem: undefined,
+			},
+			create: {
+				...checkout,
+				ShopifyLineItem: undefined,
+			},
+		});
+
+		for (const lineItem of checkout.ShopifyLineItem) {
+			await this.prisma.shopifyLineItem.upsert({
+				where: { lineItemId: lineItem.lineItemId },
+				update: {
+					...lineItem,
+					shopifyCheckoutId: savedCheckout.checkoutId,
+				},
+				create: {
+					...lineItem,
+					shopifyCheckoutId: savedCheckout.checkoutId,
+				},
+			});
+		}
 	}
 
 	private async getIntegration(shop: string): Promise<ShopifyIntegration> {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 interface MoneySet {
 	shop_money: Money;
 	presentment_money: Money;
@@ -74,6 +75,8 @@ interface MarketingConsent {
 
 interface LineItem {
 	id: number;
+	key?: string;
+	line_price?: number;
 	admin_graphql_api_id: string;
 	attributed_staffs: any[];
 	current_quantity: number;
@@ -347,6 +350,54 @@ interface ShopifyProductDelete {
 	id: number;
 }
 
+interface ShopifyCheckout {
+	id: number;
+	token: string;
+	cart_token: string;
+	email: string;
+	gateway: string | null;
+	buyer_accepts_marketing: boolean;
+	created_at: string;
+	updated_at: string;
+	landing_site: string | null;
+	note: string | null;
+	note_attributes: any[];
+	referring_site: string | null;
+	shipping_lines: any[];
+	taxes_included: boolean;
+	total_weight: number;
+	currency: string;
+	completed_at: string | null;
+	closed_at: string | null;
+	user_id: string | null;
+	location_id: string | null;
+	source_identifier: string | null;
+	source_url: string | null;
+	device_id: string | null;
+	phone: string | null;
+	customer_locale: string | null;
+	line_items: LineItem[];
+	name: string;
+	source: string | null;
+	abandoned_checkout_url: string;
+	discount_codes: any[];
+	tax_lines: any[];
+	source_name: string;
+	presentment_currency: string;
+	buyer_accepts_sms_marketing: boolean;
+	sms_marketing_phone: string | null;
+	total_discounts: string;
+	total_line_items_price: string;
+	total_price: string;
+	total_tax: string;
+	subtotal_price: string;
+	total_duties: string | null;
+	reservation_token: string | null;
+	billing_address: Address;
+	shipping_address: Address;
+	customer: ShopifyCustomer;
+}
+
 export {
 	ShopifyOrder,
 	ClientDetails,
@@ -361,4 +412,5 @@ export {
 	ShopifyOrderDelete,
 	ShopifyProduct,
 	ShopifyProductDelete,
+	ShopifyCheckout,
 };

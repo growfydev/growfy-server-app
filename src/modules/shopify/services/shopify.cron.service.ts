@@ -3,7 +3,11 @@ import { PrismaService } from 'src/core/prisma.service';
 import { Service } from 'src/service';
 //import { CronTask } from '../tasks/cron/cron.decorator';
 import dayjs from 'dayjs';
-import { GlobalStatus, ShopifyIntegration } from '@prisma/client';
+import {
+	GlobalStatus,
+	ShopifyCheckoutStatus,
+	ShopifyIntegration,
+} from '@prisma/client';
 
 @Injectable()
 export class ShopifyCronService extends Service {
@@ -160,6 +164,7 @@ export class ShopifyCronService extends Service {
 							});
 							return acc;
 						},
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
 						{} as Record<string, any>,
 					);
 
@@ -257,6 +262,23 @@ export class ShopifyCronService extends Service {
 				stack: error.stack,
 			});
 			throw error;
+		}
+	}
+
+	//@CronTask('* * * * *')
+	async markAbandonedCheckouts() {
+		const checkouts = await this.prisma.shopifyCheckout.findMany({
+			where: {
+				status: ShopifyCheckoutStatus.PENDING,
+				createdAt: { lt: dayjs().subtract(1, 'hour').toDate() }, // 1 hora
+			},
+		});
+
+		for (const checkout of checkouts) {
+			await this.prisma.shopifyCheckout.update({
+				where: { id: checkout.id },
+				data: { status: ShopifyCheckoutStatus.ABANDONED },
+			});
 		}
 	}
 

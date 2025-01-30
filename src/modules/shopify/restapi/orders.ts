@@ -42,6 +42,7 @@ const parseOrder = (order: ShopifyOrder, shopifyIntegrationId: number) => {
 				).greaterThan(0)
 			: false, // Indicador de tarjetas de regalo aplicadas
 
+		shopifyCheckoutId: order.checkout_id ? String(order.checkout_id) : null,
 		// Parsing de lineItems
 		ShopifyLineItem:
 			order.line_items?.map((lineItem) => ({

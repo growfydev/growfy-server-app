@@ -20,6 +20,7 @@ import { ShopifyWebhookService } from './services/shopify.webhooks.service';
 import { Response } from 'express';
 import configLoader from 'src/lib/ConfigLoader';
 import {
+	ShopifyCheckout,
 	ShopifyCustomer,
 	ShopifyOrder,
 	ShopifyOrderDelete,
@@ -191,7 +192,7 @@ export class ShopifyController {
 				);
 				break;
 			case WebhookTopics.ORDERS_CREATE:
-			case WebhookTopics.ORDERS_UPDATED:
+			case WebhookTopics.ORDERS_UPDATE:
 				this.shopifyWebhookService.orderCreateOrUpdate(
 					shop,
 					body as ShopifyOrder,
@@ -201,6 +202,13 @@ export class ShopifyController {
 				this.shopifyWebhookService.ordersDelete(
 					shop,
 					body as ShopifyOrderDelete,
+				);
+				break;
+			case WebhookTopics.CHECKOUTS_CREATE:
+			case WebhookTopics.CHECKOUTS_UPDATE:
+				this.shopifyWebhookService.checkoutCreateOrUpdate(
+					shop,
+					body as ShopifyCheckout,
 				);
 				break;
 			default:
