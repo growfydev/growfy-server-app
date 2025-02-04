@@ -84,6 +84,19 @@ export class ShopifyCronService extends Service {
 						},
 					});
 
+					const countAbandonedCheckouts =
+						await this.prisma.shopifyCheckout.count({
+							where: {
+								shopifyIntegrationId: integration.id,
+								globalStatus: GlobalStatus.ACTIVE,
+								status: ShopifyCheckoutStatus.ABANDONED,
+								shopifyCreatedAt: {
+									gte: start,
+									lte: end,
+								},
+							},
+						});
+
 					if (!orders.length) {
 						this.logger.warn(
 							`No orders found for integration ${integration.id} on ${start.toISOString()}`,
@@ -219,6 +232,9 @@ export class ShopifyCronService extends Service {
 							newCustomerPercentage: `${totalCustomers ? ((customerMetrics.newCustomers / totalCustomers) * 100).toFixed(0) : 0}%`,
 							returningCustomerPercentage: `${totalCustomers ? ((customerMetrics.returningCustomers / totalCustomers) * 100).toFixed(0) : 0}%`,
 						},
+						abandonedCheckouts: countAbandonedCheckouts
+							? countAbandonedCheckouts
+							: 0,
 					};
 
 					await this.prisma.shopifyDailyStats.upsert({
