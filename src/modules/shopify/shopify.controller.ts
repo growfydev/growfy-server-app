@@ -8,13 +8,27 @@ import {
 	ParseIntPipe,
 	Post,
 	Query,
+	Res,
 } from '@nestjs/common';
-import { ShopifyAuthService } from './shopify.auth.service';
-import { ShopifyDataService } from './shopify.data.service';
+import { ShopifyAuthService } from './services/shopify.auth.service';
+import { ShopifyDataService } from './services/shopify.data.service';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { ProfileMemberRoles, Role } from '@prisma/client';
 import { ResponseMessage } from 'src/decorators/responseMessage.decorator';
-import { ShopifyCronService } from './shopify.cron.service';
+import { ShopifyCronService } from './services/shopify.cron.service';
+import { ShopifyWebhookService } from './services/shopify.webhooks.service';
+import { Response } from 'express';
+import configLoader from 'src/lib/ConfigLoader';
+import {
+	ShopifyCheckout,
+	ShopifyCustomer,
+	ShopifyOrder,
+	ShopifyOrderDelete,
+	ShopifyProduct,
+	ShopifyProductDelete,
+} from './restapi/types';
+import { ShopifyWebhookBody } from './common/types';
+import { WebhookTopics } from './common/webhook-topics';
 
 @Controller('shopify')
 export class ShopifyController {
@@ -22,6 +36,7 @@ export class ShopifyController {
 		private readonly shopifyAuthService: ShopifyAuthService,
 		private readonly shopifyDataService: ShopifyDataService,
 		private readonly shopifyCronService: ShopifyCronService,
+		private readonly shopifyWebhookService: ShopifyWebhookService,
 	) {}
 
 	@Get(':profileId/auth/:shop')
@@ -36,13 +51,15 @@ export class ShopifyController {
 	}
 
 	@Get('oauth2callback')
-	@ResponseMessage('Access token received')
-	async callback(@Query('shop') shop: string, @Query('code') code: string) {
-		const accessToken = await this.shopifyAuthService.handleCallback(
-			shop,
-			code,
-		);
-		return { accessToken };
+	@ResponseMessage('Redirecting to frontend')
+	async callback(
+		@Query('shop') shop: string,
+		@Query('code') code: string,
+		@Res() res: Response,
+	) {
+		await this.shopifyAuthService.handleCallback(shop, code);
+		const redirectUrl = `${configLoader().client_url}/dashboard/shopify`;
+		return res.redirect(redirectUrl);
 	}
 
 	@Get(':profileId/shop')
@@ -132,14 +149,6 @@ export class ShopifyController {
 	}
 
 	/**
-	 @Get('save')
-	async saveDailyStats() {
-		const res = await this.shopifyCronService.saveDailyStats();
-		return res;
-	}
-	 */
-
-	/**
 	 * Endpoint para recibir webhooks.
 	 * Shopify enviará las notificaciones POST a este endpoint.
 	 */
@@ -148,7 +157,7 @@ export class ShopifyController {
 		@Headers('X-Shopify-Hmac-SHA256') hmac: string,
 		@Headers('X-Shopify-Topic') topic: string,
 		@Headers('X-Shopify-Shop-Domain') shop: string,
-		@Body() body: object,
+		@Body() body: ShopifyWebhookBody,
 	) {
 		// **Validar la firma HMAC**
 		const isValid = this.shopifyAuthService.verifyWebhookHmac(hmac, body);
@@ -156,12 +165,54 @@ export class ShopifyController {
 			throw new BadRequestException('HMAC de Shopify inválido.');
 		}
 
-		if (topic === 'orders/create') {
-			console.log(`Orden creada en la tienda ${shop}:`, body);
-		}
-
-		if (topic === 'orders/updated') {
-			console.log(`Orden actualizada en la tienda ${shop}:`, body);
+		switch (topic) {
+			case WebhookTopics.CUSTOMERS_CREATE:
+			case WebhookTopics.CUSTOMERS_UPDATE:
+				this.shopifyWebhookService.customerCreateOrUpdate(
+					shop,
+					body as ShopifyCustomer,
+				);
+				break;
+			case WebhookTopics.CUSTOMERS_DELETE:
+				this.shopifyWebhookService.customerDelete(
+					shop,
+					body as ShopifyCustomer,
+				);
+			case WebhookTopics.PRODUCTS_CREATE:
+			case WebhookTopics.PRODUCTS_UPDATE:
+				this.shopifyWebhookService.productCreateOrUpdate(
+					shop,
+					body as ShopifyProduct,
+				);
+				break;
+			case WebhookTopics.PRODUCTS_DELETE:
+				this.shopifyWebhookService.productDelete(
+					shop,
+					body as ShopifyProductDelete,
+				);
+				break;
+			case WebhookTopics.ORDERS_CREATE:
+			case WebhookTopics.ORDERS_UPDATE:
+				this.shopifyWebhookService.orderCreateOrUpdate(
+					shop,
+					body as ShopifyOrder,
+				);
+				break;
+			case WebhookTopics.ORDERS_DELETE:
+				this.shopifyWebhookService.ordersDelete(
+					shop,
+					body as ShopifyOrderDelete,
+				);
+				break;
+			case WebhookTopics.CHECKOUTS_CREATE:
+			case WebhookTopics.CHECKOUTS_UPDATE:
+				this.shopifyWebhookService.checkoutCreateOrUpdate(
+					shop,
+					body as ShopifyCheckout,
+				);
+				break;
+			default:
+				throw new BadRequestException('Webhook topic no soportado.');
 		}
 
 		return { success: true };

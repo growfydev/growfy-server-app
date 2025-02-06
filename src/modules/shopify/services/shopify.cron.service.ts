@@ -3,7 +3,11 @@ import { PrismaService } from 'src/core/prisma.service';
 import { Service } from 'src/service';
 //import { CronTask } from '../tasks/cron/cron.decorator';
 import dayjs from 'dayjs';
-import { GlobalStatus, ShopifyIntegration } from '@prisma/client';
+import {
+	GlobalStatus,
+	ShopifyCheckoutStatus,
+	ShopifyIntegration,
+} from '@prisma/client';
 
 @Injectable()
 export class ShopifyCronService extends Service {
@@ -79,6 +83,19 @@ export class ShopifyCronService extends Service {
 							},
 						},
 					});
+
+					const countAbandonedCheckouts =
+						await this.prisma.shopifyCheckout.count({
+							where: {
+								shopifyIntegrationId: integration.id,
+								globalStatus: GlobalStatus.ACTIVE,
+								status: ShopifyCheckoutStatus.ABANDONED,
+								shopifyCreatedAt: {
+									gte: start,
+									lte: end,
+								},
+							},
+						});
 
 					if (!orders.length) {
 						this.logger.warn(
@@ -160,6 +177,7 @@ export class ShopifyCronService extends Service {
 							});
 							return acc;
 						},
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
 						{} as Record<string, any>,
 					);
 
@@ -214,6 +232,9 @@ export class ShopifyCronService extends Service {
 							newCustomerPercentage: `${totalCustomers ? ((customerMetrics.newCustomers / totalCustomers) * 100).toFixed(0) : 0}%`,
 							returningCustomerPercentage: `${totalCustomers ? ((customerMetrics.returningCustomers / totalCustomers) * 100).toFixed(0) : 0}%`,
 						},
+						abandonedCheckouts: countAbandonedCheckouts
+							? countAbandonedCheckouts
+							: 0,
 					};
 
 					await this.prisma.shopifyDailyStats.upsert({
@@ -257,6 +278,23 @@ export class ShopifyCronService extends Service {
 				stack: error.stack,
 			});
 			throw error;
+		}
+	}
+
+	//@CronTask('* * * * *')
+	async markAbandonedCheckouts() {
+		const checkouts = await this.prisma.shopifyCheckout.findMany({
+			where: {
+				status: ShopifyCheckoutStatus.PENDING,
+				createdAt: { lt: dayjs().subtract(1, 'hour').toDate() }, // 1 hora
+			},
+		});
+
+		for (const checkout of checkouts) {
+			await this.prisma.shopifyCheckout.update({
+				where: { id: checkout.id },
+				data: { status: ShopifyCheckoutStatus.ABANDONED },
+			});
 		}
 	}
 

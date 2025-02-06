@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { GlobalStatus, User } from '@prisma/client';
 import { PrismaService } from 'src/core/prisma.service';
 import { RegisterDto } from '../types/dto';
 import { hashPassword } from '../utils/crypt';
@@ -38,6 +38,10 @@ export class UserService {
 									},
 								},
 								ShopifyIntegration: {
+									where: {
+										isAuth: true,
+										globalStatus: GlobalStatus.ACTIVE,
+									},
 									select: {
 										id: true,
 										profileId: true,
@@ -80,6 +84,10 @@ export class UserService {
 									},
 								},
 								ShopifyIntegration: {
+									where: {
+										isAuth: true,
+										globalStatus: GlobalStatus.ACTIVE,
+									},
 									select: {
 										id: true,
 										profileId: true,
