@@ -13,7 +13,7 @@
 		"lint": "eslint \"{src,apps,libs,test,prisma}/**/*.ts\" --fix",
 		"prepare": "husky",
 		"prod": "node dist/main",
-		"start": "nest start",
+		"start": "node --max-old-space-size=4096 dist/main",
 		"test": "jest",
 		"test:cov": "jest --coverage",
 		"test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
@@ -94,7 +94,7 @@
 		"reflect-metadata": "^0.2.2",
 		"rxjs": "^7.8.1",
 		"socket.io": "^4.8.1",
-		"stripe": "^17.4.0",
+		"stripe": "^17.6.0",
 		"swagger-ui-express": "^5.0.1",
 		"twilio": "^5.4.0"
 	},
