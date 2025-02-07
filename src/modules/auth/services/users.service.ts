@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { GlobalStatus, User } from '@prisma/client';
 import { PrismaService } from 'src/core/prisma.service';
 import { RegisterDto } from '../types/dto';
 import { hashPassword } from '../utils/crypt';
@@ -27,7 +27,35 @@ export class UserService {
 			include: {
 				members: {
 					include: {
-						profile: true,
+						profile: {
+							include: {
+								StorageProfile: {
+									select: {
+										id: true,
+										profileId: true,
+										service: true,
+										createdAt: true,
+									},
+								},
+								ShopifyIntegration: {
+									where: {
+										isAuth: true,
+										globalStatus: GlobalStatus.ACTIVE,
+									},
+									select: {
+										id: true,
+										profileId: true,
+										//shopId: true,
+										shopName: true,
+										shopDomain: true,
+										shopOwner: true,
+										shopEmail: true,
+										isAuth: true,
+										globalStatus: true,
+									},
+								},
+							},
+						},
 						roles: true,
 					},
 				},
@@ -38,18 +66,49 @@ export class UserService {
 	}
 
 	async findUserById(id: number): Promise<User | null> {
-		return await this.prisma.user.findUnique({
+		const user = await this.prisma.user.findUnique({
 			where: {
 				id,
 			},
 			include: {
 				members: {
 					include: {
-						profile: true,
+						profile: {
+							include: {
+								StorageProfile: {
+									select: {
+										id: true,
+										profileId: true,
+										service: true,
+										createdAt: true,
+									},
+								},
+								ShopifyIntegration: {
+									where: {
+										isAuth: true,
+										globalStatus: GlobalStatus.ACTIVE,
+									},
+									select: {
+										id: true,
+										profileId: true,
+										//shopId: true,
+										shopName: true,
+										shopDomain: true,
+										shopOwner: true,
+										shopEmail: true,
+										isAuth: true,
+										globalStatus: true,
+									},
+								},
+							},
+						},
+						roles: true,
 					},
 				},
 			},
 		});
+
+		return user;
 	}
 
 	async updateUser(email: string, data: Partial<User>): Promise<User> {

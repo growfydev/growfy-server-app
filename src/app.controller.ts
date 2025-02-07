@@ -9,15 +9,21 @@ import {
 } from '@nestjs/common';
 import { S3Service } from 'src/common/s3-config';
 import { Auth } from 'src/modules/auth/decorators/auth.decorator';
-import { Role } from '@prisma/client';
+import { ProfileMemberRoles, Role } from '@prisma/client';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller()
 export class AppController {
 	constructor(private readonly s3Service: S3Service) {}
 
+	@Get()
+	@Auth([Role.ADMIN], [ProfileMemberRoles.CLIENT, ProfileMemberRoles.MANAGER])
+	async foo() {
+		return { ok: true };
+	}
+
 	@Get('s3/presigned-url/:key')
-	@Auth([Role.USER, Role.ADMIN])
+	@Auth([Role.USER])
 	async getPresidedUrl(@Param('key') key: string) {
 		try {
 			const presignedUrl = await this.s3Service.getFile(key);
@@ -30,7 +36,7 @@ export class AppController {
 	}
 
 	@Post('s3/upload')
-	@Auth([Role.USER, Role.ADMIN])
+	@Auth([Role.USER])
 	@UseInterceptors(FileInterceptor('file'))
 	async uploadFile(
 		@UploadedFile() file: Express.Multer.File,

@@ -16,10 +16,14 @@ import {
 import { InviteUserDto } from './dto/invite-user.dto';
 import configLoader from 'src/lib/ConfigLoader';
 import { Service } from 'src/service';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class ProfilesService extends Service {
-	constructor(private readonly prisma: PrismaService) {
+	constructor(
+		private readonly prisma: PrismaService,
+		private readonly emailService: EmailService,
+	) {
 		super(ProfilesService.name);
 	}
 
@@ -29,7 +33,7 @@ export class ProfilesService extends Service {
 	async create(
 		userId: number,
 		createProfileDto: CreateProfileDto,
-	): Promise<{ profile: Profile }> {
+	): Promise<{ member: Member }> {
 		const { name } = createProfileDto;
 
 		if (!name) {
@@ -47,9 +51,17 @@ export class ProfilesService extends Service {
 				profileId: profile.id,
 			},
 		});
-		await this.assignRoleToMember(member.id, ProfileMemberRoles.MANAGER);
+		await this.assignRoleToMember(member.id, ProfileMemberRoles.OWNER);
 
-		return { profile };
+		const updatedMember = await this.prisma.member.findUnique({
+			where: { id: member.id },
+			include: {
+				profile: true,
+				roles: true,
+			},
+		});
+
+		return { member: updatedMember };
 	}
 
 	/**
@@ -174,10 +186,16 @@ export class ProfilesService extends Service {
 	async inviteUser(
 		inviteUserDto: InviteUserDto,
 	): Promise<{ member: Member }> {
-		const { email, profileId, role } = inviteUserDto;
+		const { email, profileId, roles } = inviteUserDto;
 
-		if (!Object.values(ProfileMemberRoles).includes(role)) {
-			throw new BadRequestException('Invalid role');
+		if (!Array.isArray(roles) || roles.length === 0) {
+			throw new BadRequestException('Roles must be a non-empty array');
+		}
+
+		for (const role of roles) {
+			if (!Object.values(ProfileMemberRoles).includes(role)) {
+				throw new BadRequestException(`Invalid role: ${role}`);
+			}
 		}
 
 		let invitedUser = await this.prisma.user.findUnique({
@@ -195,10 +213,41 @@ export class ProfilesService extends Service {
 				},
 			});
 
+			await this.emailService
+				.to(email)
+				.subject('You’re Invited to Join Growfy!')
+				.html(
+					`
+        <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                <div style="background-color:rgb(78, 78, 78); padding: 20px; color: #ffffff; text-align: center;">
+                    <h1 style="margin: 0; font-size: 24px;">Welcome to Growfy!</h1>
+                </div>
+                <div style="padding: 20px;">
+                    <p style="font-size: 16px; line-height: 1.5;">Hello,</p>
+                    <p style="font-size: 16px; line-height: 1.5;">You’ve been invited to join <strong>Growfy</strong>, a platform that helps you achieve your goals and collaborate with others effectively.</p>
+                    <p style="font-size: 16px; line-height: 1.5;">To get started, please complete your registration by clicking the button below:</p>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <a href="${configLoader().client_url}/complete-registration/${email}" 
+                           style="display: inline-block; padding: 12px 24px; font-size: 16px; color: #ffffff; background-color: #4CAF50; text-decoration: none; border-radius: 4px;">
+                           Complete Registration
+                        </a>
+                    </div>
+                    <p style="font-size: 16px; line-height: 1.5;">If you didn’t request this, please ignore this email.</p>
+                    <p style="font-size: 16px; line-height: 1.5;">Best regards,</p>
+                    <p style="font-size: 16px; line-height: 1.5;"><strong>The Growfy Team</strong></p>
+                </div>
+                <div style="background-color: #f1f1f1; padding: 10px; text-align: center; font-size: 12px; color: #777;">
+                    <p style="margin: 0;">Growfy Inc., 1234 Innovation Drive, Suite 100</p>
+                    <p style="margin: 0;">If you have any questions, contact us at <a href="mailto:support@growfy.com" style="color: #4CAF50;">support@growfy.com</a></p>
+                </div>
+            </div>
+        </div>
+        `,
+				)
+				.send();
+
 			this.logger.log(`Invitation email sent to ${email}`);
-			this.logger.log(
-				`Invitation link: ${configLoader().client_url}/complete-registration/?email=${email}`,
-			);
 		}
 
 		const isAlreadyMember = await this.prisma.member.findFirst({
@@ -221,7 +270,10 @@ export class ProfilesService extends Service {
 				globalStatus: GlobalStatus.ACTIVE,
 			},
 		});
-		await this.assignRoleToMember(member.id, role);
+
+		for (const role of roles) {
+			await this.assignRoleToMember(member.id, role);
+		}
 
 		return { member };
 	}

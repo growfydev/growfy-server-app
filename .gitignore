@@ -20,6 +20,7 @@ scrapper/zinsta/Lib
 .env.production
 .env.local
 bun.lockb
+pnpm-lock.yaml
 
 # OS
 .DS_Store

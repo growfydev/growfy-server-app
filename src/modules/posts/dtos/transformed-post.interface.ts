@@ -1,4 +1,11 @@
-import { $Enums, Post, TaskStatus, Prisma, GlobalStatus } from '@prisma/client';
+import {
+	$Enums,
+	Post,
+	TaskStatus,
+	Prisma,
+	GlobalStatus,
+	PostStatus,
+} from '@prisma/client';
 import { JsonValue } from '@prisma/client/runtime/library';
 export interface TransformedPost {
 	id: number;
@@ -65,6 +72,7 @@ export interface PostsIncludeQuery {
 }
 
 export interface TaskFieldsSelect {
+	id: boolean;
 	status: boolean;
 	unix: boolean;
 }
@@ -173,6 +181,9 @@ export interface PostsWhereClause {
 			in: number[];
 		};
 	};
+	status?: {
+		in: PostStatus[];
+	};
 }
 
 export interface PostsIncludeClause {
@@ -223,4 +234,20 @@ export interface IExporter {
 export interface Task {
 	id: number;
 	unix: number;
+}
+
+export interface PostWithTaskAndProviderPostType extends Post {
+	task: {
+		id: number;
+		status: TaskStatus;
+		unix: number;
+	} | null;
+	ProviderPostType: {
+		provider: {
+			name: string;
+		};
+		posttype: {
+			name: string;
+		};
+	} | null;
 }

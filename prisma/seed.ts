@@ -167,6 +167,12 @@ async function fillProvidersAndSocials() {
 			providerId: 2,
 			profileId: profile.id,
 		},
+		{
+			access_token: 'instagram-token-example',
+			accountId: 'instagram-account-789',
+			providerId: 3,
+			profileId: profile.id,
+		},
 	];
 
 	await prisma.social.createMany({
@@ -206,6 +212,12 @@ async function seedPostTypesAndRelations() {
 				},
 				postTypeName: 'message',
 				providerPostTypeName: 'Facebook message',
+				properties: {
+					size: 'number',
+					format: 'string',
+					width: 'number',
+					height: 'number',
+				},
 			},
 			{
 				characterLimit: 63206,
@@ -216,6 +228,11 @@ async function seedPostTypesAndRelations() {
 				},
 				postTypeName: 'image',
 				providerPostTypeName: 'Facebook image',
+				properties: {
+					validFormats: ['image/jpeg', 'image/png'],
+					maxSize: 10485760, // 10MB
+					minDimensions: { width: 640, height: 640 },
+				},
 			},
 			{
 				characterLimit: 63206,
@@ -227,6 +244,12 @@ async function seedPostTypesAndRelations() {
 				},
 				postTypeName: 'short_video',
 				providerPostTypeName: 'Facebook reel',
+				properties: {
+					size: 'number',
+					format: 'string',
+					width: 'number',
+					height: 'number',
+				},
 			},
 		],
 		YOUTUBE: [
@@ -249,6 +272,45 @@ async function seedPostTypesAndRelations() {
 				},
 				postTypeName: 'short_video',
 				providerPostTypeName: 'YouTube short',
+				properties: {
+					size: 'number',
+					format: 'string',
+					width: 'number',
+					height: 'number',
+				},
+			},
+		],
+		INSTAGRAM: [
+			{
+				characterLimit: 2200,
+				characterKey: 'caption',
+				fields: {
+					caption: 'string',
+					image_url: 'string[]',
+				},
+				postTypeName: 'image',
+				providerPostTypeName: 'Instagram image',
+				properties: {
+					validFormats: ['image/jpeg', 'image/png'],
+					maxSize: 10485760, // 10MB
+					minDimensions: { width: 640, height: 640 },
+				},
+			},
+			{
+				characterLimit: 2200,
+				characterKey: 'caption',
+				fields: {
+					caption: 'string',
+					video_url: 'string',
+				},
+				postTypeName: 'short_video',
+				providerPostTypeName: 'Instagram reel',
+				properties: {
+					validFormats: ['video/mp4', 'video/quicktime'],
+					maxSize: 100 * 1024 * 1024, // 100MB
+					minDuration: 3,
+					maxDuration: 90,
+				},
 			},
 		],
 	};
@@ -268,6 +330,7 @@ async function seedPostTypesAndRelations() {
 					characterLimit: config.characterLimit,
 					characterKey: config.characterKey,
 					fields: config.fields,
+					properties: config.properties,
 				};
 			}
 			return [];
