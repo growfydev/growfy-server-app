@@ -4,7 +4,9 @@ import {
 	InternalServerErrorException,
 } from '@nestjs/common';
 import { Dropbox } from 'dropbox';
-import { google, drive_v3 } from 'googleapis';
+import { drive_v3 } from 'googleapis/build/src/apis/drive';
+import { OAuth2Client } from 'google-auth-library';
+import { GoogleApis } from 'googleapis';
 import { PrismaClient } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -14,18 +16,24 @@ import { StorageServiceTypes } from './types/enum';
 
 @Injectable()
 export class StorageService {
-	private oauth2Client;
+	private oauth2Client: OAuth2Client;
 	private drive: drive_v3.Drive;
 	private readonly prisma: PrismaClient;
+	private googleApis: GoogleApis;
 
 	constructor() {
-		this.oauth2Client = new google.auth.OAuth2(
+		this.oauth2Client = new OAuth2Client(
 			configLoader().google.drive.clientId,
 			configLoader().google.drive.clientSecret,
 			configLoader().google.drive.redirectUri,
 		);
 
-		this.drive = google.drive({ version: 'v3', auth: this.oauth2Client });
+		this.googleApis = new GoogleApis();
+		this.drive = this.googleApis.drive({
+			version: 'v3',
+			auth: this.oauth2Client,
+		});
+
 		this.prisma = new PrismaClient();
 	}
 
@@ -169,7 +177,10 @@ export class StorageService {
 		pageSize: number = 50,
 	): Promise<StorageListResponse> {
 		const oauth2Client = await this.loadGoogleToken(profileId);
-		const drive = google.drive({ version: 'v3', auth: oauth2Client });
+		const drive = this.googleApis.drive({
+			version: 'v3',
+			auth: oauth2Client,
+		});
 
 		try {
 			const res = await drive.files.list({
@@ -251,7 +262,10 @@ export class StorageService {
 		filePath: string,
 	): Promise<StorageFile> {
 		const oauth2Client = await this.loadGoogleToken(profileId);
-		const drive = google.drive({ version: 'v3', auth: oauth2Client });
+		const drive = this.googleApis.drive({
+			version: 'v3',
+			auth: oauth2Client,
+		});
 
 		try {
 			const fileName = path.basename(filePath);
@@ -337,7 +351,10 @@ export class StorageService {
 		fileId: string,
 	): Promise<void> {
 		const oauth2Client = await this.loadGoogleToken(profileId);
-		const drive = google.drive({ version: 'v3', auth: oauth2Client });
+		const drive = this.googleApis.drive({
+			version: 'v3',
+			auth: oauth2Client,
+		});
 
 		try {
 			await drive.files.delete({ fileId });
@@ -410,8 +427,8 @@ export class StorageService {
 	}
 
 	// Crear cliente OAuth2 para Google Drive
-	private createGoogleOAuth2Client() {
-		return new google.auth.OAuth2(
+	private createGoogleOAuth2Client(): OAuth2Client {
+		return new OAuth2Client(
 			configLoader().google.drive.clientId,
 			configLoader().google.drive.clientSecret,
 			configLoader().google.drive.redirectUri,
