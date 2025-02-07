@@ -48,4 +48,9 @@ export class AppController {
 		);
 		return { url: uploadedUrl };
 	}
+
+	@Get('memory')
+	getMemoryUsage() {
+		return process.memoryUsage();
+	}
 }
