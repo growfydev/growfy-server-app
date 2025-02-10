@@ -2,12 +2,14 @@ import { Injectable } from '@nestjs/common';
 import MailchimpClient from '@mailchimp/mailchimp_marketing';
 import axios from 'axios';
 import { Campaign } from './interface/mailchimp.interface';
+import { UpdateCampaignDto } from './dto/update-campaign.dto';
 
 @Injectable()
 export class Mailchimp {
 	private clientId = process.env.MAILCHIMP_CLIENT_ID;
 	private clientSecret = process.env.MAILCHIMP_CLIENT_SECRET;
 	private redirectUri = process.env.MAILCHIMP_REDIRECT_URI;
+	private url = process.env.MAILCHIMP_URL_BASE;
 
 	constructor() {
 		MailchimpClient.setConfig({
@@ -69,7 +71,7 @@ export class Mailchimp {
 			).toISOString(),
 		});
 
-		if ('campaigns' in response && Array.isArray(response.campaigns)) {
+		if ('campaigns' in response) {
 			const campaigns = response.campaigns.map((campaign: Campaign) => ({
 				...campaign,
 				settings: {
@@ -88,5 +90,64 @@ export class Mailchimp {
 			console.error('Error fetching campaigns:', response);
 			return [];
 		}
+	}
+
+	// Método para actualizar información básica de la campaña
+	async updateCampaignBasics(
+		campaign_id: string,
+		data: UpdateCampaignDto,
+	): Promise<void> {
+		const body = {
+			settings: {
+				title: data.title,
+				subject_line: data.subjectLine,
+				preview_text: data.previewText,
+			},
+		};
+
+		const response = await axios.patch(
+			this.url + `/campaigns/${campaign_id}`,
+			body,
+			{
+				auth: {
+					username: 'anystring',
+					password: process.env.MAILCHIMP_API_KEY,
+				},
+			},
+		);
+
+		return response.data;
+	}
+
+	// Método para reprogramar una campaña
+	async rescheduleCampaign(
+		campaign_id: string,
+		scheduleTime: string,
+	): Promise<void> {
+		const unschedulerurl =
+			this.url + `/campaigns/${campaign_id}/actions/unschedule`;
+		const schedulerurl =
+			this.url + `/campaigns/${campaign_id}/actions/schedule`;
+		const data = {
+			schedule_time: scheduleTime, // Formato ISO 8601, por ejemplo: '2024-12-06T19:22:39.829Z'
+		};
+
+		// Cancelamos la programación actual
+		await axios.post(unschedulerurl, null, {
+			auth: {
+				username: 'anystring',
+				password: process.env.MAILCHIMP_API_KEY,
+			},
+		});
+
+		// Programamos la campaña en la nueva fecha
+		const response = await axios.post(schedulerurl, data, {
+			auth: {
+				username: 'anystring',
+				password: process.env.MAILCHIMP_API_KEY,
+			},
+		});
+
+		return response.data;
 	}
 }
