@@ -8,6 +8,8 @@ import {
 } from '@nestjs/common';
 import { EmailMarketingService } from './email-marketing.service';
 import { Response } from 'express';
+import { Auth } from '../auth/decorators/auth.decorator';
+import { Role } from '@prisma/client';
 
 @Controller('email-marketing')
 export class EmailMarketingController {
@@ -16,11 +18,13 @@ export class EmailMarketingController {
 	) {}
 
 	@Get('login-url')
+	@Auth([Role.USER])
 	async getLoginUrl(@Query('provider') provider: string) {
 		return this.emailMarketingService.getLoginUrl(provider);
 	}
 
 	@Get('login-url/callback')
+	@Auth([Role.USER])
 	async oauth2Callback(
 		@Query('code') code: string,
 		@Query('state') state: string,
