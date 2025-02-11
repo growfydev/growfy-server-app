@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import MailchimpClient from '@mailchimp/mailchimp_marketing';
 import axios from 'axios';
 import { Campaign } from './interface/mailchimp.interface';
-import { UpdateCampaignDto } from './dto/update-campaign.dto';
+import {
+	UpdateCampaignDto,
+	UpdateCampaignRecipients,
+} from './dto/update-campaign.dto';
 
 @Injectable()
 export class Mailchimp {
@@ -23,7 +26,7 @@ export class Mailchimp {
 			response_type: 'code',
 			client_id: this.clientId,
 			redirect_uri: this.redirectUri,
-			state: JSON.stringify({ provider: 'mailchimp' }),
+			state: JSON.stringify({ providerId: 1 }),
 		});
 
 		return `https://login.mailchimp.com/oauth2/authorize?${params.toString()}`;
@@ -92,7 +95,7 @@ export class Mailchimp {
 		}
 	}
 
-	// Método para actualizar información básica de la campaña
+	// Datos Básicos de la Campaña. Método para actualizar información básica de la campaña
 	async updateCampaignBasics(
 		campaign_id: string,
 		data: UpdateCampaignDto,
@@ -119,7 +122,7 @@ export class Mailchimp {
 		return response.data;
 	}
 
-	// Método para reprogramar una campaña
+	// Fecha y Hora. Método para reprogramar una campaña
 	async rescheduleCampaign(
 		campaign_id: string,
 		scheduleTime: string,
@@ -147,6 +150,57 @@ export class Mailchimp {
 				password: process.env.MAILCHIMP_API_KEY,
 			},
 		});
+
+		return response.data;
+	}
+
+	// Segmentación. Método para actualizar los destinatarios de una campaña
+	async updateCampaingRecipients(
+		campaign_id: string,
+		data: UpdateCampaignRecipients,
+	): Promise<void> {
+		const response = await axios.patch(
+			this.url + `/campaigns/${campaign_id}/recipients`,
+			data,
+			{
+				auth: {
+					username: 'anystring',
+					password: process.env.MAILCHIMP_API_KEY,
+				},
+			},
+		);
+
+		return response.data;
+	}
+
+	// Estado del Correo. Método para ancelar una campaña programada
+	async cancelScheduledCampaign(campaign_id: string): Promise<void> {
+		const response = await axios.post(
+			this.url + `/campaigns/${campaign_id}/actions/cancel-send`,
+			null,
+			{
+				auth: {
+					username: 'anystring',
+					password: process.env.MAILCHIMP_API_KEY,
+				},
+			},
+		);
+
+		return response.data;
+	}
+
+	// Estado del Correo. Método para dupliar una campaña
+	async duplicateCampaign(campaign_id: string): Promise<void> {
+		const response = await axios.post(
+			this.url + `/campaigns/${campaign_id}/actions/replicate`,
+			null,
+			{
+				auth: {
+					username: 'anystring',
+					password: process.env.MAILCHIMP_API_KEY,
+				},
+			},
+		);
 
 		return response.data;
 	}
