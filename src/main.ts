@@ -23,7 +23,10 @@ async function main() {
 	const document = SwaggerModule.createDocument(app, config);
 	SwaggerModule.setup('api', app, document);
 
-	app.enableCors();
+	app.enableCors({
+		origin: configService.get('FRONTEND_URL'),
+		credentials: true,
+	});
 	app.setGlobalPrefix('api/v1');
 	app.useGlobalPipes(new ValidationPipe());
 	app.useGlobalFilters(new AllExceptionsFilter());
