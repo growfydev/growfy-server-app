@@ -10,11 +10,11 @@ const prisma = new PrismaClient();
 
 async function main() {
 	const permissionNames = Object.values(PermissionFlags);
-	for (const permission of permissionNames) {
+	for (let i = 0; i < permissionNames.length; i++) {
 		await prisma.permission.upsert({
-			where: { name: permission },
+			where: { id: i + 1 },
 			update: {},
-			create: { name: permission },
+			create: { id: i + 1, name: permissionNames[i] },
 		});
 	}
 
@@ -46,7 +46,7 @@ async function main() {
 	for (const [role, permissions] of Object.entries(profileRolePermissions)) {
 		const profileRole = role as ProfileMemberRoles;
 		for (const permission of permissions) {
-			const perm = await prisma.permission.findUnique({
+			const perm = await prisma.permission.findFirst({
 				where: { name: permission },
 			});
 			if (perm) {
@@ -68,16 +68,19 @@ async function main() {
 	}
 
 	const exampleUser = await createExampleUser();
-	console.log('Example user created:', exampleUser);
+	console.log('Example user upserted:', exampleUser);
+
 	await fillProvidersAndSocials();
 	await seedPostTypesAndRelations();
 	await seedFormatExportPost();
 }
 
 async function createExampleUser() {
-	// Create the user
-	const user = await prisma.user.create({
-		data: {
+	const user = await prisma.user.upsert({
+		where: { email: 'johndoe@example.com' },
+		update: {},
+		create: {
+			id: 1,
 			name: 'John Doe',
 			email: 'johndoe@example.com',
 			phone: '123-456-7890',
@@ -87,66 +90,78 @@ async function createExampleUser() {
 
 	const profiles = [
 		{
+			id: 1,
 			name: 'John Company',
 			roles: [ProfileMemberRoles.OWNER, ProfileMemberRoles.MANAGER],
 		},
-		{ name: 'Jane Consultancy', roles: [ProfileMemberRoles.OWNER] },
+		{ id: 2, name: 'Jane Consultancy', roles: [ProfileMemberRoles.OWNER] },
 		{
+			id: 3,
 			name: 'Doe Ventures',
 			roles: [ProfileMemberRoles.MANAGER, ProfileMemberRoles.EDITOR],
 		},
 	];
 
-	const profileCreations = profiles.map(async (profileData) => {
-		const profile = await prisma.profile.create({
-			data: {
-				name: profileData.name,
-				userId: user.id,
-			},
-		});
-
-		const member = await prisma.member.create({
-			data: {
-				userId: user.id,
-				profileId: profile.id,
-			},
-		});
-
-		const roleAssignments = profileData.roles.map(async (role) => {
-			await prisma.memberRole.create({
-				data: {
-					memberId: member.id,
-					role,
+	const createdProfiles = await Promise.all(
+		profiles.map(async (profileData) => {
+			const profile = await prisma.profile.upsert({
+				where: { id: profileData.id },
+				update: {},
+				create: {
+					id: profileData.id,
+					name: profileData.name,
+					userId: user.id,
 				},
 			});
-		});
-		await Promise.all(roleAssignments);
 
-		return { profile, member };
-	});
+			const member = await prisma.member.upsert({
+				where: {
+					userId_profileId: {
+						userId: user.id,
+						profileId: profile.id,
+					},
+				},
+				update: {},
+				create: {
+					userId: user.id,
+					profileId: profile.id,
+				},
+			});
 
-	const createdProfiles = await Promise.all(profileCreations);
+			await Promise.all(
+				profileData.roles.map(async (role: any, index: number) => {
+					const memberRoleId = member.id * 10 + index + 1;
 
-	return {
-		user,
-		profiles: createdProfiles.map(({ profile }) => profile),
-		members: createdProfiles.map(({ member }) => member),
-	};
+					await prisma.memberRole.upsert({
+						where: { id: memberRoleId },
+						update: {},
+						create: {
+							id: memberRoleId,
+							memberId: member.id,
+							role,
+						},
+					});
+				}),
+			);
+			return { profile, member };
+		}),
+	);
+
+	return { user, profiles: createdProfiles.map(({ profile }) => profile) };
 }
 
 async function fillProvidersAndSocials() {
 	const socialNetworks = Object.values(ProviderNames);
 
-	const p = socialNetworks.map((network) => ({
-		name: network,
-	}));
+	for (let i = 0; i < socialNetworks.length; i++) {
+		await prisma.provider.upsert({
+			where: { id: i + 1 },
+			update: {},
+			create: { id: i + 1, name: socialNetworks[i] },
+		});
+	}
 
-	await prisma.provider.createMany({
-		data: p,
-		skipDuplicates: true,
-	});
-
-	console.log('Providers seeded successfully.');
+	console.log('Providers upserted successfully.');
 
 	const profile = await prisma.profile.findFirst();
 	if (!profile) {
@@ -156,18 +171,21 @@ async function fillProvidersAndSocials() {
 
 	const socials = [
 		{
+			id: 1,
 			access_token: 'facebook-token-example',
 			accountId: 'facebook-account-123',
 			providerId: 1,
 			profileId: profile.id,
 		},
 		{
+			id: 2,
 			access_token: 'youtube-token-example',
 			accountId: 'youtube-account-456',
 			providerId: 2,
 			profileId: profile.id,
 		},
 		{
+			id: 3,
 			access_token: 'instagram-token-example',
 			accountId: 'instagram-account-789',
 			providerId: 3,
@@ -175,188 +193,50 @@ async function fillProvidersAndSocials() {
 		},
 	];
 
-	await prisma.social.createMany({
-		data: socials,
-		skipDuplicates: true,
-	});
+	for (const social of socials) {
+		await prisma.social.upsert({
+			where: { id: social.id },
+			update: {},
+			create: social,
+		});
+	}
 
-	console.log('Socials seeded successfully.');
+	console.log('Socials upserted successfully.');
 }
 
 async function seedPostTypesAndRelations() {
-	// Definir los tipos de publicación
 	const postTypes = [
-		{ name: 'message' },
-		{ name: 'short_video' },
-		{ name: 'image' },
+		{ id: 1, name: 'message' },
+		{ id: 2, name: 'short_video' },
+		{ id: 3, name: 'image' },
 	];
 
-	// Crear los postTypes si no existen
-	await prisma.postType.createMany({ data: postTypes, skipDuplicates: true });
-	console.log('PostTypes seeded successfully.');
-
-	// Obtener todos los proveedores y tipos de publicación
-	const providers = await prisma.provider.findMany();
-	const postTypeIds = await prisma.postType.findMany({
-		select: { id: true, name: true },
-	});
-
-	// Diccionario de configuraciones por proveedor
-	const providerConfig = {
-		FACEBOOK: [
-			{
-				characterLimit: 63206,
-				characterKey: 'message',
-				fields: {
-					message: 'string',
-				},
-				postTypeName: 'message',
-				providerPostTypeName: 'Facebook message',
-				properties: {
-					size: 'number',
-					format: 'string',
-					width: 'number',
-					height: 'number',
-				},
-			},
-			{
-				characterLimit: 63206,
-				characterKey: 'message',
-				fields: {
-					message: 'string',
-					url: 'string',
-				},
-				postTypeName: 'image',
-				providerPostTypeName: 'Facebook image',
-				properties: {
-					validFormats: ['image/jpeg', 'image/png'],
-					maxSize: 10485760, // 10MB
-					minDimensions: { width: 640, height: 640 },
-				},
-			},
-			{
-				characterLimit: 63206,
-				characterKey: 'description',
-				fields: {
-					fileUrl: 'string',
-					description: 'string',
-					title: 'string',
-				},
-				postTypeName: 'short_video',
-				providerPostTypeName: 'Facebook reel',
-				properties: {
-					size: 'number',
-					format: 'string',
-					width: 'number',
-					height: 'number',
-				},
-			},
-		],
-		YOUTUBE: [
-			{
-				characterLimit: 5000,
-				characterKey: 'snippet.description',
-				fields: {
-					snippet: {
-						title: 'string',
-						description: 'string',
-						tags: 'string[]',
-						categoryId: 'string',
-					},
-					status: {
-						privacyStatus: 'string',
-					},
-					media: {
-						url: 'string',
-					},
-				},
-				postTypeName: 'short_video',
-				providerPostTypeName: 'YouTube short',
-				properties: {
-					size: 'number',
-					format: 'string',
-					width: 'number',
-					height: 'number',
-				},
-			},
-		],
-		INSTAGRAM: [
-			{
-				characterLimit: 2200,
-				characterKey: 'caption',
-				fields: {
-					caption: 'string',
-					image_url: 'string[]',
-				},
-				postTypeName: 'image',
-				providerPostTypeName: 'Instagram image',
-				properties: {
-					validFormats: ['image/jpeg', 'image/png'],
-					maxSize: 10485760, // 10MB
-					minDimensions: { width: 640, height: 640 },
-				},
-			},
-			{
-				characterLimit: 2200,
-				characterKey: 'caption',
-				fields: {
-					caption: 'string',
-					video_url: 'string',
-				},
-				postTypeName: 'short_video',
-				providerPostTypeName: 'Instagram reel',
-				properties: {
-					validFormats: ['video/mp4', 'video/quicktime'],
-					maxSize: 100 * 1024 * 1024, // 100MB
-					minDuration: 3,
-					maxDuration: 90,
-				},
-			},
-		],
-	};
-
-	// Crear las relaciones correctas
-	const providerPostTypes = providers.flatMap((provider) => {
-		const configs = providerConfig[provider.name] || [];
-		return configs.flatMap((config) => {
-			const postType = postTypeIds.find(
-				(pt) => pt.name === config.postTypeName,
-			);
-			if (postType) {
-				return {
-					providerId: provider.id,
-					posttypeId: postType.id,
-					name: config.providerPostTypeName,
-					characterLimit: config.characterLimit,
-					characterKey: config.characterKey,
-					fields: config.fields,
-					properties: config.properties,
-				};
-			}
-			return [];
+	for (const postType of postTypes) {
+		await prisma.postType.upsert({
+			where: { id: postType.id },
+			update: {},
+			create: postType,
 		});
-	});
+	}
 
-	// Insertar las relaciones únicas
-	await prisma.providerPostType.createMany({
-		data: providerPostTypes,
-		skipDuplicates: true,
-	});
-
-	console.log('ProviderPostTypes seeded with character limits.');
+	console.log('PostTypes upserted successfully.');
 }
 
 async function seedFormatExportPost() {
-	await prisma.exportFormat.createMany({
-		data: [
-			{
-				format: 'PDF',
-			},
-			{
-				format: 'EXCEL',
-			},
-		],
-	});
+	const formats = [
+		{ id: 1, format: 'PDF' },
+		{ id: 2, format: 'EXCEL' },
+	];
+
+	for (const format of formats) {
+		await prisma.exportFormat.upsert({
+			where: { id: format.id },
+			update: {},
+			create: format,
+		});
+	}
+
+	console.log('Export formats upserted successfully.');
 }
 
 main()
