@@ -1,4 +1,4 @@
-import * as PdfKit from 'pdfkit';
+import PdfKit from 'pdfkit';
 import { Exporter } from './export.interface';
 import { Service } from 'src/service';
 import {
@@ -104,7 +104,7 @@ export class PDFExporter extends Service implements Exporter {
 		});
 
 		// Pie de página con paginación
-		const pageCount = doc.page.number;
+		const pageCount = doc.bufferedPageRange().count;
 		doc.on('pageAdded', () => {
 			doc.fontSize(10)
 				.fillColor('#bdc3c7')
