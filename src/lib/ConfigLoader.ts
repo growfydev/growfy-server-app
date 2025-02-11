@@ -52,7 +52,7 @@ function configLoader(): Config {
 			password: POSTGRES_PASSWORD,
 			host: POSTGRES_HOST,
 			port: Number(POSTGRES_PORT),
-			name: POSTGRES_DB
+			name: POSTGRES_DB,
 		},
 		jwt: {
 			secret_key: JWT_SECRET,
