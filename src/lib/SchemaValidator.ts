@@ -15,11 +15,11 @@ export const envSchema = Joi.object({
 	REFRESH_SECRET_KEY: Joi.string().required(),
 
 	// Database Configuration
-	DB_USER: Joi.string().required(),
-	DB_PASSWORD: Joi.string().required(),
-	DB_HOST: Joi.string().required(),
-	DB_PORT: Joi.number().required(),
-	DB_NAME: Joi.string().required(),
+	POSTGRES_USER: Joi.string().required(),
+	POSTGRES_PASSWORD: Joi.string().required(),
+	POSTGRES_HOST: Joi.string().required(),
+	POSTGRES_PORT: Joi.number().required(),
+	POSTGRES_DB: Joi.string().required(),
 
 	// SMS Service Configuration
 	SMS_ACCOUNTID: Joi.string().required(),
