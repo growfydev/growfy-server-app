@@ -1,458 +1,543 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider      = "postgresql"
-    url           = env("DATABASE_URL")
-    
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
-    ADMIN
-    USER
-    VIRTUAL_ASSISTANT
+  ADMIN
+  USER
+  VIRTUAL_ASSISTANT
 }
 
 enum TicketPriority {
-    LOW
-    MEDIUM
-    HIGH
-    URGENT
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }
 
 enum TicketType {
-    BILLING
-    TECHNICAL
-    GENERAL
+  BILLING
+  TECHNICAL
+  GENERAL
 }
 
 enum ProfileMemberRoles {
-    MEMBER
-    OWNER
-    MANAGER
-    ANALYST
-    EDITOR
-    CONTENT_CREATOR
-    CLIENT
-    GUEST
+  MEMBER
+  OWNER
+  MANAGER
+  ANALYST
+  EDITOR
+  CONTENT_CREATOR
+  CLIENT
+  GUEST
 }
 
 enum PermissionFlags {
-    VIEW
-    VIEW_ANALYTICS
-    VIEW_INBOX
-    VIEW_PLANNER
-    VIEW_ADS
-    SMARTLINKS
-    EDIT
-    REPORTS
-    INBOX
-    ADS
-    HASHTAG_TRACKER
-    PLANNER
-    PLAN_AND_PUBLISH
-    PLAN_PENDING_REVIEW
-    REVIEW_POSTS
-    MANAGEMENT
-    BRAND
+  VIEW
+  VIEW_ANALYTICS
+  VIEW_INBOX
+  VIEW_PLANNER
+  VIEW_ADS
+  SMARTLINKS
+  EDIT
+  REPORTS
+  INBOX
+  ADS
+  HASHTAG_TRACKER
+  PLANNER
+  PLAN_AND_PUBLISH
+  PLAN_PENDING_REVIEW
+  REVIEW_POSTS
+  MANAGEMENT
+  BRAND
 }
 
 enum GlobalStatus {
-    ACTIVE
-    INACTIVE
-    DELETED
+  ACTIVE
+  INACTIVE
+  DELETED
 }
 
 enum TaskStatus {
-    SCHEDULED
-    PENDING
-    PROCESSING
-    COMPLETED
-    CANCELED
-    FAILED
+  SCHEDULED
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELED
+  FAILED
 }
 
 enum PostStatus {
-    QUEUED
-    COMPLETED
-    CANCELED
-    FAILED
-    PUBLISHED
+  QUEUED
+  COMPLETED
+  CANCELED
+  FAILED
+  PUBLISHED
 }
 
 enum ProviderNames {
-    FACEBOOK
-    YOUTUBE
-    INSTAGRAM
-    //TWITTER
-    //PINTEREST
-    //TWITCH
-    //TIKTOK
-    //LINKEDIN
+  FACEBOOK
+  YOUTUBE
+  INSTAGRAM
+  //TWITTER
+  //PINTEREST
+  //TWITCH
+  //TIKTOK
+  //LINKEDIN
 }
 
 enum ShopifyCheckoutStatus {
-    PENDING
-    COMPLETED
-    ABANDONED
+  PENDING
+  COMPLETED
+  ABANDONED
+}
+
+enum EmailProviders {
+  MAILCHIMP
+  ACTIVECAMPAIGN
+  KLAVIYO
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+  IN_REVIEW
+  CANCELED
 }
 
 model User {
-    id           Int          @id @default(autoincrement())
-    name         String
-    email        String       @unique
-    password     String
-    phone        String?
-    role         Role         @default(USER)
-    otpEnabled   Boolean      @default(false)
-    otpVerified  Boolean      @default(false)
-    otpSecret    String?
-    otpAuthURI   String?
-    globalStatus GlobalStatus @default(ACTIVE)
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime?    @updatedAt
-    members      Member[]
-    profiles     Profile[]
-    Ticket       Ticket[]
+  id           Int          @id @default(autoincrement())
+  name         String
+  email        String       @unique
+  password     String
+  phone        String?
+  role         Role         @default(USER)
+  otpEnabled   Boolean      @default(false)
+  otpVerified  Boolean      @default(false)
+  otpSecret    String?
+  otpAuthURI   String?
+  globalStatus GlobalStatus @default(ACTIVE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime?    @updatedAt
+  members      Member[]
+  profiles     Profile[]
+  Ticket       Ticket[]
 }
 
 model Ticket {
-    id Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-    title        String
-    description  String
-    status       String         @default("OPEN")
-    priority     TicketPriority
-    type         TicketType
-    profileId    Int
-    assignedToId Int?
-    createdAt    DateTime       @default(now())
-    updatedAt    DateTime?      @updatedAt
-    profile      Profile        @relation(fields: [profileId], references: [id])
-    assignedTo   User?          @relation(fields: [assignedToId], references: [id])
+  title        String
+  description  String
+  status       String         @default("OPEN")
+  priority     TicketPriority
+  type         TicketType
+  profileId    Int
+  assignedToId Int?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime?      @updatedAt
+  profile      Profile        @relation(fields: [profileId], references: [id])
+  assignedTo   User?          @relation(fields: [assignedToId], references: [id])
 }
 
 model Member {
-    id           Int          @id @default(autoincrement())
-    userId       Int
-    profileId    Int
-    user         User         @relation(fields: [userId], references: [id])
-    profile      Profile      @relation(fields: [profileId], references: [id])
-    globalStatus GlobalStatus @default(ACTIVE)
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime?    @updatedAt
-    roles        MemberRole[]
+  id           Int          @id @default(autoincrement())
+  userId       Int
+  profileId    Int
+  user         User         @relation(fields: [userId], references: [id])
+  profile      Profile      @relation(fields: [profileId], references: [id])
+  globalStatus GlobalStatus @default(ACTIVE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime?    @updatedAt
+  roles        MemberRole[]
 
-    @@unique([userId, profileId])
+  @@unique([userId, profileId])
 }
 
 model MemberRole {
-    id           Int                @id @default(autoincrement())
-    memberId     Int
-    role         ProfileMemberRoles
-    globalStatus GlobalStatus       @default(ACTIVE)
-    createdAt    DateTime           @default(now())
-    updatedAt    DateTime?          @updatedAt
+  id           Int                @id @default(autoincrement())
+  memberId     Int
+  role         ProfileMemberRoles
+  globalStatus GlobalStatus       @default(ACTIVE)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime?          @updatedAt
 
-    member Member @relation(fields: [memberId], references: [id])
+  member Member @relation(fields: [memberId], references: [id])
 }
 
 model Profile {
-    id           Int          @id @default(autoincrement())
-    name         String
-    userId       Int
-    members      Member[]
-    socials      Social[]
-    posts        Post[]
-    globalStatus GlobalStatus @default(ACTIVE)
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime?    @updatedAt
-    User         User         @relation(fields: [userId], references: [id])
-    customers    Customer[]
+  id           Int          @id @default(autoincrement())
+  name         String
+  userId       Int
+  members      Member[]
+  socials      Social[]
+  posts        Post[]
+  globalStatus GlobalStatus @default(ACTIVE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime?    @updatedAt
+  User         User         @relation(fields: [userId], references: [id])
+  customers    Customer[]
 
-    StorageProfile StorageProfile[]
+  StorageProfile StorageProfile[]
 
-    ShopifyIntegration   ShopifyIntegration?
-    shopifyIntegrationId Int?
-    Ticket               Ticket[]
+  ShopifyIntegration   ShopifyIntegration?
+  shopifyIntegrationId Int?
+  Ticket               Ticket[]
+  EmailIntegration     EmailIntegration?
+  Campaign             Campaign[]
+  EmailSegment         EmailSegment[]
 }
 
 model Customer {
-    id                Int               @id @default(autoincrement())
-    shopifyCustomerId String?           @unique
-    name              String
-    email             String?           @unique
-    phone             String?           @unique
-    profileId         Int
-    globalStatus      GlobalStatus      @default(ACTIVE)
-    createdAt         DateTime          @default(now())
-    updatedAt         DateTime?         @updatedAt
-    Profile           Profile           @relation(fields: [profileId], references: [id])
-    ShopifyOrder      ShopifyOrder[]
-    ShopifyCheckout   ShopifyCheckout[]
+  id                Int               @id @default(autoincrement())
+  shopifyCustomerId String?           @unique
+  name              String
+  email             String?           @unique
+  phone             String?           @unique
+  profileId         Int
+  globalStatus      GlobalStatus      @default(ACTIVE)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime?         @updatedAt
+  Profile           Profile           @relation(fields: [profileId], references: [id])
+  ShopifyOrder      ShopifyOrder[]
+  ShopifyCheckout   ShopifyCheckout[]
 }
 
 model Social {
-    id            Int          @id @default(autoincrement())
-    access_token  String
-    refresh_token String?
-    accountId     String
-    providerId    Int
-    profileId     Int
-    provider      Provider     @relation(fields: [providerId], references: [id])
-    profile       Profile      @relation(fields: [profileId], references: [id])
-    globalStatus  GlobalStatus @default(ACTIVE)
-    createdAt     DateTime     @default(now())
-    updatedAt     DateTime?    @updatedAt
+  id            Int          @id @default(autoincrement())
+  access_token  String
+  refresh_token String?
+  accountId     String
+  providerId    Int
+  profileId     Int
+  provider      Provider     @relation(fields: [providerId], references: [id])
+  profile       Profile      @relation(fields: [profileId], references: [id])
+  globalStatus  GlobalStatus @default(ACTIVE)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime?    @updatedAt
 }
 
 model Provider {
-    id               Int                @id @default(autoincrement())
-    name             ProviderNames
-    socials          Social[]
-    globalStatus     GlobalStatus       @default(ACTIVE)
-    createdAt        DateTime           @default(now())
-    updatedAt        DateTime?          @updatedAt
-    ProviderPostType ProviderPostType[]
+  id               Int                @id @default(autoincrement())
+  name             ProviderNames
+  socials          Social[]
+  globalStatus     GlobalStatus       @default(ACTIVE)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime?          @updatedAt
+  ProviderPostType ProviderPostType[]
 }
 
 model Post {
-    id                 Int               @id @default(autoincrement())
-    status             PostStatus
-    providerPostTypeId Int?
-    profileId          Int
-    ProviderPostType   ProviderPostType? @relation(fields: [providerPostTypeId], references: [id])
-    profile            Profile           @relation(fields: [profileId], references: [id])
-    task               Task?
-    fields             Json
-    globalStatus       GlobalStatus      @default(ACTIVE)
-    createdAt          DateTime          @default(now())
-    updatedAt          DateTime?         @updatedAt
-    PostType           PostType?         @relation(fields: [postTypeId], references: [id])
-    postTypeId         Int?
+  id                 Int               @id @default(autoincrement())
+  status             PostStatus
+  providerPostTypeId Int?
+  profileId          Int
+  ProviderPostType   ProviderPostType? @relation(fields: [providerPostTypeId], references: [id])
+  profile            Profile           @relation(fields: [profileId], references: [id])
+  task               Task?
+  fields             Json
+  globalStatus       GlobalStatus      @default(ACTIVE)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime?         @updatedAt
+  PostType           PostType?         @relation(fields: [postTypeId], references: [id])
+  postTypeId         Int?
 }
 
 model Task {
-    id           Int          @id @default(autoincrement())
-    status       TaskStatus
-    unix         Int
-    postId       Int          @unique
-    post         Post         @relation(fields: [postId], references: [id])
-    globalStatus GlobalStatus @default(ACTIVE)
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime?    @updatedAt
+  id           Int          @id @default(autoincrement())
+  status       TaskStatus
+  unix         Int
+  postId       Int          @unique
+  post         Post         @relation(fields: [postId], references: [id])
+  globalStatus GlobalStatus @default(ACTIVE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime?    @updatedAt
 }
 
 model PostType {
-    id           Int          @id @default(autoincrement())
-    name         String
-    posts        Post[]
-    globalStatus GlobalStatus @default(ACTIVE)
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime?    @updatedAt
+  id           Int          @id @default(autoincrement())
+  name         String
+  posts        Post[]
+  globalStatus GlobalStatus @default(ACTIVE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime?    @updatedAt
 
-    ProviderPostType ProviderPostType[]
+  ProviderPostType ProviderPostType[]
 }
 
 model ProviderPostType {
-    id             Int      @id @default(autoincrement())
-    providerId     Int
-    posttypeId     Int
-    name           String
-    characterLimit Int
-    characterKey   String
-    fields         Json
-    properties     Json
-    provider       Provider @relation(fields: [providerId], references: [id])
-    posttype       PostType @relation(fields: [posttypeId], references: [id])
-    Post           Post[]
+  id             Int      @id @default(autoincrement())
+  providerId     Int
+  posttypeId     Int
+  name           String
+  characterLimit Int
+  characterKey   String
+  fields         Json
+  properties     Json
+  provider       Provider @relation(fields: [providerId], references: [id])
+  posttype       PostType @relation(fields: [posttypeId], references: [id])
+  Post           Post[]
 }
 
 model Permission {
-    id           Int                     @id @default(autoincrement())
-    name         PermissionFlags         @unique
-    profileRoles ProfileRolePermission[]
-    globalStatus GlobalStatus            @default(ACTIVE)
-    createdAt    DateTime                @default(now())
-    updatedAt    DateTime?               @updatedAt
+  id           Int                     @id @default(autoincrement())
+  name         PermissionFlags         @unique
+  profileRoles ProfileRolePermission[]
+  globalStatus GlobalStatus            @default(ACTIVE)
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime?               @updatedAt
 }
 
 model ProfileRolePermission {
-    id           Int                @id @default(autoincrement())
-    profileRoles ProfileMemberRoles
-    permission   Permission         @relation(fields: [permissionId], references: [id])
-    permissionId Int
-    globalStatus GlobalStatus       @default(ACTIVE)
-    createdAt    DateTime           @default(now())
-    updatedAt    DateTime?          @updatedAt
+  id           Int                @id @default(autoincrement())
+  profileRoles ProfileMemberRoles
+  permission   Permission         @relation(fields: [permissionId], references: [id])
+  permissionId Int
+  globalStatus GlobalStatus       @default(ACTIVE)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime?          @updatedAt
 
-    @@unique([profileRoles, permissionId])
+  @@unique([profileRoles, permissionId])
 }
 
 model ExportFormat {
-    id        Int      @id @default(autoincrement())
-    format    String
-    createdAt DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  format    String
+  createdAt DateTime @default(now())
 }
 
 model Export {
-    id        Int       @id @default(autoincrement())
-    startDate DateTime
-    endDate   DateTime
-    posts     Json?
-    format    String
-    createdAt DateTime  @default(now())
-    updatedAt DateTime? @updatedAt
+  id        Int       @id @default(autoincrement())
+  startDate DateTime
+  endDate   DateTime
+  posts     Json?
+  format    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
 }
 
 model StorageProfile {
-    id           Int             @id @default(autoincrement())
-    profileId    Int
-    profile      Profile         @relation(fields: [profileId], references: [id])
-    service      StorageServices
-    accessToken  String
-    refreshToken String?
-    expiryDate   DateTime?
-    createdAt    DateTime        @default(now())
-    updatedAt    DateTime?       @updatedAt
+  id           Int             @id @default(autoincrement())
+  profileId    Int
+  profile      Profile         @relation(fields: [profileId], references: [id])
+  service      StorageServices
+  accessToken  String
+  refreshToken String?
+  expiryDate   DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime?       @updatedAt
 
-    @@unique([profileId, service])
+  @@unique([profileId, service])
 }
 
 enum StorageServices {
-    GOOGLE_DRIVE
-    DROPBOX
+  GOOGLE_DRIVE
+  DROPBOX
 }
 
 model ShopifyIntegration {
-    id                Int                 @id @default(autoincrement())
-    profileId         Int?                @unique
-    shopName          String?
-    accessToken       String?
-    code              String?
-    isAuth            Boolean             @default(false)
-    globalStatus      GlobalStatus        @default(ACTIVE)
-    createdAt         DateTime            @default(now())
-    updatedAt         DateTime?           @updatedAt
-    shopEmail         String?
-    shopDomain        String?
-    shopCountry       String?
-    shopCurrency      String?
-    shopOwner         String?
-    shopPlan          String?
-    hasDiscounts      Boolean?            @default(false)
-    hasGiftCards      Boolean?            @default(false)
-    Profile           Profile?            @relation(references: [id], fields: [profileId])
-    ShopifyOrder      ShopifyOrder[]
-    ShopifyProduct    ShopifyProduct[]
-    ShopifyDailyStats ShopifyDailyStats[]
+  id                Int                 @id @default(autoincrement())
+  profileId         Int?                @unique
+  shopName          String?
+  accessToken       String?
+  code              String?
+  isAuth            Boolean             @default(false)
+  globalStatus      GlobalStatus        @default(ACTIVE)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime?           @updatedAt
+  shopEmail         String?
+  shopDomain        String?
+  shopCountry       String?
+  shopCurrency      String?
+  shopOwner         String?
+  shopPlan          String?
+  hasDiscounts      Boolean?            @default(false)
+  hasGiftCards      Boolean?            @default(false)
+  Profile           Profile?            @relation(references: [id], fields: [profileId])
+  ShopifyOrder      ShopifyOrder[]
+  ShopifyProduct    ShopifyProduct[]
+  ShopifyDailyStats ShopifyDailyStats[]
 }
 
 model ShopifyOrder {
-    id                   Int                @id @default(autoincrement())
-    orderId              String             @unique
-    ShopifyLineItem      ShopifyLineItem[]
-    orderNumber          String?
-    financialStatus      String?
-    currency             String?
-    subTotal             Decimal?
-    totalPrice           Decimal?
-    shopifyCreatedAt     DateTime?
-    paymentMethods       String[]
-    shippingAddress      String?
-    shippingLat          Decimal?
-    shippingLong         Decimal?
-    statusPageUrl        String?
-    shopifyCustomerId    String?
-    shopifyCheckoutId    String?
-    shopifyIntegrationId Int
-    hasDiscounts         Boolean?           @default(false)
-    hasGiftCards         Boolean?           @default(false)
-    globalStatus         GlobalStatus       @default(ACTIVE)
-    createdAt            DateTime           @default(now())
-    updatedAt            DateTime?          @updatedAt
-    Customer             Customer?          @relation(fields: [shopifyCustomerId], references: [shopifyCustomerId])
-    shopifyIntegration   ShopifyIntegration @relation(fields: [shopifyIntegrationId], references: [id])
-    ShopifyCheckout      ShopifyCheckout?   @relation(fields: [shopifyCheckoutId], references: [checkoutId])
+  id                   Int                @id @default(autoincrement())
+  orderId              String             @unique
+  ShopifyLineItem      ShopifyLineItem[]
+  orderNumber          String?
+  financialStatus      String?
+  currency             String?
+  subTotal             Decimal?
+  totalPrice           Decimal?
+  shopifyCreatedAt     DateTime?
+  paymentMethods       String[]
+  shippingAddress      String?
+  shippingLat          Decimal?
+  shippingLong         Decimal?
+  statusPageUrl        String?
+  shopifyCustomerId    String?
+  shopifyCheckoutId    String?
+  shopifyIntegrationId Int
+  hasDiscounts         Boolean?           @default(false)
+  hasGiftCards         Boolean?           @default(false)
+  globalStatus         GlobalStatus       @default(ACTIVE)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime?          @updatedAt
+  Customer             Customer?          @relation(fields: [shopifyCustomerId], references: [shopifyCustomerId])
+  shopifyIntegration   ShopifyIntegration @relation(fields: [shopifyIntegrationId], references: [id])
+  ShopifyCheckout      ShopifyCheckout?   @relation(fields: [shopifyCheckoutId], references: [checkoutId])
 }
 
 model ShopifyLineItem {
-    id                  Int              @id @default(autoincrement())
-    shopifyOrderId      String?
-    lineItemId          String           @unique
-    shopifyProductId    String?
-    quantity            Int?
-    price               Decimal?
-    originalUnitPrice   Decimal?
-    discountedUnitPrice Decimal?
-    originalTotal       Decimal?
-    discountedTotal     Decimal?
-    shopifyOrder        ShopifyOrder?    @relation(fields: [shopifyOrderId], references: [orderId])
-    shopifyProduct      ShopifyProduct?  @relation(fields: [shopifyProductId], references: [productId])
-    globalStatus        GlobalStatus     @default(ACTIVE)
-    createdAt           DateTime         @default(now())
-    updatedAt           DateTime?        @updatedAt
-    ShopifyCheckout     ShopifyCheckout? @relation(fields: [shopifyCheckoutId], references: [checkoutId])
-    shopifyCheckoutId   String?
+  id                  Int              @id @default(autoincrement())
+  shopifyOrderId      String?
+  lineItemId          String           @unique
+  shopifyProductId    String?
+  quantity            Int?
+  price               Decimal?
+  originalUnitPrice   Decimal?
+  discountedUnitPrice Decimal?
+  originalTotal       Decimal?
+  discountedTotal     Decimal?
+  shopifyOrder        ShopifyOrder?    @relation(fields: [shopifyOrderId], references: [orderId])
+  shopifyProduct      ShopifyProduct?  @relation(fields: [shopifyProductId], references: [productId])
+  globalStatus        GlobalStatus     @default(ACTIVE)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime?        @updatedAt
+  ShopifyCheckout     ShopifyCheckout? @relation(fields: [shopifyCheckoutId], references: [checkoutId])
+  shopifyCheckoutId   String?
 }
 
 model ShopifyProduct {
-    id                   Int                @id @default(autoincrement())
-    productId            String             @unique
-    shopifyIntegrationId Int
-    title                String?
-    totalInventory       Int?
-    vendor               String?
-    featuredImage        String?
-    featuredImageAltText String?
-    minPrice             Decimal?
-    maxPrice             Decimal?
-    currency             String?
-    collections          String[]
-    globalStatus         GlobalStatus       @default(ACTIVE)
-    createdAt            DateTime           @default(now())
-    updatedAt            DateTime?          @updatedAt
-    ShopifyLineItem      ShopifyLineItem[]
-    shopifyIntegration   ShopifyIntegration @relation(fields: [shopifyIntegrationId], references: [id])
+  id                   Int                @id @default(autoincrement())
+  productId            String             @unique
+  shopifyIntegrationId Int
+  title                String?
+  totalInventory       Int?
+  vendor               String?
+  featuredImage        String?
+  featuredImageAltText String?
+  minPrice             Decimal?
+  maxPrice             Decimal?
+  currency             String?
+  collections          String[]
+  globalStatus         GlobalStatus       @default(ACTIVE)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime?          @updatedAt
+  ShopifyLineItem      ShopifyLineItem[]
+  shopifyIntegration   ShopifyIntegration @relation(fields: [shopifyIntegrationId], references: [id])
 }
 
 model ShopifyCheckout {
-    id                   Int                   @id @default(autoincrement())
-    checkoutId           String                @unique
-    shopifyIntegrationId Int
-    ShopifyLineItem      ShopifyLineItem[]
-    currency             String?
-    totalPrice           Decimal?
-    status               ShopifyCheckoutStatus @default(PENDING)
-    shopifyCreatedAt     DateTime?
-    shopifyCustomerId    String?
-    Customer             Customer?             @relation(fields: [shopifyCustomerId], references: [shopifyCustomerId])
-    globalStatus         GlobalStatus          @default(ACTIVE)
-    createdAt            DateTime              @default(now())
-    updatedAt            DateTime?             @updatedAt
-    ShopifyOrder         ShopifyOrder[]
+  id                   Int                   @id @default(autoincrement())
+  checkoutId           String                @unique
+  shopifyIntegrationId Int
+  ShopifyLineItem      ShopifyLineItem[]
+  currency             String?
+  totalPrice           Decimal?
+  status               ShopifyCheckoutStatus @default(PENDING)
+  shopifyCreatedAt     DateTime?
+  shopifyCustomerId    String?
+  Customer             Customer?             @relation(fields: [shopifyCustomerId], references: [shopifyCustomerId])
+  globalStatus         GlobalStatus          @default(ACTIVE)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime?             @updatedAt
+  ShopifyOrder         ShopifyOrder[]
 }
 
 model ShopifyDailyStats {
-    id                   Int      @id @default(autoincrement())
-    shopifyIntegrationId Int
-    date                 DateTime @default(now())
-    currency             String
-    totalOrders          Int
-    totalRevenue         Float
-    avgOrderValue        Float
+  id                   Int      @id @default(autoincrement())
+  shopifyIntegrationId Int
+  date                 DateTime @default(now())
+  currency             String
+  totalOrders          Int
+  totalRevenue         Float
+  avgOrderValue        Float
 
-    products  Json
-    customers Json
+  products  Json
+  customers Json
 
-    abandonedCheckouts Int
+  abandonedCheckouts Int
 
-    globalStatus GlobalStatus @default(ACTIVE)
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime?    @updatedAt
+  globalStatus GlobalStatus @default(ACTIVE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime?    @updatedAt
 
-    shopifyIntegration ShopifyIntegration @relation(fields: [shopifyIntegrationId], references: [id])
+  shopifyIntegration ShopifyIntegration @relation(fields: [shopifyIntegrationId], references: [id])
 
-    @@unique([shopifyIntegrationId, date])
+  @@unique([shopifyIntegrationId, date])
+}
+
+model EmailIntegration {
+  id           Int            @id @default(autoincrement())
+  profileId    Int            @unique
+  provider     EmailProviders
+  accessToken  String?
+  refreshToken String?
+  code         String?
+  isAuth       Boolean        @default(false)
+  expiresAt    DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime?      @updatedAt
+
+  profile   Profile    @relation(fields: [profileId], references: [id])
+  campaigns Campaign[]
+
+  @@unique([profileId, provider]) // Un Profile solo puede tener una integración por proveedor
+}
+
+model Campaign {
+  id                 Int            @id @default(autoincrement())
+  profileId          Int
+  emailIntegrationId Int
+  title              String
+  subject            String
+  previewText        String?
+  status             CampaignStatus @default(DRAFT)
+  sendDate           DateTime?
+  recipients         Int
+  openRate           Float?
+  clickRate          Float?
+  bounceRate         Float?
+  unsubscribeRate    Float?
+  spamRate           Float?
+  revenueGenerated   Decimal?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime?      @updatedAt
+
+  profile          Profile          @relation(fields: [profileId], references: [id])
+  emailIntegration EmailIntegration @relation(fields: [emailIntegrationId], references: [id])
+  metrics          CampaignMetrics?
+}
+
+model EmailSegment {
+  id        Int            @id @default(autoincrement())
+  name      String
+  provider  EmailProviders
+  profileId Int
+  createdAt DateTime       @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id])
+}
+
+model CampaignMetrics {
+  id               Int      @id @default(autoincrement())
+  campaignId       Int
+  deliveryRate     Float?
+  openRate         Float?
+  clickRate        Float?
+  conversionRate   Float?
+  revenueGenerated Decimal?
+  spamComplaints   Float?
+  unsubscribeRate  Float?
+  createdAt        DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id])
+
+  @@unique([campaignId])
 }
