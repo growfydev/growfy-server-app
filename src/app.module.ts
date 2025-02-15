@@ -8,14 +8,16 @@ import { LoggerConfiguredModule } from './lib/Logger';
 import { S3GlobalModule } from './common/s3-config/s3-module';
 import { S3Service } from './common/s3-config';
 import { NotificationService } from './modules/notification/notification.service';
-import { EmailMarketingModule } from './modules/email-marketing/email-marketing.module';
+import { AuthModule } from './modules/email-marketing/auth/auth.module';
+import { CampaignsModule } from './modules/email-marketing/campaigns/campaigns.module';
 
 @Module({
 	imports: [
 		...Modules,
 		LoggerConfiguredModule,
 		S3GlobalModule.register(),
-		EmailMarketingModule,
+		AuthModule,
+		CampaignsModule,
 	],
 	controllers: [AppController],
 	providers: [

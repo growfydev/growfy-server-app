@@ -41,6 +41,16 @@ const {
 	SHOPIFY_REDIRECT_URI,
 	SHOPIFY_SCOPES,
 	SHOPIFY_WEBHOOKS_URI,
+	MAILCHIMP_API_KEY,
+	MAILCHIMP_SERVER_PREFIX,
+	MAILCHIMP_CLIENT_ID,
+	MAILCHIMP_CLIENT_SECRET,
+	MAILCHIMP_REDIRECT_URI,
+	MAILCHIMP_URL_BASE,
+	KLAVIYO_CLIENT_ID,
+	KLAVIYO_CLIENT_SECRET,
+	KLAVIYO_REDIRECT_URI,
+	KLAVIYO_API_BASE_URL,
 } = process.env;
 
 function configLoader(): Config {
@@ -111,6 +121,20 @@ function configLoader(): Config {
 			redirectUri: SHOPIFY_REDIRECT_URI,
 			scopes: SHOPIFY_SCOPES,
 			webhooksUri: SHOPIFY_WEBHOOKS_URI,
+		},
+		mailchimp: {
+			apikey: MAILCHIMP_API_KEY,
+			serverPrefix: MAILCHIMP_SERVER_PREFIX,
+			clientId: MAILCHIMP_CLIENT_ID,
+			clientSecret: MAILCHIMP_CLIENT_SECRET,
+			redirectUri: MAILCHIMP_REDIRECT_URI,
+			urlBase: MAILCHIMP_URL_BASE,
+		},
+		klaviyo: {
+			clientId: KLAVIYO_CLIENT_ID,
+			clientSecret: KLAVIYO_CLIENT_SECRET,
+			redirectUri: KLAVIYO_REDIRECT_URI,
+			apiBaseUrl: KLAVIYO_API_BASE_URL,
 		},
 	};
 }

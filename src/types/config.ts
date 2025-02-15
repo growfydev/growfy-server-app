@@ -66,4 +66,18 @@ export type Config = {
 		scopes: string;
 		webhooksUri: string;
 	};
+	mailchimp: {
+		apikey: string;
+		serverPrefix: string;
+		clientId: string;
+		clientSecret: string;
+		redirectUri: string;
+		urlBase: string;
+	};
+	klaviyo: {
+		clientId: string;
+		clientSecret: string;
+		redirectUri: string;
+		apiBaseUrl: string;
+	};
 };
